@@ -2,6 +2,7 @@
 <#
 .Synopsis
 	Measure-Command with several iterations and progress.
+	Author: Roman Kuzmin
 
 .Description
 	The script is for measuring duration of fast expressions. In order to get a
