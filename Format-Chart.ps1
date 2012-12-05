@@ -46,7 +46,7 @@
 
 param
 (
-	[object[]]$Property = $(Write-Error "Missing parameter Property." -ErrorAction Stop),
+	[object[]]$Property,
 	$Minimum,
 	$Maximum,
 	[int]$Width = ($Host.UI.RawUI.BufferSize.Width / 2),
@@ -55,36 +55,40 @@ param
 	[object[]]$InputObject,
 	[switch]$Logarithmic
 )
-if ($args) {Write-Error "Unknown arguments: $args" -ErrorAction Stop}
+try {
+	if ($args) { throw "Unknown arguments: $args" }
+	if (!$Property) { throw "Missing parameter Property." }
 
-# select properties together with the empty chart column
-$data = $(if ($InputObject) { $InputObject } else { @($Input) }) | Select-Object ($Property + 'Chart')
-if (!$data) {return}
-$name = $Property[-1]
+	# select properties and add the chart
+	$data = $(if ($InputObject) { $InputObject } else { @($Input) }) | Select-Object ($Property + 'Chart')
+	if (!$data) {return}
+	$name = $Property[-1]
 
-# get minimum and maximum and set range
-$mm = $data | Measure-Object $name -Minimum -Maximum
-if ($mm.Minimum -isnot [double] -or $mm.Maximum -isnot [double]) {
-	Write-Error "Property '$name' should have numeric values." -ErrorAction Stop
-}
-if ($null -eq $Minimum) { $Minimum = $mm.Minimum }
-if ($null -eq $Maximum) { $Maximum = $mm.Maximum }
-$range = $Maximum - $Minimum
-if ($range -lt 0) { Write-Error "Invalid Minimum and Maximum: $Minimum, $Maximum" -ErrorAction Stop }
-if ($range -eq 0) { $range = 1 }
+	# get minimum and maximum and set range
+	$mm = $data | Measure-Object $name -Minimum -Maximum
+	if ($mm.Minimum -isnot [double] -or $mm.Maximum -isnot [double]) { throw "Property '$name' should have numeric values." }
+	if ($null -eq $Minimum) { $Minimum = $mm.Minimum }
+	if ($null -eq $Maximum) { $Maximum = $mm.Maximum }
+	$range = $Maximum - $Minimum
+	if ($range -lt 0) { throw "Invalid Minimum and Maximum: $Minimum, $Maximum." }
+	if ($range -eq 0) { $range = 1 }
 
-# fill the chart column
-foreach($_ in $data) {
-	if ($Logarithmic) {
-		$factor = [math]::Log(($_.$name - $Minimum + 1), ($range + 1))
+	# fill the chart column
+	foreach($_ in $data) {
+		if ($Logarithmic) {
+			$factor = [math]::Log(($_.$name - $Minimum + 1), ($range + 1))
+		}
+		else {
+			$factor = ($_.$name - $Minimum) / $range
+		}
+		if ($factor -lt 0) { $factor = 0 }
+		elseif ($factor -gt 1) { $factor = 1 }
+		$_.Chart = ($BarChar * ($Width * $factor)).PadRight($Width, $SpaceChar)
 	}
-	else {
-		$factor = ($_.$name - $Minimum) / $range
-	}
-	if ($factor -lt 0) { $factor = 0 }
-	elseif ($factor -gt 1) { $factor = 1 }
-	$_.Chart = ($BarChar * ($Width * $factor)).PadRight($Width, $SpaceChar)
-}
 
-# format
-Format-Table -AutoSize -InputObject $data
+	# format
+	Format-Table -AutoSize -InputObject $data
+}
+catch {
+	Write-Error $_ -ErrorAction Stop
+}
