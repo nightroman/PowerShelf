@@ -5,12 +5,12 @@
 	Author: Roman Kuzmin
 
 .Description
-	The script works like Format-Table but it adds an extra chart column which
-	represents the last specified property with bars of different widths. The
-	last specified property should have numeric values.
+	The script is similar to Format-Table but it adds an extra column which
+	represents the last specified numeric property as the bar chart. Objects
+	with null chart data are excluded.
 
 .Parameter Property
-		Properties where the last one is numeric for the chart.
+		Property names. The last specifies a numeric property for the chart.
 .Parameter Minimum
 		Minimum chart value. Default is the minimum property value.
 .Parameter Maximum
@@ -22,23 +22,17 @@
 .Parameter SpaceChar
 		Character to fill chart space. Default is space.
 .Parameter InputObject
-		Input objects. Default: the pipeline input.
+		Input objects. Default are from the pipeline.
 .Parameter Logarithmic
 		Tells to use the logarithmic scale.
 
 .Inputs
 	Objects to be formatted. Alternatively, use the parameter InputObject.
 .Outputs
-	Output of Format-Table.
+	Output of internally called Format-Table with processed input data.
 
 .Example
-	# Role of the parameter Minimum; compare two charts
-	Get-Process | ?{$_.WS -gt 10Mb} | Format-Chart Name, WS
-	Get-Process | ?{$_.WS -gt 10Mb} | Format-Chart Name, WS -Minimum 0
-
-.Example
-	# Custom bar character for shadow effects
-	Get-Process | Format-Chart Name, WS -Bar ([char]9600) -Space ([char]9617)
+	Get-Process | Sort-Object WS | Format-Chart Name, WS
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -46,7 +40,7 @@
 
 param
 (
-	[object[]]$Property,
+	[string[]]$Property,
 	$Minimum,
 	$Maximum,
 	[int]$Width = ($Host.UI.RawUI.BufferSize.Width / 2),
@@ -58,13 +52,14 @@ param
 try {
 	if ($args) { throw "Unknown arguments: $args" }
 	if (!$Property) { throw "Missing parameter Property." }
-
-	# select properties and add the chart
-	$data = $(if ($InputObject) { $InputObject } else { @($Input) }) | Select-Object ($Property + 'Chart')
-	if (!$data) {return}
 	$name = $Property[-1]
+	if (!$InputObject) { $InputObject = @($Input) }
 
-	# get minimum and maximum and set range
+	# select valid object properties and chart
+	$data = $InputObject | Select-Object ($Property + 'Chart') | .{process{if ($null -ne $_.$name) {$_}}}
+	if (!$data) { return }
+
+	# get minimum, maximum, and range
 	$mm = $data | Measure-Object $name -Minimum -Maximum
 	if ($mm.Minimum -isnot [double] -or $mm.Maximum -isnot [double]) { throw "Property '$name' should have numeric values." }
 	if ($null -eq $Minimum) { $Minimum = $mm.Minimum }
@@ -73,13 +68,13 @@ try {
 	if ($range -lt 0) { throw "Invalid Minimum and Maximum: $Minimum, $Maximum." }
 	if ($range -eq 0) { $range = 1 }
 
-	# fill the chart column
+	# set chart bars
 	foreach($_ in $data) {
-		if ($Logarithmic) {
-			$factor = [math]::Log(($_.$name - $Minimum + 1), ($range + 1))
+		$factor = if ($Logarithmic) {
+			[math]::Log(($_.$name - $Minimum + 1), ($range + 1))
 		}
 		else {
-			$factor = ($_.$name - $Minimum) / $range
+			($_.$name - $Minimum) / $range
 		}
 		if ($factor -lt 0) { $factor = 0 }
 		elseif ($factor -gt 1) { $factor = 1 }
