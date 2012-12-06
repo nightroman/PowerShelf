@@ -25,6 +25,11 @@
 .Parameter Keep
 		Tells to keep the local gist repository.
 
+.Inputs
+	None. Use the parameters.
+.Outputs
+	Text from git.
+
 .Link
 	https://github.com/nightroman/PowerShelf
 #>

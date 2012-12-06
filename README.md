@@ -10,3 +10,4 @@ This is a set of PowerShell scripts for various tasks.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
+* *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
