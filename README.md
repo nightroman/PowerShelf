@@ -7,6 +7,7 @@ They are designed and tested for PowerShell v2 and v3.
 
 ## Script List
 
+* *Add-Path.ps1* - Adds a directory to an environment path variable once.
 * *Format-Chart.ps1* - Formats output as a table with the last chart column.
 * *Format-High.ps1* - Formats output by columns with optional custom item colors.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
