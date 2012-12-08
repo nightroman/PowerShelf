@@ -5,8 +5,9 @@
 	Author: Roman Kuzmin
 
 .Description
-	The script prints the specified property, expression, or input objects by
-	columns. Custom item colors can be calculated by the scriptblock Color.
+	The script prints the property, expression, or input objects by columns and
+	determines a suitable column number automatically. As a result, it produces
+	quite compact output. Output width and custom item colors can be specified.
 
 	The script is named in contrast to Format-Wide which prints items by rows.
 
@@ -29,21 +30,18 @@
 	None. Data are written to the screen by Write-Host.
 
 .Example
-	#
+	>
 	# file system items
-	ls $home | Format-High
+	Get-ChildItem $home | Format-High
 
-	# processes, not good
-	ps | Format-High
-
-	# process names, good
-	ps | Format-High Name
+	# verb names, custom width
+	Get-Verb | Format-High Verb 80
 
 	# custom expression and width
-	ps | Format-High {$_.Name + ':' + $_.WS} 70
+	Get-Process | Format-High {$_.Name + ':' + $_.WS} 80
 
 	# process names in colors based on working sets
-	ps | Format-High Name 70 {@{f = if ($_.WS -gt 10mb) {'red'} else {'green'}}}
+	Get-Process | Format-High Name 80 {@{f=if($_.WS -gt 10mb){'red'}else{'green'}}}
 
 .Link
 	https://github.com/nightroman/PowerShelf

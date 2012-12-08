@@ -3,6 +3,7 @@ PowerShelf - PowerShell Scripts
 ===============================
 
 This is a set of PowerShell scripts for various tasks.
+They are designed and tested for PowerShell v2 and v3.
 
 ## Scripts
 
