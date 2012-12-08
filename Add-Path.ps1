@@ -6,19 +6,25 @@
 
 .Description
 	The script resolves the specified path, checks that the directory exists,
-	and adds the path to an environment variable if it is not there yet.
+	and adds the path to an environment variable if it is not there yet. The
+	changes are effective for the current process only.
 
 .Parameter Path
 		Path to add to an environment variable. Default is the current location.
 .Parameter Name
-		Environment variable name. Default is 'PATH'.
+		Environment variable to change. Default is 'PATH'.
+
+.Inputs
+	None. Use the parameters.
+.Outputs
+	None.
 
 .Example
 	>
-	# Add the current location to the system path
+	# Adds the current location to the system path
 	Add-Path
 
-	# Add TestModules to PowerShell module path
+	# Adds TestModules to the PowerShell modules
 	Add-Path TestModules PSModulePath
 
 .Link
