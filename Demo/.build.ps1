@@ -12,4 +12,5 @@
 task Add-Path { Invoke-Build * Add-Path.build.ps1 }
 task Format-Chart { Invoke-Build * Format-Chart.build.ps1 }
 task Format-High { Invoke-Build * Format-High.build.ps1 }
+task Invoke-Environment { Invoke-Build * Invoke-Environment.build.ps1 }
 task Submit-Gist { Invoke-Build * Submit-Gist.build.ps1 }

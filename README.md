@@ -10,6 +10,7 @@ They are designed and tested for PowerShell v2 and v3.
 * *Add-Path.ps1* - Adds a directory to an environment path variable once.
 * *Format-Chart.ps1* - Formats output as a table with the last chart column.
 * *Format-High.ps1* - Formats output by columns with optional custom item colors.
+* *Invoke-Environment.ps1* - Invokes a command and imports its environment variables.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
