@@ -13,6 +13,7 @@ They are designed and tested for PowerShell v2 and v3.
 * *Invoke-Environment.ps1* - Invokes a command and imports its environment variables.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
+* *Show-Color.ps1* - Shows all color combinations, color names and codes.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
 
