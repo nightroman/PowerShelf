@@ -16,7 +16,7 @@ $File = "$env:TEMP\Test-Invoke-Environment.cmd"
 Set-StrictMode -Version 2
 
 # called in the end, removes the temp file
-function Exit-BuildScript {
+function Exit-Build {
 	Remove-Item -LiteralPath $File -ErrorAction 0 -Verbose
 }
 

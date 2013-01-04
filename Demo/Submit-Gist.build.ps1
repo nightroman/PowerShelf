@@ -42,7 +42,7 @@ task SubmitNotChanged {
 	function Write-Host($Object, $ForegroundColor) { $res1.text = $Object }
 
 	### 1.
-	Write-BuildText Cyan "submit - yet no repo, do not keep"
+	Write-Build Cyan "submit - yet no repo, do not keep"
 	$res2 = (Submit-Gist.ps1 C:\ROM\APS\Markdown.tasks.ps1).Trim()
 
 	# repo must be removed
@@ -55,7 +55,7 @@ task SubmitNotChanged {
 	assert ($res2 = "Cloning into 'gist-1303971'...")
 
 	### 2.
-	Write-BuildText Cyan "submit - yet no repo, keep"
+	Write-Build Cyan "submit - yet no repo, keep"
 	$res1.text = ''
 	$res2 = Submit-Gist.ps1 C:\ROM\APS\Markdown.tasks.ps1 -Keep
 
@@ -69,7 +69,7 @@ task SubmitNotChanged {
 	assert ($res2 = "Cloning into 'gist-1303971'...")
 
 	### 3.
-	Write-BuildText Cyan "submit - repo exists, do not keep"
+	Write-Build Cyan "submit - repo exists, do not keep"
 	$res1.text = ''
 	$res2 = Submit-Gist.ps1 C:\ROM\APS\Markdown.tasks.ps1
 
@@ -83,6 +83,6 @@ task SubmitNotChanged {
 	assert (!$res2) # because it was not cloned
 
 	# remove repo
-	Write-BuildText Cyan "removing repo..."
+	Write-Build Cyan "removing repo..."
 	Remove-Item -LiteralPath $repo1303971 -Recurse -Force
 }

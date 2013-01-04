@@ -56,7 +56,7 @@ ${private:-Test} = $Test
 Remove-Variable Expression, Count, NoProgress, NoEscape, Test
 
 # title
-${private:-title} = "Measuring: {${-Expression}}"
+${private:-title} = "Measuring: {${-Expression}}" -replace '\s+', ' '
 if (!${-NoEscape}) {
 	${-title} = "[Escape] to return. ${-title}"
 }
@@ -76,10 +76,11 @@ for(${private:-n} = 1; ${-n} -le ${-Count}; ++${-n}) {
 	${-ticks} += (Measure-Command ${-Expression}).Ticks
 
 	# update progress each second
-	if (!${-NoProgress} -and ${-watch}.ElapsedMilliseconds -gt 1000) {
+	if (!${-NoProgress} -and ${-watch}.ElapsedMilliseconds -ge 1000) {
 		${-watch} = [System.Diagnostics.Stopwatch]::StartNew()
+		${private:-time} = ([timespan][int64](${-ticks} / ${-n})).TotalMilliseconds
 		${private:-diff} = [int]([System.Math]::Abs(${-ticks} - ${-ticks0}) / ${-ticks} * 10000) / 100
-		Write-Progress ${-title} "Average delta: ${-diff}%" -PercentComplete (100 * ${-n} / ${-Count})
+		Write-Progress ${-title} "${-n} Average: ${-time} Change: ${-diff}%" -PercentComplete (100 * ${-n} / ${-Count})
 	}
 
 	# check for escape
