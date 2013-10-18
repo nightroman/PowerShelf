@@ -5,9 +5,6 @@
 
 .Description
 	It uses the environment variable TEST.
-
-.Example
-	Invoke-Build * Invoke-Environment.build.ps1
 #>
 
 # used temp batch file

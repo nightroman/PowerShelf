@@ -5,9 +5,6 @@
 
 .Description
 	Task SubmitNotChanged is hardcoded for gist-1303971 C:\ROM\APS\Markdown.tasks.ps1
-
-.Example
-	Invoke-Build * Submit-Gist.build.ps1
 #>
 
 task MissingFile {
@@ -17,7 +14,7 @@ task MissingFile {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like "*\Submit-Gist.ps1 : Cannot find path 'MissingFile' because it does not exist.*At *\Submit-Gist.build.ps1:*")
+	assert ($err -like "*\Submit-Gist.ps1 : Cannot find path 'MissingFile' because it does not exist.*At *\Submit-Gist.test.ps1:*")
 }
 
 task NoGistId {
@@ -27,7 +24,7 @@ task NoGistId {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like "*\Submit-Gist.ps1 : Found no gist URL in '*\Submit-Gist.build.ps1'.*At *\Submit-Gist.build.ps1:*")
+	assert ($err -like "*\Submit-Gist.ps1 : Found no gist URL in '*\Submit-Gist.test.ps1'.*At *\Submit-Gist.test.ps1:*")
 }
 
 task SafeSubmitNotChanged @{SubmitNotChanged=1}
@@ -43,7 +40,7 @@ task SubmitNotChanged {
 
 	### 1.
 	Write-Build Cyan "submit - yet no repo, do not keep"
-	$res2 = (Submit-Gist.ps1 C:\ROM\APS\Markdown.tasks.ps1).Trim()
+	$res2 = Submit-Gist.ps1 C:\ROM\APS\Markdown.tasks.ps1 | .{process{$_.Trim()}}
 
 	# repo must be removed
 	assert (![IO.Directory]::Exists($repo1303971))

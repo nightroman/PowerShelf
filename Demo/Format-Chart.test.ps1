@@ -6,9 +6,6 @@
 .Notes
 	# Custom bar character for shadow effects
 	Get-Process | Format-Chart Name, WS -Bar ([char]9600) -Space ([char]9617)
-
-.Example
-	Invoke-Build * Format-Chart.build.ps1
 #>
 
 Set-StrictMode -Version 2
@@ -20,7 +17,7 @@ task MissingParameterProperty {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like '*\Format-Chart.ps1 : Missing parameter Property.*\Format-Chart.build.ps1:*')
+	assert ($err -like '*\Format-Chart.ps1 : Missing parameter Property.*\Format-Chart.test.ps1:*')
 }
 
 task UnknownArguments {
@@ -30,7 +27,7 @@ task UnknownArguments {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like '*\Format-Chart.ps1 : Unknown arguments: -Unknown foo*\Format-Chart.build.ps1:*')
+	assert ($err -like '*\Format-Chart.ps1 : Unknown arguments: -Unknown foo*\Format-Chart.test.ps1:*')
 }
 
 task NumericValues {
@@ -55,7 +52,7 @@ task NumericValues {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like "*\Format-Chart.ps1 : Property 'Data' should have numeric values.*\Format-Chart.build.ps1:*")
+	assert ($err -like "*\Format-Chart.ps1 : Property 'Data' should have numeric values.*\Format-Chart.test.ps1:*")
 }
 
 task InvalidMinimumMaximum {
@@ -65,7 +62,7 @@ task InvalidMinimumMaximum {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like "*\Format-Chart.ps1 : Invalid Minimum and Maximum: *, *.*\Format-Chart.build.ps1:*")
+	assert ($err -like "*\Format-Chart.ps1 : Invalid Minimum and Maximum: *, *.*\Format-Chart.test.ps1:*")
 }
 
 task NoData {

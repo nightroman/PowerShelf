@@ -2,9 +2,6 @@
 <#
 .Synopsis
 	Format-High.ps1 tests.
-
-.Example
-	Invoke-Build * Format-High.build.ps1
 #>
 
 Set-StrictMode -Version 2
@@ -30,7 +27,7 @@ task UnknownArguments {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like '*\Format-High.ps1 : Unknown arguments: -Unknown foo*\Format-High.build.ps1:*')
+	assert ($err -like '*\Format-High.ps1 : Unknown arguments: -Unknown foo*\Format-High.test.ps1:*')
 }
 
 task BadProperty {
@@ -40,7 +37,7 @@ task BadProperty {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like '*\Format-High.ps1 : Error on Property evaluation: Oops.*\Format-High.build.ps1:*')
+	assert ($err -like '*\Format-High.ps1 : Error on Property evaluation: Oops.*\Format-High.test.ps1:*')
 }
 
 task BadColorThrow {
@@ -50,7 +47,7 @@ task BadColorThrow {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like '*\Format-High.ps1 : Error on Color evaluation: Oops.*\Format-High.build.ps1:*')
+	assert ($err -like '*\Format-High.ps1 : Error on Color evaluation: Oops.*\Format-High.test.ps1:*')
 }
 
 task BadColorKeyButWorks {

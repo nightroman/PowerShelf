@@ -5,9 +5,6 @@
 
 .Description
 	Tests use the environment variable TEST.
-
-.Example
-	Invoke-Build * Add-Path.build.ps1
 #>
 
 Set-StrictMode -Version 2
@@ -19,7 +16,7 @@ task MissingDirectory {
 	}
 	catch { $err = $_ | Out-String }
 	$err
-	assert ($err -like "*\Add-Path.ps1 : Missing directory '*\MissingDirectory'.*At *\Add-Path.build.ps1:*")
+	assert ($err -like "*\Add-Path.ps1 : Missing directory '*\MissingDirectory'.*At *\Add-Path.test.ps1:*")
 }
 
 task AddTwiceNoSlash {
