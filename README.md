@@ -8,8 +8,10 @@ They are designed and tested for PowerShell v2 and v3.
 ## Script List
 
 * *Add-Path.ps1* - Adds a directory to an environment path variable once.
+* *Export-Binary.ps1* - Exports objects using binary serialization.
 * *Format-Chart.ps1* - Formats output as a table with the last chart column.
 * *Format-High.ps1* - Formats output by columns with optional custom item colors.
+* *Import-Binary.ps1* - Imports objects using binary serialization.
 * *Invoke-Environment.ps1* - Invokes a command and imports its environment variables.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Measure-Property.ps1* -  Counts properties grouped by names and types.
