@@ -64,10 +64,9 @@ if (!(Test-Path Variable:\__Debug)) {
 	$null = New-Variable -Name __Debug -Scope Global -Description 'Debugger data.' -Option Constant -Value @{
 		MaximumHistoryCount = 50
 		DebugContext = 0
-		LastAction = '?'
 		History = @()
 		Context = [ref]0
-		Action = $null
+		Action = '?'
 		e = $null
 	}
 }
@@ -96,7 +95,7 @@ function global:Invoke-DebuggerStop
 		$__Debug.Action = [Microsoft.VisualBasic.Interaction]::InputBox(
 			"Enter PowerShell or debug command`n? or h for help",
 			'Debugging',
-			$__Debug.LastAction
+			$__Debug.Action
 		).Trim()
 
 		### echo
@@ -110,14 +109,12 @@ function global:Invoke-DebuggerStop
 
 		### StepInto
 		if ($__Debug.Action -eq 's' -or $__Debug.Action -eq 'StepInto') {
-			$__Debug.LastAction = $__Debug.Action
 			$__Debug.e.ResumeAction = 'StepInto'
 			return
 		}
 
 		### StepOver
 		if ($__Debug.Action -eq 'v' -or $__Debug.Action -eq 'StepOver') {
-			$__Debug.LastAction = $__Debug.Action
 			$__Debug.e.ResumeAction = 'StepOver'
 			return
 		}
@@ -135,8 +132,12 @@ function global:Invoke-DebuggerStop
 		}
 
 		### stack
-		if ($__Debug.Action -eq 'k') {
-			Write-Host (Get-PSCallStack | Format-Table -AutoSize | Out-String)
+		if ($__Debug.Action -ceq 'k') {
+			Write-Host (Get-PSCallStack | Select-Object Command, Location, Arguments | Format-Table -AutoSize | Out-String)
+			continue
+		}
+		if ($__Debug.Action -ceq 'K') {
+			Write-Host (Get-PSCallStack | Format-List | Out-String)
 			continue
 		}
 
@@ -147,11 +148,9 @@ function global:Invoke-DebuggerStop
 
 		### <number>
 		if ([int]::TryParse($__Debug.Action, $__Debug.context)) {
+			Show-DebugContext $__Debug.context.Value
 			if ($__Debug.Action[0] -eq "+") {
 				$__Debug.DebugContext = $__Debug.context.Value
-			}
-			else {
-				Show-DebugContext $__Debug.context.Value
 			}
 			continue
 		}
@@ -166,11 +165,12 @@ function global:Invoke-DebuggerStop
   c, Continue  Continue operation (also on Cancel or empty).
   q, Quit      Stop operation and exit the debugger.
   ?, h         Display this help message.
-  r            Display PowerShell command history.
   k            Display call stack (Get-PSCallStack).
+  K            Display detailed call stack using Format-List.
   <number>     Show debug location in context of <number> lines.
   +<number>    Set location context preference to <number> lines.
   <command>    Invoke any PowerShell <command> and write its output.
+  r            Display last PowerShell commands invoked on debugging.
 
 '@
 			continue
