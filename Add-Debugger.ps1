@@ -7,12 +7,11 @@
 .Description
 	This script is designed for PowerShell hosts which do not provide their own
 	debuggers, e.g. Visual Studio NuGet console ("Package Manager Host"), the
-	default runspace host ("Default Host"), etc. The script should be called
-	once at any moment when debugging is needed.
+	default runspace host ("Default Host"), custom hosts, etc. This script
+	should be called once at any moment when debugging is needed.
 
-	The GUI input box is used for typing of PowerShell and debugger commands.
-	For output of command results, debug context script lines, and other data
-	the script uses Write-Host, built-in or fake.
+	The GUI input box is used for typing of debugger and PowerShell commands.
+	For output of these commands the script uses Write-Host, built-in or fake.
 
 	If the current runspace does not implement Write-Host or use of the cmdlet
 	is not suitable then a fake global function may be defined. For example:
@@ -64,14 +63,13 @@ if (!(Test-Path Variable:\__Debug)) {
 	$null = New-Variable -Name __Debug -Scope Global -Description 'Debugger data.' -Option Constant -Value @{
 		MaximumHistoryCount = 50
 		DebugContext = 0
-		History = @()
 		Context = [ref]0
+		History = @()
 		Action = '?'
-		e = $null
 	}
 }
 
-# Processes the debugger stop event. It does not use variables because
+# Processes DebuggerStop. It avoids variables because
 # - they make noise for debugging;
 # - they can conflict with other variables;
 # - they can be affected by commands invoked on debugging.
@@ -93,7 +91,7 @@ function global:Invoke-DebuggerStop
 	for(;;) {
 		### prompt
 		$__Debug.Action = [Microsoft.VisualBasic.Interaction]::InputBox(
-			"Enter PowerShell or debug command`n? or h for help",
+			"Enter PowerShell and debug commands.`nUse h or ? for help.",
 			'Debugging',
 			$__Debug.Action
 		).Trim()
@@ -125,6 +123,11 @@ function global:Invoke-DebuggerStop
 			return
 		}
 
+		### quit
+		if ($__Debug.Action -eq 'q' -or $__Debug.Action -eq 'Quit') {
+			throw (New-Object System.Management.Automation.PipelineStoppedException)
+		}
+
 		### history
 		if ($__Debug.Action -eq 'r') {
 			Write-Host ($__Debug.History | Out-String)
@@ -133,17 +136,12 @@ function global:Invoke-DebuggerStop
 
 		### stack
 		if ($__Debug.Action -ceq 'k') {
-			Write-Host (Get-PSCallStack | Select-Object Command, Location, Arguments | Format-Table -AutoSize | Out-String)
+			Write-Host (Get-PSCallStack | Format-Table Command, Location, Arguments -AutoSize | Out-String)
 			continue
 		}
 		if ($__Debug.Action -ceq 'K') {
 			Write-Host (Get-PSCallStack | Format-List | Out-String)
 			continue
-		}
-
-		### quit
-		if ($__Debug.Action -eq 'q' -or $__Debug.Action -eq 'Quit') {
-			throw (New-Object System.Management.Automation.PipelineStoppedException)
 		}
 
 		### <number>
@@ -164,30 +162,40 @@ function global:Invoke-DebuggerStop
   o, StepOut   Step out of the current function, script, etc.
   c, Continue  Continue operation (also on Cancel or empty).
   q, Quit      Stop operation and exit the debugger.
-  ?, h         Display this help message.
-  k            Display call stack (Get-PSCallStack).
-  K            Display detailed call stack using Format-List.
-  <number>     Show debug location in context of <number> lines.
-  +<number>    Set location context preference to <number> lines.
+  ?, h         Write this help message.
+  k            Write call stack (Get-PSCallStack).
+  K            Write detailed call stack using Format-List.
+
+  <n>          Write debug location in context of <n> lines.
+  +<n>         Set location context preference to <n> lines.
+  k <s> <n>    Write source at stack <s> in context of <n> lines.
+
+  r            Write last PowerShell commands invoked on debugging.
   <command>    Invoke any PowerShell <command> and write its output.
-  r            Display last PowerShell commands invoked on debugging.
 
 '@
 			continue
 		}
 
-		# parse command
-		try {
-			$__Debug.Action = [scriptblock]::Create($__Debug.Action)
-		}
-		catch {
-			Write-Host $_
-			continue
+		### stack <s> <n>
+		function k([Parameter()][int]$s, [int]$n) {
+			$stack = @(Get-PSCallStack)
+			if ($s -ge $stack.Count) {
+				Write-Host 'Out of range of the call stack.'
+				return
+			}
+			if (!$stack[$s].ScriptName) {
+				Write-Host 'The caller has no script file.'
+				return
+			}
+			if ($n -le 0) {$n = 5}
+			$markIndex = $stack[$s].ScriptLineNumber - 1
+			Show-FileContext $stack[$s].ScriptName ($markIndex - $n) (2 * $n + 1) $markIndex
 		}
 
-		# invoke command
+		### invoke command
 		try {
-			Write-Host (. $__Debug.Action | Out-String)
+			Write-Host (.([scriptblock]::Create($__Debug.Action)) | Out-String)
 			$__Debug.History = $__Debug.History | .{
 				process { if ($_ -ne $__Debug.Action) { $_ } }
 				end { $__Debug.Action }
@@ -195,7 +203,7 @@ function global:Invoke-DebuggerStop
 			Select-Object -Last $__Debug.MaximumHistoryCount
 		}
 		catch {
-			Write-Host ($_ | Out-String)
+			Write-Host $(if ($_.InvocationInfo.ScriptName -like '*Add-Debugger.ps1') {$_.ToString()} else {$_})
 		}
 	}
 }
@@ -206,11 +214,8 @@ function global:Show-DebugContext(
 	[int]$Context = 5
 )
 {
-	# invocation info
-	if (!($ii = $PSCmdlet.GetVariableValue('PSDebugContext'))) {return}
-	$ii = $PSDebugContext.InvocationInfo
-
 	# position message
+	$ii = $PSDebugContext.InvocationInfo
 	Write-Host $ii.PositionMessage.Trim()
 
 	# done?
@@ -219,13 +224,30 @@ function global:Show-DebugContext(
 		return
 	}
 
+	# show file context
+	$markIndex = $ii.ScriptLineNumber - 1
+	Show-FileContext $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
+}
+
+# Shows the specified file context.
+function global:Show-FileContext(
+	[Parameter()]
+	[string]$Path,
+	[int]$LineIndex,
+	[int]$LineCount,
+	[int]$MarkIndex
+)
+{
+	if ($LineIndex -lt 0) {
+		$LineCount += $lineIndex
+		$LineIndex = 0
+	}
+
 	# context lines
-	$lines = @(Get-Content -LiteralPath $file -TotalCount ($ii.ScriptLineNumber + $Context) -ErrorAction 0 -Force)
-	$lineIndex = $ii.ScriptLineNumber - 1
-	$index = [Math]::Max($lineIndex - $Context, 0)
+	$lines = @(Get-Content -LiteralPath $Path -TotalCount ($LineIndex + $LineCount) -ErrorAction 0 -Force)
 
 	# leading spaces
-	$space = ($lines[$index .. -1] | .{process{
+	$space = ($lines[$LineIndex .. -1] | .{process{
 		if ($_ -match '^(\s*)\S') {
 			($matches[1] -replace "`t", '    ').Length
 		}
@@ -234,12 +256,12 @@ function global:Show-DebugContext(
 	# show lines
 	Write-Host ''
 	do {
-		if (($line = $lines[$index]) -match '^(\s*)(\S.*)') {
+		if (($line = $lines[$LineIndex]) -match '^(\s*)(\S.*)') {
 			$line = ($matches[1] -replace "`t", '    ').Substring($space) + $matches[2]
 		}
-		$mark = if ($index -eq $lineIndex) {'=>'} else {'  '}
-		Write-Host ('{0,4} {1} {2}' -f ($index + 1), $mark, $line)
+		$mark = if ($LineIndex -eq $MarkIndex) {'=>'} else {'  '}
+		Write-Host ('{0,4} {1} {2}' -f ($LineIndex + 1), $mark, $line)
 	}
-	while(++$index -lt $lines.Length)
+	while(++$LineIndex -lt $lines.Length)
 	Write-Host ''
 }

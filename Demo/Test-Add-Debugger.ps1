@@ -16,6 +16,8 @@
 	debugger is not available. Add-Debugger.ps1 is simple and yet effective.
 #>
 
+Set-StrictMode -Version Latest
+
 # ensure empty debug log
 '' > $env:TEMP\debug.log
 
