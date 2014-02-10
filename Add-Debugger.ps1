@@ -5,12 +5,12 @@
 	Author: Roman Kuzmin
 
 .Description
-	This script is designed for PowerShell hosts which do not provide their own
-	debuggers, e.g. Visual Studio NuGet console ("Package Manager Host"), the
-	default runspace host ("Default Host"), custom hosts, etc. This script
-	should be called once at any moment when debugging is needed.
+	This script is designed for PowerShell runspaces which do not have their
+	own debuggers, e.g. Visual Studio NuGet console ("Package Manager Host"),
+	the default runspace host ("Default Host"), and etc. It should be called
+	from such a runspace once at any moment when debugging is needed.
 
-	The GUI input box is used for typing of debugger and PowerShell commands.
+	The GUI input box is used for typing of PowerShell and debugger commands.
 	For output of these commands the script uses Write-Host, built-in or fake.
 
 	If the current runspace does not implement Write-Host or use of the cmdlet
@@ -31,20 +31,20 @@
 
 .Example
 	>
-	# Enable debugging on errors in a script invoked with the default host
+	# Debugging on errors in a script invoked in a bare runspace
 
 	$ps = [PowerShell]::Create()
 	$null = $ps.AddScript({
-		# Debugger
+		# debugger
 		Add-Debugger.ps1
 
-		# Fake Write-Host
+		# fake Write-Host
 		function Write-Host { $args >> C:\TEMP\debug.log }
 
-		# Enable debugging on terminating errors
+		# enable debugging on terminating errors
 		$null = Set-PSBreakpoint -Variable StackTrace -Mode Write
 
-		# The main code; the debugger dialog is shown on problems
+		# from now on the debugger dialog is shown on problems
 		...
 	})
 	$ps.Invoke()
@@ -58,8 +58,7 @@ if (!(Test-Path Variable:\__Debug)) {
 	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({ . Invoke-DebuggerStop $_ })
 	Add-Type -AssemblyName Microsoft.VisualBasic
 
-	# Debugger data. MaximumHistoryCount and DebugContext can be changed after
-	# calling the script. Other properties are internal.
+	# Debugger data. MaximumHistoryCount and DebugContext can be changed after calling the script.
 	$null = New-Variable -Name __Debug -Scope Global -Description 'Debugger data.' -Option Constant -Value @{
 		MaximumHistoryCount = 50
 		DebugContext = 0
@@ -69,26 +68,23 @@ if (!(Test-Path Variable:\__Debug)) {
 	}
 }
 
-# Processes DebuggerStop. It avoids variables because
-# - they make noise for debugging;
-# - they can conflict with other variables;
-# - they can be affected by commands invoked on debugging.
+# Processes the DebuggerStop event.
 function global:Invoke-DebuggerStop
 {
 	# event arguments
 	$__Debug.e = $args[0]
 
 	# write stop reason
-	if ($PSDebugContext.Breakpoints.Count) {
-		Write-Host ('Hit ' + $($PSDebugContext.Breakpoints | .{process{"$_"}} | Out-String).Trim())
+	if ($__Debug.e.Breakpoints) {
+		Write-Host ('Hit ' + $($__Debug.e.Breakpoints | .{process{"$_"}} | Out-String).Trim())
 	}
 
 	# write debug location
-	Show-DebugContext $__Debug.DebugContext
+	Write-InvocationContext $__Debug.e.InvocationInfo $__Debug.DebugContext
 	Write-Host ''
 
 	# REPL
-	for(;;) {
+	for() {
 		### prompt
 		$__Debug.Action = [Microsoft.VisualBasic.Interaction]::InputBox(
 			"Enter PowerShell and debug commands.`nUse h or ? for help.",
@@ -145,10 +141,10 @@ function global:Invoke-DebuggerStop
 		}
 
 		### <number>
-		if ([int]::TryParse($__Debug.Action, $__Debug.context)) {
-			Show-DebugContext $__Debug.context.Value
+		if ([int]::TryParse($__Debug.Action, $__Debug.Context)) {
+			Write-InvocationContext $__Debug.e.InvocationInfo $__Debug.Context.Value
 			if ($__Debug.Action[0] -eq "+") {
-				$__Debug.DebugContext = $__Debug.context.Value
+				$__Debug.DebugContext = $__Debug.Context.Value
 			}
 			continue
 		}
@@ -190,47 +186,43 @@ function global:Invoke-DebuggerStop
 			}
 			if ($n -le 0) {$n = 5}
 			$markIndex = $stack[$s].ScriptLineNumber - 1
-			Show-FileContext $stack[$s].ScriptName ($markIndex - $n) (2 * $n + 1) $markIndex
+			Write-FileContext $stack[$s].ScriptName ($markIndex - $n) (2 * $n + 1) $markIndex
 		}
 
 		### invoke command
 		try {
 			Write-Host (.([scriptblock]::Create($__Debug.Action)) | Out-String)
-			$__Debug.History = $__Debug.History | .{
-				process { if ($_ -ne $__Debug.Action) { $_ } }
-				end { $__Debug.Action }
-			} |
+			$__Debug.History = $__Debug.History |
+			.{process{ if ($_ -ne $__Debug.Action) {$_} } end { $__Debug.Action }} |
 			Select-Object -Last $__Debug.MaximumHistoryCount
 		}
 		catch {
-			Write-Host $(if ($_.InvocationInfo.ScriptName -like '*Add-Debugger.ps1') {$_.ToString()} else {$_})
+			Write-Host $(if ($_.InvocationInfo.ScriptName -like '*\Add-Debugger.ps1') {$_.ToString()} else {$_})
 		}
 	}
 }
 
-# Shows source lines of the debug context.
-function global:Show-DebugContext(
+# Writes the invocation info source lines.
+function global:Write-InvocationContext(
 	[Parameter()]
+	$InvocationInfo,
 	[int]$Context = 5
 )
 {
 	# position message
-	$ii = $PSDebugContext.InvocationInfo
-	Write-Host $ii.PositionMessage.Trim()
+	Write-Host $InvocationInfo.PositionMessage.Trim()
 
 	# done?
-	$file = $ii.ScriptName
-	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {
-		return
-	}
+	$file = $InvocationInfo.ScriptName
+	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {return}
 
 	# show file context
-	$markIndex = $ii.ScriptLineNumber - 1
-	Show-FileContext $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
+	$markIndex = $InvocationInfo.ScriptLineNumber - 1
+	Write-FileContext $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
 }
 
-# Shows the specified file context.
-function global:Show-FileContext(
+# Writes the specified file context.
+function global:Write-FileContext(
 	[Parameter()]
 	[string]$Path,
 	[int]$LineIndex,

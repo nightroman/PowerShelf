@@ -21,6 +21,14 @@ Set-StrictMode -Version Latest
 # ensure empty debug log
 '' > $env:TEMP\debug.log
 
+# make a script module
+@'
+# test module
+function TestModule1 {
+	'Hi, TestModule1'
+}
+'@ > $env:TEMP\debug.psm1
+
 # invoke with debugger asynchronously
 $ps = [PowerShell]::Create()
 $null = $ps.AddScript({
@@ -35,6 +43,11 @@ $null = $ps.AddScript({
 
 	# invoke with debugger
 	Test-Debugger.ps1
+
+	# test script module
+	Set-PSBreakpoint -Command TestModule1
+	Import-Module $env:TEMP\debug.psm1
+	TestModule1
 })
 $null = $ps.BeginInvoke()
 
@@ -44,5 +57,5 @@ try {
 }
 finally {
 	# remove debug on [Ctrl-C]
-	Remove-Item $env:TEMP\debug.log -ErrorAction 0
+	Remove-Item $env:TEMP\debug.log, $env:TEMP\debug.psm1 -ErrorAction 0
 }
