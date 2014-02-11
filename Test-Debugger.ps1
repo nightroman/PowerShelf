@@ -13,17 +13,30 @@
 	in order to see how the debugger works when breakpoints are hit. In order
 	to remove test breakpoints invoke Test-Debugger.ps1 -RemoveBreakpoints.
 
-	With built-in debuggers it is ready to use, e.g. in
+	With built-in debuggers it is ready to use, e.g. with
 	- ConsoleHost
 	- FarHost
 	- Windows PowerShell ISE Host
 
-	Use it with a custom debugger (Add-Debugger.ps1) in
-	- Default Host
-	- Package Manager Host
+	Use it with a custom debugger, e.g. Add-Debugger.ps1, with
+	- Default Host (simple calls of PowerShell from .NET)
+	- Package Manager Host (Visual Studio NuGet console)
 
 .Parameter RemoveBreakpoints
 		Tells to remove breakpoints set for this script.
+
+.Example
+	>
+	# How to use in NuGet console which does not have own debugger
+
+	# add the debugger
+	Add-Debugger.ps1
+
+	# set test breakpoints
+	Test-Debugger.ps1
+
+	# run with breakpoints
+	Test-Debugger.ps1
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -61,6 +74,9 @@ if (!$breakpoints) {
 	# variable breakpoint on reading and writing
 	$null = Set-PSBreakpoint -Script $script -Variable varReadWrite -Mode ReadWrite
 
+	# special handy breakpoint enables debugging of terminating errors
+	$null = Set-PSBreakpoint -Script $script -Variable StackTrace -Mode Write
+
 	# special breakpoint with action without breaking (for logging, diagnostics and etc.)
 	# NOTE: mind infinite recursion (stack overflow) if the action accesses the same variables
 	$null = Set-PSBreakpoint -Script $script -Variable 'varRead', 'varWrite', 'varReadWrite' -Mode ReadWrite -Action {
@@ -95,6 +111,13 @@ function TestFunction2 { # you have stepped into TestFunction2
 
 # test a command breakpoint
 TestFunction1 # in v2 it stops at this line, in v3 at `function TestFunction1 {`
+
+# non terminating error does not enter debugging mode
+Get-Item missing -ErrorAction Continue
+
+# terminating error triggers the StackTrace breakpoint
+try { Get-Item missing -ErrorAction Stop }
+catch { Write-Host $_ }
 
 # to change the variable in debugger
 [int]$toWrite = 0 # change me after

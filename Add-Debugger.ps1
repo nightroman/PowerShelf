@@ -55,7 +55,7 @@
 
 # Add the stop handler and data once
 if (!(Test-Path Variable:\__Debug)) {
-	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({ . Invoke-DebuggerStop $_ })
+	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({ . Invoke-DebuggerStop })
 	Add-Type -AssemblyName Microsoft.VisualBasic
 
 	# Debugger data. MaximumHistoryCount and DebugContext can be changed after calling the script.
@@ -71,16 +71,18 @@ if (!(Test-Path Variable:\__Debug)) {
 # Processes the DebuggerStop event.
 function global:Invoke-DebuggerStop
 {
-	# event arguments
-	$__Debug.e = $args[0]
-
 	# write stop reason
-	if ($__Debug.e.Breakpoints) {
-		Write-Host ('Hit ' + $($__Debug.e.Breakpoints | .{process{"$_"}} | Out-String).Trim())
+	if ($_.Breakpoints) {
+		if ($_.Breakpoints[0] -is [System.Management.Automation.VariableBreakpoint] -and $_.Breakpoints[0].Variable -eq 'StackTrace') {
+			Write-Host 'TERMINATING ERROR BREAKPOINT'
+		}
+		else {
+			Write-Host ($_.Breakpoints | &{process{"Hit $_"}} | Out-String).Trim()
+		}
 	}
 
 	# write debug location
-	Write-InvocationContext $__Debug.e.InvocationInfo $__Debug.DebugContext
+	Write-InvocationContext $_.InvocationInfo $__Debug.DebugContext
 	Write-Host ''
 
 	# REPL
@@ -88,7 +90,7 @@ function global:Invoke-DebuggerStop
 		### prompt
 		$__Debug.Action = [Microsoft.VisualBasic.Interaction]::InputBox(
 			"Enter PowerShell and debug commands.`nUse h or ? for help.",
-			'Debugging',
+			'Debugger',
 			$__Debug.Action
 		).Trim()
 
@@ -97,31 +99,32 @@ function global:Invoke-DebuggerStop
 
 		### continue
 		if (!$__Debug.Action -or $__Debug.Action -eq 'c' -or $__Debug.Action -eq 'Continue') {
-			$__Debug.e.ResumeAction = 'Continue'
+			$_.ResumeAction = 'Continue'
 			return
 		}
 
 		### StepInto
 		if ($__Debug.Action -eq 's' -or $__Debug.Action -eq 'StepInto') {
-			$__Debug.e.ResumeAction = 'StepInto'
+			$_.ResumeAction = 'StepInto'
 			return
 		}
 
 		### StepOver
 		if ($__Debug.Action -eq 'v' -or $__Debug.Action -eq 'StepOver') {
-			$__Debug.e.ResumeAction = 'StepOver'
+			$_.ResumeAction = 'StepOver'
 			return
 		}
 
 		### StepOut
 		if ($__Debug.Action -eq 'o' -or $__Debug.Action -eq 'StepOut') {
-			$__Debug.e.ResumeAction = 'StepOut'
+			$_.ResumeAction = 'StepOut'
 			return
 		}
 
 		### quit
 		if ($__Debug.Action -eq 'q' -or $__Debug.Action -eq 'Quit') {
-			throw (New-Object System.Management.Automation.PipelineStoppedException)
+			$_.ResumeAction = 'Stop'
+			return
 		}
 
 		### history
@@ -142,7 +145,7 @@ function global:Invoke-DebuggerStop
 
 		### <number>
 		if ([int]::TryParse($__Debug.Action, $__Debug.Context)) {
-			Write-InvocationContext $__Debug.e.InvocationInfo $__Debug.Context.Value
+			Write-InvocationContext $_.InvocationInfo $__Debug.Context.Value
 			if ($__Debug.Action[0] -eq "+") {
 				$__Debug.DebugContext = $__Debug.Context.Value
 			}
