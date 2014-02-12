@@ -9,7 +9,7 @@
 
 task Terminating.NonTerminating.TurningOff {
 	# enable debugging on errors
-	Debug-Error { $script:log = 'Failed' }
+	Debug-Error -Action { $script:log = 'Failed' }
 
 	# use the try block to disable debugging in any case
 	try {

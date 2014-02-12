@@ -15,12 +15,13 @@
 
 	With built-in debuggers it is ready to use, e.g. with
 	- ConsoleHost
-	- FarHost
 	- Windows PowerShell ISE Host
+	- FarHost (in the main session)
 
 	Use it with a custom debugger, e.g. Add-Debugger.ps1, with
 	- Default Host (simple calls of PowerShell from .NET)
 	- Package Manager Host (Visual Studio NuGet console)
+	- FarHost (editor console with a local session)
 
 .Parameter RemoveBreakpoints
 		Tells to remove breakpoints set for this script.
@@ -29,14 +30,12 @@
 	>
 	# How to use in NuGet console which does not have own debugger
 
-	# add the debugger
+	# add debugger
 	Add-Debugger.ps1
 
-	# set test breakpoints
-	Test-Debugger.ps1
-
-	# run with breakpoints
-	Test-Debugger.ps1
+	# test breakpoints
+	Test-Debugger.ps1 # set
+	Test-Debugger.ps1 # run
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -56,7 +55,7 @@ $breakpoints = Get-PSBreakpoint | Where-Object { $_.Script -eq $script }
 ### remove breakpoints and exit
 if ($RemoveBreakpoints) {
 	$breakpoints | Remove-PSBreakpoint
-	Write-Host "Removed $($breakpoints.Count) breakpoints."
+	"Removed $($breakpoints.Count) breakpoints."
 	return
 }
 
@@ -83,12 +82,7 @@ if (!$breakpoints) {
 		++$script:VarAccessCount
 	}
 
-	Write-Host @'
-
-Test breakpoints have been set.
-Invoke the script again to test.
-
-'@
+	'Test breakpoints are set, invoke the script again to test.'
 	return
 }
 
@@ -113,19 +107,19 @@ function TestFunction2 { # you have stepped into TestFunction2
 TestFunction1 # in v2 it stops at this line, in v3 at `function TestFunction1 {`
 
 # non terminating error does not enter debugging mode
-Get-Item missing -ErrorAction Continue
+Write-Error 'This is non terminating demo error.' -ErrorAction Continue
 
 # terminating error triggers the StackTrace breakpoint
-try { Get-Item missing -ErrorAction Stop }
-catch { Write-Host $_ }
+try { Write-Error 'This is terminating demo error.' -ErrorAction Stop }
+catch { $_ }
 
 # to change the variable in debugger
 [int]$toWrite = 0 # change me after
 if ($toWrite -le 0) {
-	Write-Host "Nothing to write."
+	"Nothing to write."
 }
 else {
-	Write-Host "Writing"
+	"Writing..."
 	1..$toWrite
 }
 
@@ -141,10 +135,5 @@ $_ = $varWrite # no break
 $varReadWrite = 3 # break on writing
 $_ = $varReadWrite # break on reading
 
-# counter value is calculated by the breakpoint action
-Write-Host @"
-
-Testing completed.
-Watched variables have been accessed $($script:VarAccessCount) times.
-
-"@
+# the counter was updated by the breakpoint action
+"Watched variables have been accessed $($script:VarAccessCount) times."

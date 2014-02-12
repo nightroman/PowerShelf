@@ -1,61 +1,40 @@
 
 <#
 .Synopsis
-	Tests Add-Debugger.ps1
+	Tests Add-Debugger.ps1 in a bare runspace with default host.
 
 .Description
-	Requires Add-Debugger.ps1 and Test-Debugger.ps1 in the path.
-
-	This test is interactive. When it is invoked the debugger dialog appears.
-	The main console is used for watching the debug output in the log file.
-	Type debugger commands and watch the output. The test never ends due to
-	Get-Content -Wait. Press [Ctrl-C] when you are done in order to exit.
-
-.Notes
-	In fact, this test shows how to debug PowerShell code when the built-in
-	debugger is not available. Add-Debugger.ps1 is simple and yet effective.
+	Requires Add-Debugger.ps1 and Test-Debugger.ps1 in the path. This test is
+	interactive. When it is invoked the debugger dialog and a separate console
+	with debugger output appear together (in random z-order). Enter PowerShell
+	and debug commands in the dialog and watch the results in the console.
 #>
 
-Set-StrictMode -Version Latest
-
-# ensure empty debug log
-'' > $env:TEMP\debug.log
-
-# make a script module
+# make a mini script module to be tested as well
 @'
 # test module
 function TestModule1 {
-	'Hi, TestModule1'
+	'In TestModule1'
 }
 '@ > $env:TEMP\debug.psm1
 
-# invoke with debugger asynchronously
+# test debugging in a bare runspace
 $ps = [PowerShell]::Create()
 $null = $ps.AddScript({
-	# debugger
-	Add-Debugger.ps1
+	# add debugger
+	Add-Debugger.ps1 $env:TEMP\debug.log
 
-	# fake Write-Host
-	function Write-Host { $args >> $env:TEMP\debug.log }
+	# test breakpoints
+	Test-Debugger.ps1 # set
+	Test-Debugger.ps1 # run
 
-	# set test breakpoints
-	Test-Debugger.ps1
-
-	# invoke with debugger
-	Test-Debugger.ps1
-
-	# test script module
-	Set-PSBreakpoint -Command TestModule1
+	# test a script module breakpoint
+	$null = Set-PSBreakpoint -Command TestModule1
 	Import-Module $env:TEMP\debug.psm1
 	TestModule1
 })
-$null = $ps.BeginInvoke()
+$ps.Invoke()
+$ps.Streams.Error
 
-# watch debug log
-try {
-	Get-Content $env:TEMP\debug.log -Wait
-}
-finally {
-	# remove debug on [Ctrl-C]
-	Remove-Item $env:TEMP\debug.log, $env:TEMP\debug.psm1 -ErrorAction 0
-}
+# remove temp files
+Remove-Item $env:TEMP\debug.log, $env:TEMP\debug.psm1 -ErrorAction 0

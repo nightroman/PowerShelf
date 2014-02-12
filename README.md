@@ -7,7 +7,7 @@ They are designed and tested for PowerShell v2 and v3.
 
 ## Script List
 
-* *Add-Debugger.ps1* - Adds a simple debugger to PowerShell.
+* *Add-Debugger.ps1* - Adds a script debugger to PowerShell.
 * *Add-Path.ps1* - Adds a directory to an environment path variable once.
 * *Debug-Error.ps1* - Enables debugging on terminating errors.
 * *Export-Binary.ps1* - Exports objects using binary serialization.
@@ -23,7 +23,8 @@ They are designed and tested for PowerShell v2 and v3.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
 
-The directory *Demo* contains demo scripts and tests invoked by [*Invoke-Build.ps1*](https://github.com/nightroman/Invoke-Build).
+The directory *Demo* contains demo scripts, interactive tests, and tests
+invoked by [*Invoke-Build.ps1*](https://github.com/nightroman/Invoke-Build).
 
 ## Get Scripts
 

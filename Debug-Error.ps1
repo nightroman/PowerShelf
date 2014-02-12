@@ -13,11 +13,15 @@
 
 	Use the switch Off in order to turn debugging on errors off.
 
+.Parameter Script
+		Sets a breakpoint in each of the specified script files.
+		See: Get-Help Set-PSBreakpoint -Parameter Script
 .Parameter Action
 		Specifies commands that run at each breakpoint.
 		See: Get-Help Set-PSBreakpoint -Parameter Action
 .Parameter Off
-		Tells to turn debugging on errors off.
+		Tells to turn debugging on errors off, i.e. remove all StackTrace
+		breakpoints. Other parameters are ignored.
 
 .Inputs
 	None
@@ -28,8 +32,9 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
-[CmdletBinding()]
 param(
+	[Parameter()]
+	[string[]]$Script,
 	[scriptblock]$Action,
 	[switch]$Off
 )
@@ -37,5 +42,10 @@ param(
 Get-PSBreakpoint -Variable StackTrace | Remove-PSBreakpoint
 
 if (!$Off) {
-	$null = Set-PSBreakpoint -Variable StackTrace -Mode Write -Action $Action
+	if ($Script) {
+		$null = Set-PSBreakpoint -Variable StackTrace -Mode Write -Action $Action -Script $Script
+	}
+	else {
+		$null = Set-PSBreakpoint -Variable StackTrace -Mode Write -Action $Action
+	}
 }
