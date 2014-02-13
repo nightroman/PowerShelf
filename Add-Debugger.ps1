@@ -11,7 +11,8 @@
 	in such a runspace once at any moment when debugging is needed.
 
 	The GUI input box is used for typing of PowerShell and debugger commands.
-	For output of these commands the script uses Write-Host or a file.
+	For output of these commands the script uses Write-Host or a file with an
+	external viewer for watching the output.
 
 .Parameter FilePath
 		Specifies the path to the output file. It is used when Write-Host is
@@ -128,7 +129,7 @@ function global:Invoke-DebuggerStop
 			return
 		}
 
-		### quit
+		### Quit
 		if ($__Debugger.Action -eq 'q' -or $__Debugger.Action -eq 'Quit') {
 			$__Debugger.e.ResumeAction = 'Stop'
 			return
@@ -191,16 +192,18 @@ function global:Invoke-DebuggerStop
 				Write-Debugger 'Out of range of the call stack.'
 				return
 			}
-			if (!$stack[$s].ScriptName) {
+			$1 = $stack[$s]
+			if (!($file = $1.ScriptName)) {
 				Write-Debugger 'The caller has no script file.'
 				return
 			}
 			if ($n -le 0) {$n = 5}
-			$markIndex = $stack[$s].ScriptLineNumber - 1
-			Write-DebuggerContent $stack[$s].ScriptName ($markIndex - $n) (2 * $n + 1) $markIndex
+			$markIndex = $1.ScriptLineNumber - 1
+			Write-Debugger $file
+			Write-DebuggerContent $file ($markIndex - $n) (2 * $n + 1) $markIndex
 		}
 
-		### stack <s> <n>
+		### watch
 		function w {
 			if ($__Debugger.Watch) {
 				& $__Debugger.Watch $__Debugger.FilePath
@@ -251,14 +254,14 @@ function global:Write-DebuggerCurrent(
 	[int]$Context = 5
 )
 {
-	# position message
+	# write position message
 	Write-Debugger $InvocationInfo.PositionMessage.Trim()
 
 	# done?
 	$file = $InvocationInfo.ScriptName
 	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {return}
 
-	# show file context
+	# write file content
 	$markIndex = $InvocationInfo.ScriptLineNumber - 1
 	Write-DebuggerContent $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
 }
@@ -272,12 +275,13 @@ function global:Write-DebuggerContent(
 	[int]$MarkIndex
 )
 {
+	# correct negative start
 	if ($LineIndex -lt 0) {
 		$LineCount += $lineIndex
 		$LineIndex = 0
 	}
 
-	# context lines
+	# content lines
 	$lines = @(Get-Content -LiteralPath $Path -TotalCount ($LineIndex + $LineCount) -ErrorAction 0 -Force)
 
 	# leading spaces
@@ -287,7 +291,7 @@ function global:Write-DebuggerContent(
 		}
 	}} | Measure-Object -Minimum).Minimum
 
-	# show lines
+	# write lines with a mark
 	Write-Debugger ''
 	do {
 		if (($line = $lines[$LineIndex]) -match '^(\s*)(\S.*)') {

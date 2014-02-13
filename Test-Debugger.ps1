@@ -94,13 +94,13 @@ $script:VarAccessCount = 0
 # a command breakpoint is set for this function
 function TestFunction1 {
 	TestFunction2 42 text @{data=3.14} # try to step into, over, out
-	$_ = 1 # dummy
+	'In TestFunction1'
 }
 
 # function to test stepping into from TestFunction1
 function TestFunction2 { # you have stepped into TestFunction2
 	param($int, $text, $data)
-	$_ = 1 # dummy
+	'In TestFunction2'
 }
 
 # test a command breakpoint
