@@ -8,19 +8,15 @@
 	This script is designed for PowerShell runspaces which do not have their
 	own debuggers, e.g. Visual Studio NuGet console ("Package Manager Host"),
 	the default runspace host ("Default Host"), and etc. It should be called
-	in such a runspace once at any moment when debugging is needed.
+	from such a runspace once at any moment when debugging is needed.
 
 	The GUI input box is used for typing of PowerShell and debugger commands.
-	For output of these commands the script uses Write-Host or a file with an
-	external viewer for watching the output.
+	For output of these commands the script uses Write-Host or a file with a
+	separate console started for watching the output.
 
-.Parameter FilePath
-		Specifies the path to the output file. It is used when Write-Host is
-		not available or suitable for output during debugging.
-.Parameter Watch
-		Starts an external application used to watch the debug output. It is a
-		script block which first argument is the output file path. By default
-		it starts a separate PowerShell console with Get-Content -Wait.
+.Parameter Path
+		Specifies the output file used instead of Write-Host.
+		A separate console is opened for watching the output.
 
 .Inputs
 	None
@@ -41,8 +37,8 @@
 		# enable debugging on terminating errors
 		$null = Set-PSBreakpoint -Variable StackTrace -Mode Write
 
-		# from now on the debugger dialog is shown on problems
-		# and a separate PowerShell console with debug output
+		# from now on the debugger dialog is shown on failures
+		# and a separate PowerShell output console is started
 		...
 	})
 	$ps.Invoke() # or InvokeAsync()
@@ -53,8 +49,7 @@
 
 param(
 	[Parameter()]
-	[string]$FilePath,
-	[scriptblock]$Watch = {Start-Process PowerShell.exe -ArgumentList "-NoProfile Get-Content '$($args[0])' -Wait -ErrorAction 0"}
+	[string]$Path
 )
 
 # Add the stop handler and data once
@@ -62,7 +57,7 @@ if (!(Test-Path Variable:\__Debugger)) {
 	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({ . Invoke-DebuggerStop })
 	Add-Type -AssemblyName Microsoft.VisualBasic
 
-	# Debugger data. MaximumHistoryCount and DebugContext can be changed after calling the script.
+	# Debugger data. MaximumHistoryCount and DebugContext can be customized.
 	$null = New-Variable -Name __Debugger -Scope Global -Description 'Debugger data.' -Option Constant -Value @{
 		MaximumHistoryCount = 50
 		DebugContext = 0
@@ -72,7 +67,92 @@ if (!(Test-Path Variable:\__Debugger)) {
 	}
 }
 
-# Processes the DebuggerStop event.
+# Writes the debugger output.
+if ($Path) {
+	$__Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+	$__Debugger.Watch = $true
+	function global:Write-Debugger($Object)
+	{
+		$Object >> $__Debugger.Path
+		if ($__Debugger.Watch) {
+			$__Debugger.Watch = $false
+			Watch-Debugger $__Debugger.Path
+		}
+	}
+}
+else {
+	$__Debugger.Path = $null
+	$__Debugger.Watch = $false
+	function global:Write-Debugger($Object)
+	{
+		Write-Host $Object
+	}
+}
+
+# Starts an external viewer to watch output.
+function global:Watch-Debugger($Path)
+{
+	Start-Process PowerShell.exe -ArgumentList "-NoProfile Get-Content '$Path' -Wait"
+}
+
+# Writes the current invocation info.
+function global:Write-DebuggerInfo(
+	[Parameter()]
+	$InvocationInfo,
+	[int]$Context = 5
+)
+{
+	# write position message
+	Write-Debugger $InvocationInfo.PositionMessage.Trim()
+
+	# done?
+	$file = $InvocationInfo.ScriptName
+	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {return}
+
+	# write file content
+	$markIndex = $InvocationInfo.ScriptLineNumber - 1
+	Write-DebuggerFile $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
+}
+
+# Writes the specified script content.
+function global:Write-DebuggerFile(
+	[Parameter()]
+	[string]$Path,
+	[int]$LineIndex,
+	[int]$LineCount,
+	[int]$MarkIndex
+)
+{
+	# correct negative start
+	if ($LineIndex -lt 0) {
+		$LineCount += $lineIndex
+		$LineIndex = 0
+	}
+
+	# content lines
+	$lines = @(Get-Content -LiteralPath $Path -TotalCount ($LineIndex + $LineCount) -ErrorAction 0 -Force)
+
+	# leading spaces
+	$space = ($lines[$LineIndex .. -1] | .{process{
+		if ($_ -match '^(\s*)\S') {
+			($matches[1] -replace "`t", '    ').Length
+		}
+	}} | Measure-Object -Minimum).Minimum
+
+	# write lines with a mark
+	Write-Debugger ''
+	do {
+		if (($line = $lines[$LineIndex]) -match '^(\s*)(\S.*)') {
+			$line = ($matches[1] -replace "`t", '    ').Substring($space) + $matches[2]
+		}
+		$mark = if ($LineIndex -eq $MarkIndex) {'=>'} else {'  '}
+		Write-Debugger ('{0,4} {1} {2}' -f ($LineIndex + 1), $mark, $line)
+	}
+	while(++$LineIndex -lt $lines.Length)
+	Write-Debugger ''
+}
+
+# Processes DebuggerStop events.
 function global:Invoke-DebuggerStop
 {
 	# write breakpoints
@@ -89,7 +169,7 @@ function global:Invoke-DebuggerStop
 	}}
 
 	# write debug location
-	Write-DebuggerCurrent $_.InvocationInfo $__Debugger.DebugContext
+	Write-DebuggerInfo $_.InvocationInfo $__Debugger.DebugContext
 	Write-Debugger ''
 
 	# REPL
@@ -153,7 +233,7 @@ function global:Invoke-DebuggerStop
 
 		### <number>
 		if ([int]::TryParse($__Debugger.Action, $__Debugger.Context)) {
-			Write-DebuggerCurrent $__Debugger.e.InvocationInfo $__Debugger.Context.Value
+			Write-DebuggerInfo $__Debugger.e.InvocationInfo $__Debugger.Context.Value
 			if ($__Debugger.Action[0] -eq "+") {
 				$__Debugger.DebugContext = $__Debugger.Context.Value
 			}
@@ -177,7 +257,7 @@ function global:Invoke-DebuggerStop
   +<n>         Set location context preference to <n> lines.
   k <s> <n>    Write source at stack <s> in context of <n> lines.
 
-  w            Restart watching of the output file.
+  w            Restart watching the debugger output file.
   r            Write last PowerShell commands invoked on debugging.
   <command>    Invoke any PowerShell <command> and write its output.
 
@@ -200,13 +280,13 @@ function global:Invoke-DebuggerStop
 			if ($n -le 0) {$n = 5}
 			$markIndex = $1.ScriptLineNumber - 1
 			Write-Debugger $file
-			Write-DebuggerContent $file ($markIndex - $n) (2 * $n + 1) $markIndex
+			Write-DebuggerFile $file ($markIndex - $n) (2 * $n + 1) $markIndex
 		}
 
 		### watch
 		function w {
-			if ($__Debugger.Watch) {
-				& $__Debugger.Watch $__Debugger.FilePath
+			if ($__Debugger.Path) {
+				Watch-Debugger $__Debugger.Path
 			}
 		}
 
@@ -221,85 +301,4 @@ function global:Invoke-DebuggerStop
 			Write-Debugger $(if ($_.InvocationInfo.ScriptName -like '*\Add-Debugger.ps1') {$_.ToString()} else {$_})
 		}
 	}
-}
-
-# Writes the debugger output.
-if ($FilePath) {
-	$__Debugger.FilePath = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($FilePath)
-	$__Debugger.ToWatch = $true
-	$__Debugger.Watch = $Watch
-	function global:Write-Debugger($Object)
-	{
-		$Object >> $__Debugger.FilePath
-		if ($__Debugger.ToWatch -and $__Debugger.Watch) {
-			$__Debugger.ToWatch = $false
-			& $__Debugger.Watch $__Debugger.FilePath
-		}
-	}
-}
-else {
-	$__Debugger.FilePath = $null
-	$__Debugger.ToWatch = $false
-	$__Debugger.Watch = $null
-	function global:Write-Debugger($Object)
-	{
-		Write-Host $Object
-	}
-}
-
-# Writes the current file content.
-function global:Write-DebuggerCurrent(
-	[Parameter()]
-	$InvocationInfo,
-	[int]$Context = 5
-)
-{
-	# write position message
-	Write-Debugger $InvocationInfo.PositionMessage.Trim()
-
-	# done?
-	$file = $InvocationInfo.ScriptName
-	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {return}
-
-	# write file content
-	$markIndex = $InvocationInfo.ScriptLineNumber - 1
-	Write-DebuggerContent $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
-}
-
-# Writes the specified file content.
-function global:Write-DebuggerContent(
-	[Parameter()]
-	[string]$Path,
-	[int]$LineIndex,
-	[int]$LineCount,
-	[int]$MarkIndex
-)
-{
-	# correct negative start
-	if ($LineIndex -lt 0) {
-		$LineCount += $lineIndex
-		$LineIndex = 0
-	}
-
-	# content lines
-	$lines = @(Get-Content -LiteralPath $Path -TotalCount ($LineIndex + $LineCount) -ErrorAction 0 -Force)
-
-	# leading spaces
-	$space = ($lines[$LineIndex .. -1] | .{process{
-		if ($_ -match '^(\s*)\S') {
-			($matches[1] -replace "`t", '    ').Length
-		}
-	}} | Measure-Object -Minimum).Minimum
-
-	# write lines with a mark
-	Write-Debugger ''
-	do {
-		if (($line = $lines[$LineIndex]) -match '^(\s*)(\S.*)') {
-			$line = ($matches[1] -replace "`t", '    ').Substring($space) + $matches[2]
-		}
-		$mark = if ($LineIndex -eq $MarkIndex) {'=>'} else {'  '}
-		Write-Debugger ('{0,4} {1} {2}' -f ($LineIndex + 1), $mark, $line)
-	}
-	while(++$LineIndex -lt $lines.Length)
-	Write-Debugger ''
 }

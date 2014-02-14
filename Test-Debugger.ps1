@@ -5,7 +5,7 @@
 	Author: Roman Kuzmin
 
 .Description
-	This scripts helps to get familiar with all kinds of breakpoints, i.e.
+	This scripts helps to get familiar with most kinds of breakpoints, i.e.
 	command, variable (reading, writing, reading and writing), and custom
 	actions. It is also used for testing of debuggers (Add-Debugger.ps1).
 
@@ -28,7 +28,7 @@
 
 .Example
 	>
-	# How to use in NuGet console which does not have own debugger
+	# How to use in a runspace without a debugger
 
 	# add debugger
 	Add-Debugger.ps1
@@ -55,8 +55,7 @@ $breakpoints = Get-PSBreakpoint | Where-Object { $_.Script -eq $script }
 ### remove breakpoints and exit
 if ($RemoveBreakpoints) {
 	$breakpoints | Remove-PSBreakpoint
-	"Removed $($breakpoints.Count) breakpoints."
-	return
+	return "Removed $($breakpoints.Count) breakpoints."
 }
 
 ### set breakpoints and exit
@@ -82,13 +81,12 @@ if (!$breakpoints) {
 		++$script:VarAccessCount
 	}
 
-	'Test breakpoints are set, invoke the script again to test.'
-	return
+	return 'Breakpoints are set, invoke the script again to test.'
 }
 
-### proceed with existing breakpoints
+### proceed with the breakpoints
 
-# will be counted by the breakpoint action
+# it is updated by the breakpoint action
 $script:VarAccessCount = 0
 
 # a command breakpoint is set for this function
@@ -104,16 +102,17 @@ function TestFunction2 { # you have stepped into TestFunction2
 }
 
 # test a command breakpoint
-TestFunction1 # in v2 it stops at this line, in v3 at `function TestFunction1 {`
+TestFunction1 # in v2 it stops here, in v3 in the function
 
-# non terminating error does not enter debugging mode
+# non terminating error does not trigger debugging
 Write-Error 'This is non terminating demo error.' -ErrorAction Continue
 
 # terminating error triggers the StackTrace breakpoint
 try { Write-Error 'This is terminating demo error.' -ErrorAction Stop }
 catch { $_ }
 
-# to change the variable in debugger
+# to change the variable in a debugger, mind that in some debuggers it is the
+# current scope, in others it may be the parent scope (Add-Debugger.ps1).
 [int]$toWrite = 0 # change me after
 if ($toWrite -le 0) {
 	"Nothing to write."
@@ -135,5 +134,5 @@ $_ = $varWrite # no break
 $varReadWrite = 3 # break on writing
 $_ = $varReadWrite # break on reading
 
-# the counter was updated by the breakpoint action
+# it was updated by the breakpoint action
 "Watched variables have been accessed $($script:VarAccessCount) times."
