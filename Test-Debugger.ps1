@@ -105,7 +105,7 @@ function TestFunction2 { # you have stepped into TestFunction2
 TestFunction1 # in v2 it stops here, in v3 in the function
 
 # non terminating error does not trigger debugging
-Write-Error 'This is non terminating demo error.' -ErrorAction Continue
+Write-Error 'This is non terminating demo error.' -ErrorAction SilentlyContinue
 
 # terminating error triggers the StackTrace breakpoint
 try { Write-Error 'This is terminating demo error.' -ErrorAction Stop }

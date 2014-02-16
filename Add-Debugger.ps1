@@ -11,12 +11,12 @@
 	from such a runspace once at any moment when debugging is needed.
 
 	The GUI input box is used for typing of PowerShell and debugger commands.
-	For output of these commands the script uses Write-Host or a file with a
-	separate console started for watching the output.
+	For output of these commands the script uses Out-Host or a file with a
+	separate console started for watching the data.
 
 .Parameter Path
-		Specifies the output file used instead of Write-Host.
-		A separate console is opened for watching the output.
+		Specifies the output file used instead of Out-Host.
+		A separate console is opened for watching the data.
 
 .Inputs
 	None
@@ -27,7 +27,7 @@
 	>
 	How to debug terminating errors in a bare runspace. Use cases:
 	- In .NET the similar code is typical for invoking PowerShell.
-	- In PowerShell InvokeAsync() makes sense for background jobs.
+	- In PowerShell BeginInvoke() makes sense for background jobs.
 
 	$ps = [PowerShell]::Create()
 	$null = $ps.AddScript({
@@ -41,7 +41,7 @@
 		# and a separate PowerShell output console is started
 		...
 	})
-	$ps.Invoke() # or InvokeAsync()
+	$ps.Invoke() # or BeginInvoke()
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -53,84 +53,89 @@ param(
 )
 
 # Add the stop handler and data once
-if (!(Test-Path Variable:\__Debugger)) {
-	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({ . Invoke-DebuggerStop })
-	Add-Type -AssemblyName Microsoft.VisualBasic
-
-	# Debugger data. MaximumHistoryCount and DebugContext can be customized.
-	$null = New-Variable -Name __Debugger -Scope Global -Description 'Debugger data.' -Option Constant -Value @{
-		MaximumHistoryCount = 50
-		DebugContext = 0
+if (!(Test-Path Variable:\_Debugger)) {
+	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({. Invoke-DebuggerStop})
+	$null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option Constant -Value @{
+		History = [System.Collections.ArrayList]@()
+		DefaultContext = 0
 		Context = [ref]0
-		History = @()
 		Action = '?'
 	}
 }
 
 # Writes the debugger output.
 if ($Path) {
-	$__Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-	$__Debugger.Watch = $true
-	function global:Write-Debugger($Object)
+	$_Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+	$_Debugger.Watch = $true
+	function global:Write-Debugger($Data)
 	{
-		$Object >> $__Debugger.Path
-		if ($__Debugger.Watch) {
-			$__Debugger.Watch = $false
-			Watch-Debugger $__Debugger.Path
+		[System.IO.File]::AppendAllText($_Debugger.Path, ($Data | Out-String), [System.Text.Encoding]::Unicode)
+		if ($_Debugger.Watch) {
+			$_Debugger.Watch = $false
+			Watch-Debugger $_Debugger.Path
 		}
 	}
 }
 else {
-	$__Debugger.Path = $null
-	$__Debugger.Watch = $false
-	function global:Write-Debugger($Object)
+	$_Debugger.Path = $null
+	function global:Write-Debugger($Data)
 	{
-		Write-Host $Object
+		$Data | Out-Host
 	}
 }
 
-# Starts an external viewer to watch output.
+# Reads the debugger input.
+function global:Read-Debugger(
+	$Prompt,
+	$Title,
+	$Default
+)
+{
+	Add-Type -AssemblyName Microsoft.VisualBasic
+	[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title, $Default)
+}
+
+# Starts an external file viewer.
 function global:Watch-Debugger($Path)
 {
-	Start-Process PowerShell.exe -ArgumentList "-NoProfile Get-Content '$Path' -Wait"
+	$Path = $Path.Replace("'", "''")
+	Start-Process PowerShell.exe "-NoProfile Get-Content -LiteralPath '$Path' -Wait -ErrorAction 0"
 }
 
 # Writes the current invocation info.
 function global:Write-DebuggerInfo(
-	[Parameter()]
 	$InvocationInfo,
-	[int]$Context = 5
+	$Context
 )
 {
 	# write position message
-	Write-Debugger $InvocationInfo.PositionMessage.Trim()
+	Write-Debugger ($InvocationInfo.PositionMessage.Trim())
 
 	# done?
 	$file = $InvocationInfo.ScriptName
 	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {return}
 
-	# write file content
+	# write file lines
 	$markIndex = $InvocationInfo.ScriptLineNumber - 1
 	Write-DebuggerFile $file ($markIndex - $Context) (2 * $Context + 1) $markIndex
 }
 
-# Writes the specified script content.
+# Writes the specified file lines.
 function global:Write-DebuggerFile(
-	[Parameter()]
-	[string]$Path,
-	[int]$LineIndex,
-	[int]$LineCount,
-	[int]$MarkIndex
+	$Path,
+	$LineIndex,
+	$LineCount,
+	$MarkIndex
 )
 {
-	# correct negative start
+	# amend negative start
 	if ($LineIndex -lt 0) {
 		$LineCount += $lineIndex
 		$LineIndex = 0
 	}
 
 	# content lines
-	$lines = @(Get-Content -LiteralPath $Path -TotalCount ($LineIndex + $LineCount) -ErrorAction 0 -Force)
+	$lines = @(Get-Content -LiteralPath $Path -TotalCount ($LineIndex + $LineCount) -Force -ErrorAction 0)
 
 	# leading spaces
 	$space = ($lines[$LineIndex .. -1] | .{process{
@@ -169,79 +174,84 @@ function global:Invoke-DebuggerStop
 	}}
 
 	# write debug location
-	Write-DebuggerInfo $_.InvocationInfo $__Debugger.DebugContext
+	Write-DebuggerInfo $_.InvocationInfo $_Debugger.DefaultContext
 	Write-Debugger ''
 
 	# REPL
-	$__Debugger.e = $_
+	$_Debugger.e = $_
 	for() {
 		### prompt
-		$__Debugger.Action = [Microsoft.VisualBasic.Interaction]::InputBox(
-			"Enter PowerShell and debug commands.`nUse h or ? for help.",
-			'Debugger',
-			$__Debugger.Action
-		).Trim()
+		$_Debugger.Action = (Read-Debugger "Enter PowerShell and debug commands.`nUse h or ? for help." Debugger $_Debugger.Action).Trim()
+		Write-Debugger "DBG> $($_Debugger.Action)"
 
-		### echo
-		Write-Debugger "DBG> $($__Debugger.Action)"
-
-		### continue
-		if (!$__Debugger.Action -or $__Debugger.Action -eq 'c' -or $__Debugger.Action -eq 'Continue') {
-			$__Debugger.e.ResumeAction = 'Continue'
+		### Continue
+		if (!$_Debugger.Action -or $_Debugger.Action -eq 'c' -or $_Debugger.Action -eq 'Continue') {
+			$_Debugger.e.ResumeAction = 'Continue'
 			return
 		}
 
 		### StepInto
-		if ($__Debugger.Action -eq 's' -or $__Debugger.Action -eq 'StepInto') {
-			$__Debugger.e.ResumeAction = 'StepInto'
+		if ($_Debugger.Action -eq 's' -or $_Debugger.Action -eq 'StepInto') {
+			$_Debugger.e.ResumeAction = 'StepInto'
 			return
 		}
 
 		### StepOver
-		if ($__Debugger.Action -eq 'v' -or $__Debugger.Action -eq 'StepOver') {
-			$__Debugger.e.ResumeAction = 'StepOver'
+		if ($_Debugger.Action -eq 'v' -or $_Debugger.Action -eq 'StepOver') {
+			$_Debugger.e.ResumeAction = 'StepOver'
 			return
 		}
 
 		### StepOut
-		if ($__Debugger.Action -eq 'o' -or $__Debugger.Action -eq 'StepOut') {
-			$__Debugger.e.ResumeAction = 'StepOut'
+		if ($_Debugger.Action -eq 'o' -or $_Debugger.Action -eq 'StepOut') {
+			$_Debugger.e.ResumeAction = 'StepOut'
 			return
 		}
 
 		### Quit
-		if ($__Debugger.Action -eq 'q' -or $__Debugger.Action -eq 'Quit') {
-			$__Debugger.e.ResumeAction = 'Stop'
+		if ($_Debugger.Action -eq 'q' -or $_Debugger.Action -eq 'Quit') {
+			$_Debugger.e.ResumeAction = 'Stop'
 			return
 		}
 
 		### history
-		if ($__Debugger.Action -eq 'r') {
-			Write-Debugger ($__Debugger.History | Out-String)
+		if ($_Debugger.Action -eq 'r') {
+			Write-Debugger $_Debugger.History
 			continue
 		}
 
 		### stack
-		if ($__Debugger.Action -ceq 'k') {
-			Write-Debugger (Get-PSCallStack | Format-Table Command, Location, Arguments -AutoSize | Out-String)
+		if ($_Debugger.Action -ceq 'k') {
+			Write-Debugger (Get-PSCallStack | Format-Table Command, Location, Arguments -AutoSize)
 			continue
 		}
-		if ($__Debugger.Action -ceq 'K') {
-			Write-Debugger (Get-PSCallStack | Format-List | Out-String)
+		if ($_Debugger.Action -ceq 'K') {
+			Write-Debugger (Get-PSCallStack | Format-List)
 			continue
 		}
 
 		### <number>
-		if ([int]::TryParse($__Debugger.Action, $__Debugger.Context)) {
-			Write-DebuggerInfo $__Debugger.e.InvocationInfo $__Debugger.Context.Value
-			if ($__Debugger.Action[0] -eq "+") {
-				$__Debugger.DebugContext = $__Debugger.Context.Value
+		if ([int]::TryParse($_Debugger.Action, $_Debugger.Context)) {
+			Write-DebuggerInfo $_Debugger.e.InvocationInfo $_Debugger.Context.Value
+			if ($_Debugger.Action[0] -eq "+") {
+				$_Debugger.DefaultContext = $_Debugger.Context.Value
+			}
+			continue
+		}
+
+		### watch
+		if ($_Debugger.Action -eq 'w') {
+			if ($_Debugger.Path) {
+				Watch-Debugger $_Debugger.Path
+			}
+			else {
+				Write-Debugger 'Debugger output file is not used.'
 			}
 			continue
 		}
 
 		### help
-		if ($__Debugger.Action -eq '?' -or $__Debugger.Action -eq 'h') {
+		if ($_Debugger.Action -eq '?' -or $_Debugger.Action -eq 'h') {
 			Write-Debugger @'
 
   s, StepInto  Step to the next statement into functions, scripts, etc.
@@ -283,19 +293,11 @@ function global:Invoke-DebuggerStop
 			Write-DebuggerFile $file ($markIndex - $n) (2 * $n + 1) $markIndex
 		}
 
-		### watch
-		function w {
-			if ($__Debugger.Path) {
-				Watch-Debugger $__Debugger.Path
-			}
-		}
-
 		### invoke command
 		try {
-			Write-Debugger (.([scriptblock]::Create($__Debugger.Action)) | Out-String)
-			$__Debugger.History = $__Debugger.History |
-			.{process{ if ($_ -ne $__Debugger.Action) {$_} } end { $__Debugger.Action }} |
-			Select-Object -Last $__Debugger.MaximumHistoryCount
+			$_Debugger.History.Remove($_Debugger.Action)
+			$null = $_Debugger.History.Add($_Debugger.Action)
+			Write-Debugger (.([scriptblock]::Create($_Debugger.Action)))
 		}
 		catch {
 			Write-Debugger $(if ($_.InvocationInfo.ScriptName -like '*\Add-Debugger.ps1') {$_.ToString()} else {$_})
