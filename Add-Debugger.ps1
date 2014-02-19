@@ -7,8 +7,11 @@
 .Description
 	This script is designed for PowerShell runspaces which do not have their
 	own debuggers, e.g. Visual Studio NuGet console ("Package Manager Host"),
-	the default runspace host ("Default Host"), and etc. It should be called
-	from such a runspace once at any moment when debugging is needed.
+	the default runspace host ("Default Host"), and etc. But it can be used
+	instead of build-in debuggers as well.
+
+	The script should be called once at any moment when debugging is needed.
+	In order to restore the original debugger invoke Restore-Debugger.
 
 	The GUI input box is used for typing of PowerShell and debugger commands.
 	For output of these commands the script uses Out-Host or a file with a
@@ -52,18 +55,46 @@ param(
 	[string]$Path
 )
 
-# Add the stop handler and data once
+# Removes and gets debugger handlers.
+function global:Remove-Debugger {
+	$instance = [System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger
+	$type = $instance.GetType()
+	$e = $type.GetEvent('DebuggerStop')
+	$v = $type.GetField('DebuggerStop', ([System.Reflection.BindingFlags]'NonPublic, Instance')).GetValue($instance)
+	if ($v) {
+		$handlers = $v.GetInvocationList()
+		foreach($handler in $handlers) {
+			$e.RemoveEventHandler($instance, $handler)
+		}
+		$handlers
+	}
+}
+
+# Restores original debugger handlers.
+function global:Restore-Debugger {
+	if (!(Test-Path Variable:\_Debugger)) {return}
+	$null = Remove-Debugger
+	if ($_Debugger.Handlers) {
+		foreach($handler in $_Debugger.Handlers) {
+			[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop($handler)
+		}
+	}
+	Remove-Variable _Debugger -Scope Global -Force
+}
+
+# Add the debugger and data once
 if (!(Test-Path Variable:\_Debugger)) {
-	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({. Invoke-DebuggerStop})
-	$null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option Constant -Value @{
+	$null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
 		History = [System.Collections.ArrayList]@()
+		Handlers = Remove-Debugger
 		DefaultContext = 0
 		Context = [ref]0
 		Action = '?'
 	}
+	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({. Invoke-DebuggerStop})
 }
 
-# Writes the debugger output.
+# Writes debugger output.
 if ($Path) {
 	$_Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
 	$_Debugger.Watch = $true
@@ -84,7 +115,7 @@ else {
 	}
 }
 
-# Reads the debugger input.
+# Reads debugger input.
 function global:Read-Debugger(
 	$Prompt,
 	$Title,

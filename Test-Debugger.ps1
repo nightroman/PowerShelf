@@ -28,9 +28,7 @@
 
 .Example
 	>
-	# How to use in a runspace without a debugger
-
-	# add debugger
+	# add debugger (or use the built-in and skip this)
 	Add-Debugger.ps1
 
 	# test breakpoints
