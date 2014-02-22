@@ -21,6 +21,7 @@ They are designed and tested for PowerShell v2 and v3.
 * *Show-Color.ps1* - Shows all color combinations, color names and codes.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
+* *Trace-Debugger.ps1* - Provides script tracing and coverage data collection.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
 
 The directory *Demo* contains demo scripts, interactive tests, and tests

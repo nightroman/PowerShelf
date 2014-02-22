@@ -55,6 +55,11 @@ param(
 	[string]$Path
 )
 
+# Restore another debugger by its Restore-Debugger.
+if ((Test-Path Variable:\_Debugger) -and (Get-Variable _Debugger).Description -ne 'Add-Debugger.ps1') {
+	Restore-Debugger
+}
+
 # Removes and gets debugger handlers.
 function global:Remove-Debugger {
 	$instance = [System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger
