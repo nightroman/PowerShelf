@@ -40,6 +40,7 @@ task OutputToFile {
 }
 
 task CodeCoverageWithFilter -If $v3 {
+	# trace with collecting coverage data
 	Trace-Debugger Invoke-Build -Table Coverage -Filter {$ScriptName -like '*\Add-Path.*'}
 	Invoke-Build * Add-Path.test.ps1
 	Restore-Debugger
@@ -48,13 +49,22 @@ task CodeCoverageWithFilter -If $v3 {
 	assert ($Coverage.Count -eq 2)
 	$files = $Coverage.Keys | Sort-Object {[IO.Path]::GetFileName($_)}
 
+	# test file [0]
 	($file = $files[0])
 	$Coverage[$file]
 	assert ([IO.Path]::GetFileName($file) -eq 'Add-Path.ps1')
 	assert ($Coverage[$file].Count -eq 7)
 
+	# test file [1]
 	($file = $files[1])
 	$Coverage[$file]
 	assert ([IO.Path]::GetFileName($file) -eq 'Add-Path.test.ps1')
 	assert ($Coverage[$file].Count -eq 34)
+
+	# convert coverage data, do not show
+	$html = "$env:TEMP\test-coverage.htm"
+	if (Test-Path -LiteralPath $html) {Remove-Item -LiteralPath $html}
+	Show-Coverage $Coverage -Html $html -Show $null
+	assert (Test-Path -LiteralPath $html)
+	Remove-Item -LiteralPath $html
 }

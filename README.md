@@ -2,8 +2,10 @@
 PowerShelf - PowerShell Scripts
 ===============================
 
-This is a set of PowerShell scripts for various tasks.
-They are designed and tested for PowerShell v2 and v3.
+## Introduction
+
+PowerShell tools for various tasks implemented as scripts, mostly standalone.
+They are designed for PowerShell v2.0 and v3.0.
 
 ## Script List
 
@@ -19,17 +21,20 @@ They are designed and tested for PowerShell v2 and v3.
 * *Measure-Property.ps1* -  Counts properties grouped by names and types.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
 * *Show-Color.ps1* - Shows all color combinations, color names and codes.
+* *Show-Coverage.ps1* - Converts to HTML and shows script coverage data.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
 * *Trace-Debugger.ps1* - Provides script tracing and coverage data collection.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
 
-The directory *Demo* contains demo scripts, interactive tests, and tests
-invoked by [*Invoke-Build.ps1*](https://github.com/nightroman/Invoke-Build).
-
 ## Get Scripts
 
-The scripts can be downloaded as the archive *PowerShelf.zip* to the current
-process directory by this PowerShell command:
+The scripts are distributed as two NuGet packages:
+
+- [PowerShelf](https://www.nuget.org/packages/PowerShelf/) (all scripts)
+- [NuGetDebugTools](https://www.nuget.org/packages/NuGetDebugTools/) (debugging)
+
+All scripts together with tests and other files can be downloaded to the
+current directory as *PowerShelf.zip* by this PowerShell command:
 
     (New-Object Net.WebClient).DownloadFile("https://github.com/nightroman/PowerShelf/zipball/master", "PowerShelf.zip")

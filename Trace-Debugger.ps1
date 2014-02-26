@@ -27,6 +27,11 @@
 		and return $true in order to trace or $false in order to ignore.
 		$ScriptName contains the full path of a script being invoked.
 
+		The code must not change anything in the session, this may break normal
+		program flow. For example, the operator -match must not be used because
+		it changes the automatic variable $Matches and other code with $Matches
+		may work incorrectly on tracing.
+
 .Parameter Path
 		Specifies the file used instead of the default Write-Host output. The
 		data are appended to this file. Thus, the same file may be used many
@@ -42,6 +47,8 @@
 		The variable is a hashtable created in the global scope. The keys are
 		script paths, values are hashtables where keys are line numbers and
 		values are line pass counters.
+
+		Coverage data can be shown as HTML by the script Show-Coverage.ps1.
 
 .Inputs
 	None
@@ -68,7 +75,7 @@
 
 .Example
 	>
-	How to collect and get script coverage data
+	How to collect and show script coverage data
 
 	# enable tracing with result data table
 	Trace-Debugger Test.ps1 -Table Coverage
@@ -79,11 +86,13 @@
 	# stop tracing
 	Restore-Debugger
 
-	# analyse data
-	$Coverage
+	# show coverage data
+	Show-Coverage $Coverage
 
 .Link
 	https://github.com/nightroman/PowerShelf
+.Link
+	Show-Coverage.ps1
 #>
 
 [CmdletBinding(DefaultParameterSetName='All')]
