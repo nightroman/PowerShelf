@@ -24,7 +24,7 @@
 
 .Parameter Filter
 		Specifies the filter scriptblock which tests the variable $ScriptName
-		and return $true in order to trace or $false in order to ignore.
+		and returns $true in order to trace or $false in order to ignore.
 		$ScriptName contains the full path of a script being invoked.
 
 		The code must not change anything in the session, this may break normal
@@ -60,7 +60,7 @@
 	How to trace Test-Debugger.ps1. Test-Debugger is invoked twice. The first
 	call simply sets breakpoints. The second call does actual work, not much.
 	Note that breakpoints are not triggered in a usual way on tracing because
-	the original debugger is temporary replaced by the tracing debugger. But
+	the original debugger is replaced by the temporary tracing debugger. But
 	action script blocks specified for some breakpoints are still invoked.
 
 	# enable tracing with the trigger command
