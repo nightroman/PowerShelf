@@ -35,7 +35,7 @@ task OutputToFile {
 	Test-Debugger
 	Restore-Debugger
 
-	# end
+	Assert-SameFile "$HOME\data\Trace-Debugger.OutputToFile.$($PSVersionTable.PSVersion.Major).log" $log $env:MERGE
 	Remove-Item -LiteralPath $log
 }
 

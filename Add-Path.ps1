@@ -1,39 +1,43 @@
 
 <#
 .Synopsis
-	Adds a directory to an environment path variable once.
+	Adds a directory to an environment path variable.
 	Author: Roman Kuzmin
 
 .Description
 	The script resolves the specified path, checks that the directory exists,
 	and adds the path to an environment variable if it is not there yet. The
-	changes are effective for the current process only.
+	changes are effective for the current process.
 
 .Parameter Path
-		Path to add to an environment variable. Default is the current location.
+		Specifies the path to be added.
+		Default is the current location.
 .Parameter Name
-		Environment variable to change. Default is 'PATH'.
+		Specifies the environment variable to be updated.
+		Default is 'PATH'.
 
 .Inputs
-	None. Use the parameters.
+	None
 .Outputs
-	None.
+	None
 
 .Example
-	>
-	# Adds the current location to the system path
-	Add-Path
+	> Add-Path
 
-	# Adds TestModules to the PowerShell modules
-	Add-Path TestModules PSModulePath
+	Adds the current location to the system path.
+
+.Example
+	> Add-Path TestModules PSModulePath
+
+	Adds TestModules to the PowerShell module path.
 
 .Link
 	https://github.com/nightroman/PowerShelf
 #>
 
-param
-(
-	[Parameter()][string]$Path = '.',
+param (
+	[Parameter()]
+	[string]$Path = '.',
 	[string]$Name = 'PATH'
 )
 

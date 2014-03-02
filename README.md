@@ -10,7 +10,8 @@ They are designed for PowerShell v2.0 and v3.0.
 ## Script List
 
 * *Add-Debugger.ps1* - Adds a script debugger to PowerShell.
-* *Add-Path.ps1* - Adds a directory to an environment path variable once.
+* *Add-Path.ps1* - Adds a directory to an environment path variable.
+* *Assert-SameFile.ps1* - Compares the sample and result files.
 * *Debug-Error.ps1* - Enables debugging on terminating errors.
 * *Export-Binary.ps1* - Exports objects using binary serialization.
 * *Format-Chart.ps1* - Formats output as a table with the last chart column.

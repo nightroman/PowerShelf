@@ -21,22 +21,8 @@ task TestDebugger {
 	assert ($LASTEXITCODE -eq 0)
 	assert (Test-Path -LiteralPath $log)
 
-	# compare logs
-	$log2 = "$env:APPDATA\debug.log"
-	if (Test-Path -LiteralPath $log2) {
-		$text1 = [IO.File]::ReadAllText($log)
-		$text2 = [IO.File]::ReadAllText($log2)
-		if ($text1 -ne $text2) {
-			if ($env:MERGE -and (Test-Path $env:MERGE)) {
-				& $env:MERGE $log $log2
-			}
-			throw "Different logs"
-		}
-	}
-	else {
-		Write-Warning "Creating missing $log2"
-		Move-Item -LiteralPath $log $log2
-	}
+	# test log
+	Assert-SameFile $HOME\data\Add-Debugger.test.log $log $env:MERGE
 
 	# remove temp files
 	Remove-Item -LiteralPath $log, $env:TEMP\debug.psm1 -ErrorAction 0
