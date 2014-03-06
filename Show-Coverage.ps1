@@ -151,7 +151,7 @@ function convert($Path, $Data) {
 	$n = 0
 	foreach($path in $paths) { if (Test-Path -LiteralPath $path) {
 		++$n
-		"<hr/><h3><a name='#file$n'>$(encode $path)</a></h3>"
+		"<hr/><h3><a id='file$n'>$(encode $path)</a></h3>"
 		convert $path $Data[$path]
 	}}
 

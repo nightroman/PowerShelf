@@ -2,6 +2,10 @@
 NuGetDebugTools Release Notes
 =============================
 
+## v1.3.1
+
+Show-Coverage.ps1: fixed links in HTML.
+
 ## v1.3.0
 
 *Show-Coverage.ps1* - This new tool is used together with *Trace-Debugger.ps1*
