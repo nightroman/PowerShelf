@@ -2,9 +2,13 @@
 PowerShelf Release Notes
 ========================
 
+## v1.1.2
+
+Added *Sync-Directory.ps1*.
+
 ## v1.1.1
 
-Show-Coverage.ps1: fixed links in HTML.
+*Show-Coverage.ps1*: fixed links in HTML.
 
 ## v1.1.0
 

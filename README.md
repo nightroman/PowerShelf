@@ -24,6 +24,7 @@ They are designed for PowerShell v2.0 and v3.0.
 * *Show-Color.ps1* - Shows all color combinations, color names and codes.
 * *Show-Coverage.ps1* - Converts to HTML and shows script coverage data.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
+* *Sync-Directory.ps1* - Syncs two directories with some interaction.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
 * *Trace-Debugger.ps1* - Provides script tracing and coverage data collection.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
