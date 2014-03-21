@@ -40,51 +40,52 @@ task MissingSample {
 	Remove-Item z
 }
 
-task DifferentFileUpdate {
-	$data = @{}
-	42 > z
-
+task DifferentFile {
 	# fake
 	function Write-Warning {
-		$data.Warning = $args[0]
+		$fake.Warning = $args[0]
 	}
-	function Read-Host {
-		$data.Read = $args[0]
-		'1'
+	function Get-Choice2 {
+		$fake.Caption = $args[0]
+		$fakeChoice
 	}
+	Set-Alias Get-Choice Get-Choice2
 
-	Assert-SameFile z $BuildFile { $data.View = 1 }
+	### Ignore
 
-	assert ($data.Warning -clike "Different sample 'z' and result '$BuildFile'.")
-	assert ($data.Read -ceq '[1] Update sample [0] Abort')
-	assert ($data.View -eq 1)
-
-	Assert-SameFile z $BuildFile
-
+	0 > z
+	$fake = @{}
+	$fakeChoice = 0
+	Assert-SameFile z $BuildFile { $fake.View = 0 }
+	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
+	assert ($fake.Caption -ceq 'Different result')
+	assert ($fake.View -eq 0)
+	assert ((Get-Content z) -eq 0)
 	Remove-Item z
-}
 
-task DifferentFileAbort {
-	$data = @{}
-	42 > z
+	### Update
 
-	# fake
-	function Write-Warning {
-		$data.Warning = $args[0]
-	}
-	function Read-Host {
-		$data.Read = $args[0]
-		'0'
-	}
+	1 > z
+	$fake = @{}
+	$fakeChoice = 1
+	Assert-SameFile z $BuildFile { $fake.View = 1 }
+	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
+	assert ($fake.Caption -ceq 'Different result')
+	assert ($fake.View -eq 1)
+	Assert-SameFile z $BuildFile
+	Remove-Item z
 
-	$$ = try { Assert-SameFile z $BuildFile { $data.View = 1 } } catch {$_}
+	### Abort
+
+	2 > z
+	$fake = @{}
+	$fakeChoice = 2
+	$$ = try { Assert-SameFile z $BuildFile { $fake.View = 2 } } catch {$_}
 	$$
+	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
+	assert ($fake.Caption -ceq 'Different result')
+	assert ($fake.View -eq 2)
 	assert ($$ -clike "*Different sample 'z' and result '$BuildFile'.")
-	assert ((Get-Content z) -eq 42)
-
-	assert ($data.Warning -clike "Different sample 'z' and result '$BuildFile'.")
-	assert ($data.Read -ceq '[1] Update sample [0] Abort')
-	assert ($data.View -eq 1)
-
+	assert ((Get-Content z) -eq 2)
 	Remove-Item z
 }

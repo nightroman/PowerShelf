@@ -116,12 +116,19 @@ else {
 	Write-Error "Invalid view command: '$View'."
 }
 
-# prompt, copy
-while ((Read-Host "[1] Update sample [0] Abort") -notmatch '^(1|0)$') {}
-if (1 -eq $Matches[1]) {
-	Copy-Item -LiteralPath $fileResult.FullName -Destination $fileSample.FullName -Force
-	return
+# prompt
+function Get-Choice($Caption, $Message, $Choices) { $Host.UI.PromptForChoice($Caption, $Message, $Choices, 0) }
+function New-Choice { New-Object System.Management.Automation.Host.ChoiceDescription $args }
+switch(Get-Choice 'Different result' 'How would you like to proceed?' @(
+		New-Choice '&0. Ignore' 'Do nothing.'
+		New-Choice '&1. Update' 'Copy result to sample.'
+		New-Choice '&2. Abort' 'Write a terminating error.'
+	))
+{
+	1 {
+		Copy-Item -LiteralPath $fileResult.FullName -Destination $fileSample.FullName -Force
+	}
+	2 {
+		Write-Error "Different sample '$Sample' and result '$Result'."
+	}
 }
-
-# abort
-Write-Error "Different sample '$Sample' and result '$Result'."

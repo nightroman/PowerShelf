@@ -2,6 +2,13 @@
 PowerShelf Release Notes
 ========================
 
+## v1.2.0
+
+*Assert-SameFile.ps1*
+
+- Replaced `Read-Host` prompt with `PromptForChoice`.
+- Added *Ignore* (default) in addition to *Update* and *Abort*.
+
 ## v1.1.2
 
 Added *Sync-Directory.ps1*.
