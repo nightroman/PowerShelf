@@ -1,6 +1,9 @@
 
-PowerShelf Release Notes
-========================
+# PowerShelf Release Notes
+
+## v1.2.1
+
+*Assert-SameFile.ps1*: PromptForChoice did not work in PS v2.0
 
 ## v1.2.0
 

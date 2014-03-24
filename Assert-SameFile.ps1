@@ -14,9 +14,8 @@
 	a warning is written and the sample is created as a copy of the result. The
 	target directory is also created if it does not exist.
 
-	If files are different then the test either fails or, if the command View
-	is specified, writes a warning, invokes View, and then prompts to update
-	the sample. Read-Host is used for user input.
+	If files are different then the test either fails or, if View is specified,
+	writes a warning, invokes View, and then prompts to update the sample.
 
 	File comparison is done via MD5 hashes, it is fast and suitable for large
 	files. But there is a tiny chance that file differences are not detected.
@@ -116,13 +115,19 @@ else {
 	Write-Error "Invalid view command: '$View'."
 }
 
+# choice, cast is for v2.0
+function Get-Choice($Caption, $Message, $Choices) {
+	$Host.UI.PromptForChoice($Caption, $Message, [System.Management.Automation.Host.ChoiceDescription[]]$Choices, 0)
+}
+function New-Choice {
+	New-Object System.Management.Automation.Host.ChoiceDescription $args
+}
+
 # prompt
-function Get-Choice($Caption, $Message, $Choices) { $Host.UI.PromptForChoice($Caption, $Message, $Choices, 0) }
-function New-Choice { New-Object System.Management.Automation.Host.ChoiceDescription $args }
 switch(Get-Choice 'Different result' 'How would you like to proceed?' @(
 		New-Choice '&0. Ignore' 'Do nothing.'
 		New-Choice '&1. Update' 'Copy result to sample.'
-		New-Choice '&2. Abort' 'Write a terminating error.'
+		New-Choice '&2. Abort' 'Write terminating error.'
 	))
 {
 	1 {
