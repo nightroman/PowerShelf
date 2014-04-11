@@ -4,26 +4,15 @@
 	Build script (https://github.com/nightroman/Invoke-Build)
 #>
 
-Set-StrictMode -Version Latest
-
-# Package files
-$Files = @(
-	'..\*-*.ps1'
-	'..\LICENSE.txt'
-)
-
-# Import markdown tasks ConvertMarkdown and RemoveMarkdownHtml.
-# <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>
-Markdown.tasks.ps1
-
-# Copy external markdown here.
-task BeforeConvertMarkdown -Before ConvertMarkdown {
-	Copy-Item ..\README.md .
+# Docs by https://www.nuget.org/packages/MarkdownToHtml
+task ConvertMarkdown {
+	exec { MarkdownToHtml from=..\README.md to=README.htm }
+	exec { MarkdownToHtml from=Release-Notes.md to=Release-Notes.htm }
 }
 
-# Remove temporary files.
-task Clean RemoveMarkdownHtml, {
-	Remove-Item z, README.md, PowerShelf.*.nupkg -Force -Recurse -ErrorAction 0
+# Remove temp files
+task Clean {
+	Remove-Item z, README.htm, Release-Notes.htm, PowerShelf.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Make package directory z\tools.
@@ -33,12 +22,11 @@ task Package ConvertMarkdown, {
 	$null = mkdir z\tools
 
 	# copy files
-	Copy-Item $Files z\tools
-
-	# move generated files
-	Move-Item -Destination z\tools `
-	.\README.htm,
-	.\Release-Notes.htm
+	Copy-Item -Destination z\tools `
+	..\*-*.ps1,
+	..\LICENSE.txt,
+	README.htm,
+	Release-Notes.htm
 }
 
 # Get version.
