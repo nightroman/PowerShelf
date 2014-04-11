@@ -36,8 +36,7 @@ task Package ConvertMarkdown, {
 # Get version.
 task Version {
 	assert ([IO.File]::ReadAllText('Release-Notes.md') -match '##\s+v(\d+\.\d+\.\d+)')
-	$script:Version = $Matches[1]
-	$Version
+	($script:Version = $Matches[1])
 }
 
 # Make NuGet package.
