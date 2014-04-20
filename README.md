@@ -5,7 +5,7 @@ PowerShelf - PowerShell Scripts
 ## Introduction
 
 PowerShell tools for various tasks implemented as scripts, mostly standalone.
-They are designed for PowerShell v2.0 and v3.0.
+They are designed for PowerShell v2.0+.
 
 ## Script List
 
@@ -40,3 +40,5 @@ All scripts together with tests and other files can be downloaded to the
 current directory as *PowerShelf.zip* by this PowerShell command:
 
     (New-Object Net.WebClient).DownloadFile("https://github.com/nightroman/PowerShelf/zipball/master", "PowerShelf.zip")
+
+---
