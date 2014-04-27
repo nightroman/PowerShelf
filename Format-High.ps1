@@ -47,10 +47,9 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
-param
-(
+param(
 	[object]$Property,
-	[int]$Width = $Host.UI.RawUI.WindowSize.Width - 1,
+	[int]$Width,
 	[scriptblock]$Color,
 	[object[]]$InputObject
 )
@@ -61,6 +60,15 @@ try {
 	${private:-Color} = $Color
 	${private:-InputObject} = $InputObject
 	Remove-Variable Property, Width, Color, InputObject
+
+	if (!${-Width}) {
+		${-Width} = if (!$Host.UI -or !$Host.UI.RawUI -or !$Host.UI.RawUI.WindowSize) {
+			80
+		}
+		else {
+			$Host.UI.RawUI.WindowSize.Width - 1
+		}
+	}
 
 	# process the input, color, get items as strings
 	if ($null -eq ${-InputObject}) { ${-InputObject} = @($input) }

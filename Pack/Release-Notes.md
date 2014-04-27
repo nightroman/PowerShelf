@@ -1,6 +1,12 @@
 
 # PowerShelf Release Notes
 
+## v1.2.2
+
+*Format-High.ps1*: When a window width is unknown use 80 as the default. As a
+result, it works in PowerShell ISE, too. 80 is normally too small there but
+data are shown, not an error. Then a proper width may be specified manually.
+
 ## v1.2.1
 
 *Assert-SameFile.ps1*: PromptForChoice did not work in PS v2.0

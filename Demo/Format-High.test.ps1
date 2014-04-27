@@ -54,3 +54,24 @@ task BadColorKeyButWorks {
 	# Write-Host accepts crap parameters due to ValueFromRemainingArguments
 	1..11 | Format-High.ps1 -Color {if ($_ -le 5) {@{}} else {@{bad='bad'}}}
 }
+
+# v1.2.2 Use 80 as the default width.
+task NoWindowWidthAvailable {
+	$ps = [powershell]::Create()
+	$null = $ps.AddScript({
+		$global:out = ''
+		function Write-Host ($Message, [switch]$NoNewLine) {
+			if ($NoNewLine) {
+				$global:out += $Message
+			}
+			else {
+				$global:out += "$Message`n"
+			}
+		}
+		1..111 | Format-High.ps1
+		$out
+	})
+	$out = $ps.Invoke()[0].Trim() -split '\n' #! [0] is for PS v2
+	$out
+	assert ($out.Count -eq 5)
+}
