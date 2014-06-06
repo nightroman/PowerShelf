@@ -5,6 +5,7 @@ by [Invoke-Build](https://github.com/nightroman/Invoke-Build).
 Example PowerShell commands
 
 - If *Invoke-Build.ps1* is not in the path then specify its path in the commands.
+- Ensure the directory with *PowerShelf* scripts is in the path.
 - Set this directory current (`Set-Location ...`).
 
 Invoke all tests in all test scripts here:
