@@ -1,6 +1,12 @@
 
 # PowerShelf Release Notes
 
+## v1.2.3
+
+*Invoke-Environment.ps1*: Fixed cases like one of the examples :)
+
+*Add-Debugger.ps1*, *Trace-Debugger.ps1*: Adapted for PowerShell v4.0.
+
 ## v1.2.2
 
 *Format-High.ps1*: When a window width is unknown use 80 as the default. As a

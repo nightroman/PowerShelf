@@ -63,7 +63,7 @@ if ((Test-Path Variable:\_Debugger) -and (Get-Variable _Debugger).Description -n
 # Removes and gets debugger handlers.
 function global:Remove-Debugger {
 	$instance = [System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger
-	$type = $instance.GetType()
+	$type = [System.Management.Automation.Debugger]
 	$e = $type.GetEvent('DebuggerStop')
 	$v = $type.GetField('DebuggerStop', ([System.Reflection.BindingFlags]'NonPublic, Instance')).GetValue($instance)
 	if ($v) {

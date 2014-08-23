@@ -2,6 +2,10 @@
 NuGetDebugTools Release Notes
 =============================
 
+## v1.3.2
+
+*Add-Debugger.ps1*, *Trace-Debugger.ps1*: Adapted for PowerShell v4.0.
+
 ## v1.3.1
 
 Show-Coverage.ps1: fixed links in HTML.

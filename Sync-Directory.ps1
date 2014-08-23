@@ -124,15 +124,17 @@ if (!$exist2) {
 }
 
 # get paths
-$d1 = New-Object System.Collections.Generic.HashSet[string] ([StringComparer]::OrdinalIgnoreCase)
+$d1 = [System.Collections.Generic.HashSet[string]]([StringComparer]::OrdinalIgnoreCase)
 foreach($_ in Get-ChildItem -LiteralPath $Directory1 -Force -Recurse -Name) {$null = $d1.Add($_)}
-$d2 = New-Object System.Collections.Generic.HashSet[string] ([StringComparer]::OrdinalIgnoreCase)
+$d2 = [System.Collections.Generic.HashSet[string]]([StringComparer]::OrdinalIgnoreCase)
 foreach($_ in Get-ChildItem -LiteralPath $Directory2 -Force -Recurse -Name) {$null = $d2.Add($_)}
 
 # except
-$o1 = New-Object System.Collections.Generic.HashSet[string] $d1, ([StringComparer]::OrdinalIgnoreCase)
+$o1 = [System.Collections.Generic.HashSet[string]]([StringComparer]::OrdinalIgnoreCase)
+$o1.UnionWith($d1)
 $o1.ExceptWith($d2)
-$o2 = New-Object System.Collections.Generic.HashSet[string] $d2, ([StringComparer]::OrdinalIgnoreCase)
+$o2 = [System.Collections.Generic.HashSet[string]]([StringComparer]::OrdinalIgnoreCase)
+$o2.UnionWith($d2)
 $o2.ExceptWith($d1)
 
 $RegexHidden = [regex]'\\\.(?:git|svn)'
