@@ -22,6 +22,10 @@
 .Parameter GistId
 		The existing gist ID. If it is not specified then the script searches
 		for a gist URL in the file, the first matching URL is used for the ID.
+		The expected URL is either
+			https://gist.github.com/user/gist-id
+		or
+			https://gist.github.com/gist-id
 .Parameter Keep
 		Tells to keep the local gist repository.
 
@@ -54,7 +58,7 @@ try {
 	# extract the gist ID from the file
 	if (!$GistId) {
 		foreach($$ in Get-Content -LiteralPath $FileName) {
-			if ($$ -match 'https://gist.github.com/(\w+)') {
+			if ($$ -match 'https://gist.github.com/\w+/(\w+)' -or $$ -match 'https://gist.github.com/(\w+)') {
 				$GistId = $matches[1]
 				break
 			}

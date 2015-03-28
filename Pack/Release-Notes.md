@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.2.4
+
+*Submit-Gist.ps1*: Added yet another form of expected gist URL.
+
 ## v1.2.3
 
 *Invoke-Environment.ps1*: Fixed cases like one of the examples :)
