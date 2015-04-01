@@ -8,23 +8,15 @@
 #>
 
 task MissingFile {
-	$ErrorActionPreference = $err = 'Continue'
-	try {
-		Submit-Gist.ps1 MissingFile
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like "*\Submit-Gist.ps1 : Cannot find path 'MissingFile' because it does not exist.*At *\Submit-Gist.test.ps1:*")
+	$ErrorActionPreference = 'Continue'
+	($e = try {Submit-Gist.ps1 MissingFile} catch {$_ | Out-String})
+	assert ($e -like "*\Submit-Gist.ps1 : Cannot find path 'MissingFile' because it does not exist.*At *\Submit-Gist.test.ps1:*")
 }
 
 task NoGistId {
-	$ErrorActionPreference = $err = 'Continue'
-	try {
-		Submit-Gist.ps1 $BuildFile
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like "*\Submit-Gist.ps1 : Found no gist URL in '*\Submit-Gist.test.ps1'.*At *\Submit-Gist.test.ps1:*")
+	$ErrorActionPreference = 'Continue'
+	($e = try {Submit-Gist.ps1 $BuildFile} catch {$_ | Out-String})
+	assert ($e -like "*\Submit-Gist.ps1 : GistId is not specified and the file does not contain the gist URL.*At *\Submit-Gist.test.ps1:*")
 }
 
 task SafeSubmitNotChanged (job SubmitNotChanged -Safe)

@@ -11,15 +11,13 @@ task SameFile {
 }
 
 task MissingResult {
-	$$ = try { Assert-SameFile $BuildFile missing } catch {$_}
-	$$
-	assert ($$ -clike "*Missing result file 'missing'.")
+	($e = try {Assert-SameFile $BuildFile missing} catch {$_})
+	assert ($e -clike "*Missing result file 'missing'.")
 }
 
 task DifferentFileFail {
-	$$ = try { Assert-SameFile $BuildFile Add-Debugger.test.ps1 } catch {$_}
-	$$
-	assert ($$ -like "*Different sample '*\Assert-SameFile.test.ps1' and result 'Add-Debugger.test.ps1'.")
+	($e = try {Assert-SameFile $BuildFile Add-Debugger.test.ps1} catch {$_})
+	assert ($e -like "*Different sample '*\Assert-SameFile.test.ps1' and result 'Add-Debugger.test.ps1'.")
 }
 
 task MissingSample {
@@ -80,12 +78,11 @@ task DifferentFile {
 	2 > z
 	$fake = @{}
 	$fakeChoice = 2
-	$$ = try { Assert-SameFile z $BuildFile { $fake.View = 2 } } catch {$_}
-	$$
+	($e = try {Assert-SameFile z $BuildFile { $fake.View = 2 }} catch {$_})
 	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
 	assert ($fake.Caption -ceq 'Different result')
 	assert ($fake.View -eq 2)
-	assert ($$ -clike "*Different sample 'z' and result '$BuildFile'.")
+	assert ($e -like "*Different sample 'z' and result '$BuildFile'.")
 	assert ((Get-Content z) -eq 2)
 	Remove-Item z
 }

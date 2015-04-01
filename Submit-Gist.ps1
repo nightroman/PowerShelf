@@ -17,6 +17,8 @@
 	A just cloned local gist repository is removed after submission unless the
 	switch Keep is used. An existing local repository is not removed.
 
+	See also Update-Gist.ps1 which has its pros and cons.
+
 .Parameter FileName
 		The file to be submitted (existing is updated, new is added).
 .Parameter GistId
@@ -38,82 +40,76 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
-param
-(
+param(
 	[Parameter(Mandatory = $true)][string]$FileName,
 	[string]$GistId,
 	[switch]$Keep
 )
 
 $ErrorActionPreference = 'Stop'
+trap {Write-Error $_}
 
 function exec($command) {
 	. $command
-	if ($LASTEXITCODE) { throw "Command {$command} exited with code $LASTEXITCODE." }
+	if ($LASTEXITCODE) {throw "Command {$command} exited with code $LASTEXITCODE."}
 }
 
-try {
-	$FileName = Resolve-Path -LiteralPath $FileName
+$FileName = Resolve-Path -LiteralPath $FileName
 
-	# extract the gist ID from the file
-	if (!$GistId) {
-		foreach($$ in Get-Content -LiteralPath $FileName) {
-			if ($$ -match 'https://gist.github.com/\w+/(\w+)' -or $$ -match 'https://gist.github.com/(\w+)') {
-				$GistId = $matches[1]
-				break
-			}
+# extract the gist ID from the file
+if (!$GistId) {
+	foreach($$ in Get-Content -LiteralPath $FileName) {
+		if ($$ -match 'https://gist.github.com/\w+/(\w+)' -or $$ -match 'https://gist.github.com/(\w+)') {
+			$GistId = $matches[1]
+			break
 		}
-		if (!$GistId) { throw "Found no gist URL in '$FileName'." }
 	}
-	$repo = "gist-$GistId"
+	if (!$GistId) {throw 'GistId is not specified and the file does not contain the gist URL.'}
+}
+$repo = "gist-$GistId"
 
+Push-Location -LiteralPath $HOME
+try {
+	# clone the repository
+	if (Test-Path -LiteralPath $repo) {
+		$Keep = $true
+	}
+	else {
+		exec { git clone git@gist.github.com:$GistId.git $repo }
+	}
 
-	Push-Location -LiteralPath $HOME
+	Push-Location -LiteralPath $repo
 	try {
-		# clone the repository
-		if (Test-Path -LiteralPath $repo) {
-			$Keep = $true
+		# copy the file to the repository
+		Copy-Item -LiteralPath $FileName . -Force
+
+		# add
+		exec { git add . }
+
+		# status
+		$status = exec { git status -s }
+
+		# nothing?
+		if (!$status) {
+			Write-Host -ForegroundColor Cyan "Nothing is changed."
+			return
 		}
-		else {
-			exec { git clone git@gist.github.com:$GistId.git $repo }
-		}
 
-		Push-Location -LiteralPath $repo
-		try {
-			# copy the file to the repository
-			Copy-Item -LiteralPath $FileName . -Force
+		# commit
+		exec { git commit -m ([System.IO.Path]::GetFileName($FileName)) }
 
-			# add
-			exec { git add . }
-
-			# status
-			$status = exec { git status -s }
-
-			# nothing?
-			if (!$status) {
-				Write-Host -ForegroundColor Cyan "Nothing is changed."
-				return
-			}
-
-			# commit
-			exec { git commit -m ([System.IO.Path]::GetFileName($FileName)) }
-
-			# push
-			exec { git push }
-		}
-		finally {
-			Pop-Location
-
-			# remove the local repository
-			if (!$Keep) {
-				Remove-Item -LiteralPath $repo -Force -Recurse
-			}
-		}
+		# push
+		exec { git push }
 	}
 	finally {
 		Pop-Location
+
+		# remove the local repository
+		if (!$Keep) {
+			Remove-Item -LiteralPath $repo -Force -Recurse
+		}
 	}
 }
-catch {
-	Write-Error $_
+finally {
+	Pop-Location
 }

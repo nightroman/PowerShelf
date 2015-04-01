@@ -86,13 +86,13 @@ task Get-Date-V3 -If ($PSVersionTable.PSVersion.Major -ge 3) {
 
 # Get-Date in a hashtable is troublesome in V2
 task Get-Date-V2 -If ($PSVersionTable.PSVersion.Major -eq 2) {
-	$e = try { @{ date = (Get-Date) } | Export-Binary.ps1 z.binary } catch {$_}
+	($e = try { @{ date = (Get-Date) } | Export-Binary.ps1 z.binary } catch {$_})
 	assert ($e -like "*Type 'System.Management.Automation.PSObject' * is not marked as serializable.*")
 }
 
 task RecoverDataFromBrokenFile {
 	# export is stopped in the middle
-	$e = try { 1, 2, $host | Export-Binary.ps1 z.binary } catch {$_}
+	($e = try { 1, 2, $host | Export-Binary.ps1 z.binary } catch {$_})
 	assert ($e -like "*Type 'System.Management.Automation.Internal.Host.InternalHost' * is not marked as serializable.*")
 
 	# recover some data from the broken file

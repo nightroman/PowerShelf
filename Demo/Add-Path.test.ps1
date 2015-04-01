@@ -10,13 +10,9 @@
 Set-StrictMode -Version 2
 
 task MissingDirectory {
-	$ErrorActionPreference = $err = 'Continue'
-	try {
-		Add-Path MissingDirectory TEST
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like "*\Add-Path.ps1 : Missing directory '*\MissingDirectory'.*At *\Add-Path.test.ps1:*")
+	$ErrorActionPreference = 'Continue'
+	($e = try {Add-Path MissingDirectory TEST} catch {$_ | Out-String})
+	assert ($e -like "*\Add-Path.ps1 : Missing directory '*\MissingDirectory'.*At *\Add-Path.test.ps1:*")
 }
 
 task AddTwiceNoSlash {

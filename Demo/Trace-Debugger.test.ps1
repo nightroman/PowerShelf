@@ -7,10 +7,10 @@
 $v3 = $PSVersionTable.PSVersion.Major -eq 3
 
 task Invalid {
-	$e = try {Trace-Debugger.ps1 -Path ''} catch {$_}
+	($e = try {Trace-Debugger.ps1 -Path ''} catch {$_})
 	assert ($e -like "*Cannot bind argument to parameter 'Path' because it is an empty string.")
 
-	$e = try {Trace-Debugger.ps1 -Table ''} catch {$_}
+	($e = try {Trace-Debugger.ps1 -Table ''} catch {$_})
 	assert ($e -like "*Cannot bind argument to parameter 'Table' because it is an empty string.")
 }
 
@@ -59,7 +59,7 @@ task CodeCoverageWithFilter -If $v3 {
 	($file = $files[1])
 	$Coverage[$file]
 	assert ([IO.Path]::GetFileName($file) -eq 'Add-Path.test.ps1')
-	assert ($Coverage[$file].Count -eq 34)
+	assert ($Coverage[$file].Count -eq 32)
 
 	# convert coverage data, do not show
 	$html = "$env:TEMP\test-coverage.htm"

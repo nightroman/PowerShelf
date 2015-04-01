@@ -27,6 +27,7 @@ They are designed for PowerShell v2.0+.
 * *Sync-Directory.ps1* - Syncs two directories with some interaction.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
 * *Trace-Debugger.ps1* - Provides script tracing and coverage data collection.
+* *Update-Gist.ps1* - Updates or creates a gist file using Invoke-RestMethod.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
 
 ## Get Scripts

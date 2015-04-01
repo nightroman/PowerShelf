@@ -8,30 +8,22 @@
 	Get-Process | Format-Chart Name, WS -Bar ([char]9600) -Space ([char]9617)
 #>
 
-Set-StrictMode -Version 2
+Set-StrictMode -Version Latest
 
 task MissingParameterProperty {
-	$ErrorActionPreference = $err = 'Continue'
-	try {
-		Format-Chart
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like '*\Format-Chart.ps1 : Missing parameter Property.*\Format-Chart.test.ps1:*')
+	$ErrorActionPreference = 'Continue'
+	($e = try {Format-Chart} catch {$_ | Out-String})
+	assert ($e -like '*\Format-Chart.ps1 : Missing parameter Property.*\Format-Chart.test.ps1:*')
 }
 
 task UnknownArguments {
-	$ErrorActionPreference = $err = 'Continue'
-	try {
-		Format-Chart Name -Unknown foo
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like '*\Format-Chart.ps1 : Unknown arguments: -Unknown foo*\Format-Chart.test.ps1:*')
+	$ErrorActionPreference = 'Continue'
+	($e = try {Format-Chart Name -Unknown foo} catch {$_ | Out-String})
+	assert ($e -like '*\Format-Chart.ps1 : Unknown arguments: -Unknown foo*\Format-Chart.test.ps1:*')
 }
 
 task NumericValues {
-	$ErrorActionPreference = $err = 'Continue'
+	$ErrorActionPreference = 'Continue'
 
 	# in V3 null and strings make issues; V2 is less strict
 	if ($PSVersionTable.PSVersion.Major -ge 3) {
@@ -47,22 +39,14 @@ task NumericValues {
 		)
 	}
 
-	try {
-		$NonNumeric | Format-Chart Name, Data
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like "*\Format-Chart.ps1 : Property 'Data' should have numeric values.*\Format-Chart.test.ps1:*")
+	($e = try {$NonNumeric | Format-Chart Name, Data} catch {$_ | Out-String})
+	assert ($e -like "*\Format-Chart.ps1 : Property 'Data' should have numeric values.*\Format-Chart.test.ps1:*")
 }
 
 task InvalidMinimumMaximum {
-	$ErrorActionPreference = $err = 'Continue'
-	try {
-		Get-Process PowerShell | Format-Chart Name, WS -Minimum 1gb
-	}
-	catch { $err = $_ | Out-String }
-	$err
-	assert ($err -like "*\Format-Chart.ps1 : Invalid Minimum and Maximum: *, *.*\Format-Chart.test.ps1:*")
+	$ErrorActionPreference = 'Continue'
+	($e = try {Get-Process PowerShell | Format-Chart Name, WS -Minimum 1gb} catch {$_ | Out-String})
+	assert ($e -like "*\Format-Chart.ps1 : Invalid Minimum and Maximum: *, *.*\Format-Chart.test.ps1:*")
 }
 
 task NoData {

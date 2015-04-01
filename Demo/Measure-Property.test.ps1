@@ -6,10 +6,8 @@
 
 task UnknownArguments {
 	$ErrorActionPreference = 'Continue'
-	$err = ''
-	try { Measure-Property Bad1 Bad2 }
-	catch { $err = $_ | Out-String }
-	assert ($err -like "*Unknown arguments: Bad1 Bad2*At*\Measure-Property.test.ps1:*")
+	($e = try {Measure-Property Bad1 Bad2} catch {$_ | Out-String})
+	assert ($e -like "*Unknown arguments: Bad1 Bad2*At*\Measure-Property.test.ps1:*")
 }
 
 task ObjectProperty {

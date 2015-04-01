@@ -1,6 +1,12 @@
 
 # PowerShelf Release Notes
 
+## v1.3.0
+
+New script *Update-Gist.ps1*. It updates or creates a gist file. Unlike
+*Submit-Gist.ps1* it does not require a git client, it uses the cmdlet
+`Invoke-RestMethod` and GitHub API. Requires PowerShell 3.0+.
+
 ## v1.2.4
 
 *Submit-Gist.ps1*: Added yet another form of expected gist URL.
