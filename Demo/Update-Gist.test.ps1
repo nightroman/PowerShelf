@@ -26,15 +26,22 @@ task NoGistId {
 	assert ($e -like "*\Update-Gist.ps1 : GistId is not specified and the file does not contain the gist URL.*At *\Update-Gist.test.ps1:*")
 }
 
+<#
+Fixed issues:
+1. кириллица - [System.Text.Encoding]::UTF8.GetBytes should be used
+2. "$({})" - gets invalid JSON without -Compress in ConvertTo-Json
+#>
 task UpdateGist {
 	$gistId = '95d318d6a34927f74eba'
-	$gistFile = 'try.txt'
+	$gistFile = 'test.txt'
 
 	$credential = Import-Clixml -LiteralPath "$HOME\data\GitHub.clixml"
-	($content = @"
-https://gist.github.com/$gistId
-тест $(Get-Date)
-"@)
+	($content = @'
+https://gist.github.com/{0}
+{1}
+кириллица
+"$({{}})" - fixed ConvertTo-JSON
+'@ -f $gistId, (Get-Date))
 	$file = "$env:TEMP\$gistFile"
 	[System.IO.File]::WriteAllText($file, $content, [System.Text.Encoding]::UTF8)
 

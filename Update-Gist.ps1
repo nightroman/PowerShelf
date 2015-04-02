@@ -75,7 +75,7 @@ $body = [System.Text.Encoding]::UTF8.GetBytes((
 				'content' = $content
 			}
 		}
-	} | ConvertTo-Json
+	} | ConvertTo-Json -Compress
 ))
 
 # get request credential

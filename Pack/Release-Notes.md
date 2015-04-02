@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.3.1
+
+*Update-Gist.ps1*. Fixed JSON issues.
+
 ## v1.3.0
 
 New script *Update-Gist.ps1*. It updates or creates a gist file. Unlike
