@@ -50,21 +50,27 @@ without a solution, and for other PowerShell hosts, too.
 
 How to debug NuGet package scripts like *init.ps1*, *install.ps1*, and etc.?
 
-Start Visual Studio. Open the NuGet console and invoke commands
+Start Visual Studio. Open the NuGet console and add the debugger:
 
-    Add-Debugger.ps1
+    Add-Debugger
+
+Or invoke this with the switch `-ReadHost` in order to use `Read-Host` for
+input instead of the default input box:
+
+    Add-Debugger -ReadHost
+
+Then set some breakpoints, see `help Set-PSBreakpoint`. For example:
+
     Set-PSBreakpoint -Command init.ps1, install.ps1, uninstall.ps1
 
-or set some more specific breakpoints, see `help Set-PSBreakpoint`.
-
 Open a Visual Studio solution or invoke NuGet package commands for the already
-opened. The debugger input dialog appears when the specified scripts are
-invoked. Enter `?` in the debugger input box and see what you can do:
+opened. The debugger prompt appears when the specified breakpoints are hit.
+Enter `?` and see what you can do:
 
     s, StepInto  Step to the next statement into functions, scripts, etc.
     v, StepOver  Step to the next statement over functions, scripts, etc.
     o, StepOut   Step out of the current function, script, etc.
-    c, Continue  Continue operation (also on Cancel or empty).
+    c, Continue  Continue operation (also on empty input).
     q, Quit      Stop operation and exit the debugger.
     ?, h         Write this help message.
     k            Write call stack (Get-PSCallStack).

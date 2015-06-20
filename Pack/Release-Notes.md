@@ -1,6 +1,11 @@
 
 # PowerShelf Release Notes
 
+## v1.4.0
+
+*Add-Debugger.ps1*. New switch `ReadHost` tells to use `Read-Host` for input
+instead of the default GUI input box.
+
 ## v1.3.1
 
 *Update-Gist.ps1*. Fixed JSON issues.

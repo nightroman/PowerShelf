@@ -2,6 +2,11 @@
 NuGetDebugTools Release Notes
 =============================
 
+## v1.4.0
+
+*Add-Debugger.ps1*. New switch `ReadHost` tells to use `Read-Host` for input
+instead of the default GUI input box.
+
 ## v1.3.2
 
 *Add-Debugger.ps1*, *Trace-Debugger.ps1*: Adapted for PowerShell v4.0.

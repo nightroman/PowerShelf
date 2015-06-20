@@ -13,13 +13,18 @@
 	The script should be called once at any moment when debugging is needed.
 	In order to restore the original debugger invoke Restore-Debugger.
 
-	The GUI input box is used for typing of PowerShell and debugger commands.
-	For output of these commands the script uses Out-Host or a file with a
+	For output of debug commands the script uses Out-Host or a file with a
 	separate console started for watching the data.
+
+	For input the GUI input box is used for typing of PowerShell and debugger
+	commands. Use the switch ReadHost in order to use Read-Host instead.
 
 .Parameter Path
 		Specifies the output file used instead of Out-Host.
 		A separate console is opened for watching the data.
+
+.Parameter ReadHost
+		Tells to use Read-Host for input instead of the default GUI input box.
 
 .Inputs
 	None
@@ -52,7 +57,8 @@
 
 param(
 	[Parameter()]
-	[string]$Path
+	[string]$Path,
+	[switch]$ReadHost
 )
 
 # Restore another debugger by its Restore-Debugger.
@@ -121,14 +127,26 @@ else {
 }
 
 # Reads debugger input.
-function global:Read-Debugger(
-	$Prompt,
-	$Title,
-	$Default
-)
-{
+if ($ReadHost) {
+	function global:Read-Debugger(
+		$Prompt,
+		$Title,
+		$Default
+	)
+	{
+		Read-Host $Prompt
+	}
+}
+else {
 	Add-Type -AssemblyName Microsoft.VisualBasic
-	[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title, $Default)
+	function global:Read-Debugger(
+		$Prompt,
+		$Title,
+		$Default
+	)
+	{
+		[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title, $Default)
+	}
 }
 
 # Starts an external file viewer.
@@ -217,7 +235,8 @@ function global:Invoke-DebuggerStop
 	$_Debugger.e = $_
 	for() {
 		### prompt
-		$_Debugger.Action = (Read-Debugger "Enter PowerShell and debug commands.`nUse h or ? for help." Debugger $_Debugger.Action).Trim()
+		$_Debugger.Action = Read-Debugger "Enter PowerShell and debug commands.`nUse h or ? for help" Debugger $_Debugger.Action
+		$_Debugger.Action = if ($null -eq $_Debugger.Action) {''} else {$_Debugger.Action.Trim()}
 		Write-Debugger "DBG> $($_Debugger.Action)"
 
 		### Continue
@@ -293,7 +312,7 @@ function global:Invoke-DebuggerStop
   s, StepInto  Step to the next statement into functions, scripts, etc.
   v, StepOver  Step to the next statement over functions, scripts, etc.
   o, StepOut   Step out of the current function, script, etc.
-  c, Continue  Continue operation (also on Cancel or empty).
+  c, Continue  Continue operation (also on empty input).
   q, Quit      Stop operation and exit the debugger.
   ?, h         Write this help message.
   k            Write call stack (Get-PSCallStack).
