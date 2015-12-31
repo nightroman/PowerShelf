@@ -18,7 +18,7 @@ task TestDebugger {
 
 	# call the test
 	PowerShell.exe "$BuildRoot\Test-Add-Debugger.ps1"
-	assert ($LASTEXITCODE -eq 0)
+	equals $LASTEXITCODE 0
 	assert (Test-Path -LiteralPath $log)
 
 	# test log

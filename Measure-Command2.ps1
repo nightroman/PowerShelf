@@ -7,7 +7,7 @@
 .Description
 	The script is for measuring duration of fast expressions. In order to get a
 	more reliable result it invokes an expression several times and returns the
-	average. Unlike Measure-Command it returns a number of milliseconds, not a
+	average. Unlike Measure-Command, it returns a number of milliseconds, not a
 	time span which seems to be too verbose for fast expressions.
 
 	By default the script shows the progress with some current information and
@@ -29,24 +29,27 @@
 		Tells to not return on pressed [Escape].
 .Parameter Test
 		Tells to invoke once before timing.
+		The result is written to the output.
 
 .Inputs
 	None. Use the script parameters.
 .Outputs
 	Average duration in milliseconds.
+	It comes after Test output, if any.
 
 .Link
 	https://github.com/nightroman/PowerShelf
 #>
 
-param
-(
+param (
 	[Parameter()][scriptblock]$Expression = {},
 	[int]$Count = 1000,
 	[switch]$NoProgress,
 	[switch]$NoEscape,
 	[switch]$Test
 )
+
+try {
 
 ${private:-Expression} = $Expression
 ${private:-Count} = $Count
@@ -63,7 +66,7 @@ if (!${-NoEscape}) {
 
 # test once
 if (${-Test}) {
-	. ${-Expression} | Out-Host
+	. ${-Expression}
 }
 
 # iterations
@@ -95,3 +98,8 @@ for(${private:-n} = 1; ${-n} -le ${-Count}; ++${-n}) {
 
 # result
 ([timespan][int64](${-ticks} / ${-Count})).TotalMilliseconds
+
+} catch {
+	Write-Warning 'For more details try to examine previous errors in $Error'
+	Write-Error $_ -ErrorAction Stop
+}

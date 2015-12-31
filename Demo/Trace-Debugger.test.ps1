@@ -46,20 +46,20 @@ task CodeCoverageWithFilter -If $v3 {
 	Restore-Debugger
 
 	$Coverage
-	assert ($Coverage.Count -eq 2)
+	equals $Coverage.Count 2
 	$files = $Coverage.Keys | Sort-Object {[IO.Path]::GetFileName($_)}
 
 	# test file [0]
 	($file = $files[0])
 	$Coverage[$file]
-	assert ([IO.Path]::GetFileName($file) -eq 'Add-Path.ps1')
-	assert ($Coverage[$file].Count -eq 7)
+	equals [IO.Path]::GetFileName($file) 'Add-Path.ps1'
+	equals $Coverage[$file].Count 7
 
 	# test file [1]
 	($file = $files[1])
 	$Coverage[$file]
-	assert ([IO.Path]::GetFileName($file) -eq 'Add-Path.test.ps1')
-	assert ($Coverage[$file].Count -eq 32)
+	equals [IO.Path]::GetFileName($file) 'Add-Path.test.ps1'
+	equals $Coverage[$file].Count 32
 
 	# convert coverage data, do not show
 	$html = "$env:TEMP\test-coverage.htm"

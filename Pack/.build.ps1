@@ -4,10 +4,11 @@
 	Build script (https://github.com/nightroman/Invoke-Build)
 #>
 
-# Docs by https://www.nuget.org/packages/MarkdownToHtml
-task ConvertMarkdown {
-	exec { MarkdownToHtml from=..\README.md to=README.htm }
-	exec { MarkdownToHtml from=Release-Notes.md to=Release-Notes.htm }
+# Convert markdown files to HTML.
+# <http://johnmacfarlane.net/pandoc/>
+task Markdown {
+	exec { pandoc.exe --standalone --from=markdown_strict --output=README.htm ../README.md }
+	exec { pandoc.exe --standalone --from=markdown_strict --output=Release-Notes.htm Release-Notes.md }
 }
 
 # Remove temp files
@@ -16,7 +17,7 @@ task Clean {
 }
 
 # Make package directory z\tools.
-task Package ConvertMarkdown, {
+task Package Markdown, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
 	$null = mkdir z\tools

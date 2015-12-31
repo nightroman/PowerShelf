@@ -39,7 +39,7 @@ task SubmitNotChanged {
 
 	# check messages
 	$res1.text
-	assert ($res1.text -eq "Nothing is changed.")
+	equals $res1.text "Nothing is changed."
 	$res2
 	assert ($res2 = "Cloning into 'gist-1303971'...")
 
@@ -53,7 +53,7 @@ task SubmitNotChanged {
 
 	# check messages
 	$res1.text
-	assert ($res1.text -eq "Nothing is changed.")
+	equals $res1.text "Nothing is changed."
 	$res2
 	assert ($res2 = "Cloning into 'gist-1303971'...")
 
@@ -67,7 +67,7 @@ task SubmitNotChanged {
 
 	# check messages
 	$res1.text
-	assert ($res1.text -eq "Nothing is changed.")
+	equals $res1.text "Nothing is changed."
 	$res2
 	assert (!$res2) # because it was not cloned
 

@@ -31,7 +31,7 @@ task MissingSample {
 
 	Assert-SameFile z $BuildFile
 
-	assert ($data.Warning -ceq "Created missing sample file 'z'.")
+	equals $data.Warning "Created missing sample file 'z'."
 	assert (Test-Path z)
 	Assert-SameFile z $BuildFile
 
@@ -56,9 +56,9 @@ task DifferentFile {
 	$fakeChoice = 0
 	Assert-SameFile z $BuildFile { $fake.View = 0 }
 	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
-	assert ($fake.Caption -ceq 'Different result')
-	assert ($fake.View -eq 0)
-	assert ((Get-Content z) -eq 0)
+	equals $fake.Caption 'Different result'
+	equals $fake.View 0
+	equals (Get-Content z) '0'
 	Remove-Item z
 
 	### Update
@@ -68,8 +68,8 @@ task DifferentFile {
 	$fakeChoice = 1
 	Assert-SameFile z $BuildFile { $fake.View = 1 }
 	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
-	assert ($fake.Caption -ceq 'Different result')
-	assert ($fake.View -eq 1)
+	equals $fake.Caption 'Different result'
+	equals $fake.View 1
 	Assert-SameFile z $BuildFile
 	Remove-Item z
 
@@ -80,9 +80,9 @@ task DifferentFile {
 	$fakeChoice = 2
 	($e = try {Assert-SameFile z $BuildFile { $fake.View = 2 }} catch {$_})
 	assert ($fake.Warning -clike "Different sample 'z' and result '$BuildFile'.")
-	assert ($fake.Caption -ceq 'Different result')
-	assert ($fake.View -eq 2)
+	equals $fake.Caption 'Different result'
+	equals $fake.View 2
 	assert ($e -like "*Different sample 'z' and result '$BuildFile'.")
-	assert ((Get-Content z) -eq 2)
+	equals (Get-Content z) '2'
 	Remove-Item z
 }

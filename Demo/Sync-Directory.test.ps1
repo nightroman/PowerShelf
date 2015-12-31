@@ -36,7 +36,7 @@ task Missing1 {
 	assert ($r.Warning -like "Directory 1 '*\z' does not exist.")
 	assert ($r.Caption -like "Mirror 2->1 '$BuildRoot' to '*\z'")
 	assert (Test-Path $env:TEMP\z)
-	assert ((Get-ChildItem).Count -eq (Get-ChildItem $env:TEMP\z).Count)
+	equals (Get-ChildItem).Count (Get-ChildItem $env:TEMP\z).Count
 
 	Remove-Item $env:TEMP\z -Force -Recurse
 }
@@ -66,7 +66,7 @@ task Missing2 {
 	assert ($r.Warning -like "Directory 2 '*\z' does not exist.")
 	assert ($r.Caption -like "Mirror 1->2 '$BuildRoot' to '*\z'")
 	assert (Test-Path $env:TEMP\z)
-	assert ((Get-ChildItem).Count -eq (Get-ChildItem $env:TEMP\z).Count)
+	equals (Get-ChildItem).Count (Get-ChildItem $env:TEMP\z).Count
 
 	Remove-Item $env:TEMP\z -Force -Recurse
 }

@@ -21,7 +21,7 @@ task Hashtable {
 	$r
 
 	assert ($r -is [hashtable])
-	assert ($r.Count -eq $data.Count)
+	equals $r.Count $data.Count
 }
 
 task Primitives {
@@ -31,10 +31,10 @@ task Primitives {
 	$r
 
 	assert ($r -is [object[]])
-	assert ($r.Count -eq 5)
-	assert ($r[0] -ceq 'data1')
-	assert ($r[1] -eq 42)
-	assert ($r[2] -eq 3.14)
+	equals $r.Count 5
+	equals $r[0] 'data1'
+	equals $r[1] 42
+	equals $r[2] 3.14
 	assert ($r[3] -is [DateTime])
 	assert ($r[4] -is [guid])
 }
@@ -46,7 +46,7 @@ task FileSystemItems {
 	$r = Import-Binary.ps1 z.binary
 	$r
 
-	assert ($r.Count -eq $items.Count)
+	equals $r.Count $items.Count
 	assert ($r[0] -is [System.IO.FileInfo])
 }
 
@@ -58,21 +58,21 @@ task CustomObjects -If ($PSVersionTable.PSVersion.Major -ge 3) {
 	$r = Import-Binary.ps1 z.binary
 	$r
 
-	assert ($r.Count -eq 2)
-	assert ($r[0].data -eq 'data1')
-	assert ($r[1].data -eq 'data2')
+	equals $r.Count 2
+	equals $r[0].data 'data1'
+	equals $r[1].data 'data2'
 }
 
 task Append {
 	'data1' | Export-Binary.ps1 z.binary
 	$r = Import-Binary.ps1 z.binary
-	assert ($r -eq 'data1')
+	equals $r 'data1'
 
 	'data2' | Export-Binary.ps1 z.binary -Append
 	$r = Import-Binary.ps1 z.binary
-	assert ($r.Count -eq 2)
-	assert ($r[0] -eq 'data1')
-	assert ($r[1] -eq 'data2')
+	equals $r.Count 2
+	equals $r[0] 'data1'
+	equals $r[1] 'data2'
 }
 
 ### Issues
@@ -98,9 +98,9 @@ task RecoverDataFromBrokenFile {
 	# recover some data from the broken file
 	$r = Import-Binary.ps1 z.binary -ErrorAction 0 -ErrorVariable e
 	assert ($e -like "*End of Stream encountered before parsing was completed.*")
-	assert ($r.Count -eq 2)
-	assert ($r[0] -eq 1)
-	assert ($r[1] -eq 2)
+	equals $r.Count 2
+	equals $r[0] 1
+	equals $r[1] 2
 }
 
 task Clean {

@@ -61,5 +61,5 @@ task NoWindowWidthAvailable {
 	})
 	$out = $ps.Invoke()[0].Trim() -split '\n' #! [0] is for PS v2
 	$out
-	assert ($out.Count -eq 5)
+	equals $out.Count 5
 }

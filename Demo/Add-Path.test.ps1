@@ -21,11 +21,11 @@ task AddTwiceNoSlash {
 
 	# add a new, check added
 	Add-Path . TEST
-	assert ($env:TEST -eq "$BuildRoot;a;b;c")
+	equals $env:TEST "$BuildRoot;a;b;c"
 
 	# add the same, check not added again
 	Add-Path . TEST
-	assert ($env:TEST -eq "$BuildRoot;a;b;c")
+	equals $env:TEST "$BuildRoot;a;b;c"
 }
 
 task AddTwiceWithSlash {
@@ -34,23 +34,23 @@ task AddTwiceWithSlash {
 
 	# add a new, check added
 	Add-Path "$BuildRoot/" TEST
-	assert ($env:TEST -eq "$BuildRoot\;a;b;c")
+	equals $env:TEST "$BuildRoot\;a;b;c"
 
 	# add the same, check not added again
 	Add-Path "$BuildRoot/" TEST
-	assert ($env:TEST -eq "$BuildRoot\;a;b;c")
+	equals $env:TEST "$BuildRoot\;a;b;c"
 }
 
 task AddExisting {
 	$env:TEST = "a;$BuildRoot;c"
 	Add-Path "$BuildRoot" TEST
-	assert ($env:TEST -eq "a;$BuildRoot;c")
+	equals $env:TEST "a;$BuildRoot;c"
 	Add-Path "$BuildRoot/" TEST
-	assert ($env:TEST -eq "a;$BuildRoot;c")
+	equals $env:TEST "a;$BuildRoot;c"
 
 	$env:TEST = "a;$BuildRoot\;c"
 	Add-Path "$BuildRoot" TEST
-	assert ($env:TEST -eq "a;$BuildRoot\;c")
+	equals $env:TEST "a;$BuildRoot\;c"
 	Add-Path "$BuildRoot/" TEST
-	assert ($env:TEST -eq "a;$BuildRoot\;c")
+	equals $env:TEST "a;$BuildRoot\;c"
 }

@@ -28,7 +28,7 @@ set TEST=Simple
 	# invoke and test
 	$env:test = $null
 	$res = Invoke-Environment $File
-	assert ($env:test -eq 'Simple')
+	equals $env:test 'Simple'
 	assert (!$res) $res
 }
 
@@ -43,9 +43,9 @@ set TEST=Output
 	# invoke and test
 	$env:test = $null
 	$res = @(Invoke-Environment $File -Output)
-	assert ($env:test -eq 'Output')
-	assert ($res.Count -eq 1) $res.Count
-	assert ($res[0] -eq 'Some output') ($res[0])
+	equals $env:test 'Output'
+	equals $res.Count 1
+	equals $res[0] 'Some output'
 }
 
 task Exit11Stop {
@@ -60,7 +60,7 @@ exit /b 11
 	$env:test = $null
 	Invoke-Environment $File
 	assert (!$env:test) $env:test
-	assert ($LastExitCode -eq 11)
+	equals $LastExitCode 11
 }
 
 task Exit42Force {
@@ -74,9 +74,9 @@ exit /b 42
 	# invoke and test
 	$env:test = $null
 	$r = Invoke-Environment $File -Force
-	assert ($null -eq $r)
-	assert ($LastExitCode -eq 0)
-	assert ($env:test -eq 'Exit42Force') $env:test
+	equals $r
+	equals $LastExitCode 0
+	equals $env:test 'Exit42Force'
 }
 
 <#
@@ -100,16 +100,16 @@ exit /b 42
 	# with -Force
 	$env:test = $null
 	$r = Invoke-Environment "`"$File2`"" -Force -Output
-	assert ($r -eq 'BatchWithSpacesAndError')
-	assert ($LastExitCode -eq 0)
-	assert ($env:test -eq 'BatchWithSpacesAndError')
+	equals $r 'BatchWithSpacesAndError'
+	equals $LastExitCode 0
+	equals $env:test 'BatchWithSpacesAndError'
 
 	# no -Force
 	$env:test = $null
 	$r = Invoke-Environment "`"$File2`"" -Output
-	assert ($r -eq 'BatchWithSpacesAndError')
-	assert ($LastExitCode -eq 42)
-	assert ($null -eq $env:test)
+	equals $r 'BatchWithSpacesAndError'
+	equals $LastExitCode 42
+	equals $env:test
 }
 
 <#
@@ -128,6 +128,6 @@ set TEST2=%2
 	$env:test1 = $null
 	$env:test2 = $null
 	Invoke-Environment "`"$File2`" Argument1 `"Argument 2`"" -Force
-	assert ($env:test1 -eq 'Argument1')
-	assert ($env:test2 -eq '"Argument 2"')
+	equals $env:test1 'Argument1'
+	equals $env:test2 '"Argument 2"'
 }

@@ -52,15 +52,15 @@ task InvalidMinimumMaximum {
 task NoData {
 	$io = @()
 	$res = $io | Format-Chart Data
-	assert ($null -eq $res)
+	equals $null $res
 	$res = Format-Chart Data -InputObject $io
-	assert ($null -eq $res)
+	equals $null $res
 
 	$io = $null
 	$res = $io | Format-Chart Data
-	assert ($null -eq $res)
+	equals $null $res
 	$res = Format-Chart Data -InputObject $io
-	assert ($null -eq $res)
+	equals $null $res
 }
 
 function Trim

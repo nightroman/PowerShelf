@@ -16,13 +16,13 @@ task Terminating.NonTerminating.TurningOff {
 		# Test 1. Non terminating errors do not trigger the breakpoint
 		$script:log = ''
 		Get-Item missing -ErrorAction SilentlyContinue
-		assert ($log -eq '')
+		equals $log ''
 
 		# Test 2. Terminating errors trigger the breakpoint
 		$script:log = ''
 		try { Get-Item missing -ErrorAction Stop }
 		catch {}
-		assert ($log -eq 'Failed')
+		equals $log 'Failed'
 	}
 	finally {
 		# disable debugging on errors
@@ -33,5 +33,5 @@ task Terminating.NonTerminating.TurningOff {
 	$script:log = ''
 	try { Get-Item missing -ErrorAction Stop }
 	catch {}
-	assert ($log -eq '')
+	equals $log ''
 }

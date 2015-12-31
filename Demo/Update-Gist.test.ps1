@@ -51,7 +51,7 @@ https://gist.github.com/{0}
 	# get and check
 	$r = Invoke-RestMethod -Uri https://api.github.com/gists/95d318d6a34927f74eba
 	($content2 = $r.files.$GistFile.content.Replace("`n", "`r`n"))
-	assert ($content -ceq $content2)
+	equals $content $content2
 
 	[System.IO.File]::Delete($file)
 }

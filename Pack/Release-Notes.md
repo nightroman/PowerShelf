@@ -1,6 +1,13 @@
 
 # PowerShelf Release Notes
 
+## v1.4.1
+
+`Measure-Command2.ps1`
+
+- Avoided `Out-Host` on `-Test`, data, if any, are returned before the duration.
+- On failures a warning is shown. It tells to examine `$Error` for more details.
+
 ## v1.4.0
 
 *Add-Debugger.ps1*. New switch `ReadHost` tells to use `Read-Host` for input
