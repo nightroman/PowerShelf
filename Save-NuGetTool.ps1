@@ -1,7 +1,8 @@
 
 <#
 .Synopsis
-	Downloads the NuGet package and extracts /tools.
+	Downloads a NuGet package and extracts /tools.
+	Author: Roman Kuzmin
 
 .Description
 	The command downloads PackageId.zip from the NuGet Gallery to the current
@@ -10,6 +11,9 @@
 
 .Parameter PackageId
 	Specifies the package ID.
+
+.Link
+	https://github.com/nightroman/PowerShelf
 #>
 
 param([Parameter()]$PackageId)

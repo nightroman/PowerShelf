@@ -1,6 +1,9 @@
 
-NuGetDebugTools Release Notes
-=============================
+# NuGetDebugTools Release Notes
+
+## v1.4.1
+
+Set package `developmentDependency` to true.
 
 ## v1.4.0
 

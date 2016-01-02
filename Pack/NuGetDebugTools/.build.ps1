@@ -62,6 +62,7 @@ for debugging and testing NuGet and Visual Studio specific scripts.
 		<summary>$text</summary>
 		<description>$text</description>
 		<tags>NuGet PowerShell Debugging Tracing Coverage Tools</tags>
+		<developmentDependency>true</developmentDependency>
 	</metadata>
 </package>
 "@

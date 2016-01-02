@@ -1,11 +1,9 @@
 
-PowerShelf - PowerShell Scripts
-===============================
+# PowerShelf - PowerShell Scripts
 
 ## Introduction
 
 PowerShell tools for various tasks implemented as scripts, mostly standalone.
-They are designed for PowerShell v2.0+.
 
 ## Script List
 
@@ -20,6 +18,7 @@ They are designed for PowerShell v2.0+.
 * *Invoke-Environment.ps1* - Invokes a command and imports its environment variables.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Measure-Property.ps1* -  Counts properties grouped by names and types.
+* *Save-NuGetTool.ps1* - Downloads a NuGet package and extracts /tools.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
 * *Show-Color.ps1* - Shows all color combinations, color names and codes.
 * *Show-Coverage.ps1* - Converts to HTML and shows script coverage data.
@@ -34,12 +33,19 @@ They are designed for PowerShell v2.0+.
 
 The scripts are distributed as two NuGet packages:
 
-- [PowerShelf](https://www.nuget.org/packages/PowerShelf/) (all scripts)
-- [NuGetDebugTools](https://www.nuget.org/packages/NuGetDebugTools/) (debugging)
+[PowerShelf](https://www.nuget.org/packages/PowerShelf) (all scripts).
+Download it to the current location as the directory *"PowerShelf"* by this PowerShell command:
 
-All scripts together with tests and other files can be downloaded to the
-current directory as *PowerShelf.zip* by this PowerShell command:
+    Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} PowerShelf"
 
-    (New-Object Net.WebClient).DownloadFile("https://github.com/nightroman/PowerShelf/zipball/master", "PowerShelf.zip")
+[NuGetDebugTools](https://www.nuget.org/packages/NuGetDebugTools) (debugging).
+Download it to the current location as the directory *"NuGetDebugTools"* by this PowerShell command:
 
----
+    Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} NuGetDebugTools"
+
+Alternatively, get them by NuGet tools or download
+[PowerShelf](http://nuget.org/api/v2/package/PowerShelf) or
+[NuGetDebugTools](http://nuget.org/api/v2/package/NuGetDebugTools).
+In the latter case save as *".zip"* and unzip. Use the package subdirectory *"tools"*.
+
+***

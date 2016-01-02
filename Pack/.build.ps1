@@ -73,6 +73,7 @@ They are designed for PowerShell v2.0 and v3.0.
 		<summary>$text</summary>
 		<description>$text</description>
 		<tags>NuGet PowerShell Debugging Tracing Coverage Tools</tags>
+		<developmentDependency>true</developmentDependency>
 	</metadata>
 </package>
 "@
