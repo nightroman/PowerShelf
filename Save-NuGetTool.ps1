@@ -13,7 +13,6 @@
 #>
 
 param([Parameter()]$PackageId)
-
 $ErrorActionPreference = 'Stop'
 
 $here = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
@@ -33,10 +32,14 @@ catch {
 }
 
 $shell = New-Object -ComObject Shell.Application
-$from = $shell.Namespace("$zip\tools")
+$from = $shell.NameSpace("$zip\tools")
 if (!$from) {
 	Write-Error "Missing package item '$zip\tools'."
 }
+$one, $two = @($from.Items())
+if (!$two -and $one.Name -eq $PackageId) {
+	$from = $shell.NameSpace($one.Path)
+}
 
 $null = mkdir $dir
-$shell.NameSpace($dir).CopyHere($from.items(), 4)
+$shell.NameSpace($dir).CopyHere($from.Items(), 4)
