@@ -41,13 +41,14 @@
 #>
 
 param(
-	[Parameter(Mandatory = $true)][string]$FileName,
+	[Parameter(Mandatory=1)]
+	[string]$FileName,
 	[string]$GistId,
 	[switch]$Keep
 )
 
+trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
-trap {Write-Error $_}
 
 function exec($command) {
 	. $command

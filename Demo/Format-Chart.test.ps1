@@ -10,16 +10,11 @@
 
 Set-StrictMode -Version Latest
 
-task MissingParameterProperty {
+task BadParameter {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Format-Chart} catch {$_ | Out-String})
-	assert ($e -like '*\Format-Chart.ps1 : Missing parameter Property.*\Format-Chart.test.ps1:*')
-}
-
-task UnknownArguments {
-	$ErrorActionPreference = 'Continue'
-	($e = try {Format-Chart Name -Unknown foo} catch {$_ | Out-String})
-	assert ($e -like '*\Format-Chart.ps1 : Unknown arguments: -Unknown foo*\Format-Chart.test.ps1:*')
+	($r = try {<##> Format-Chart.ps1 Name -Unknown foo} catch {$_})
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+	equals $r.FullyQualifiedErrorId 'NamedParameterNotFound,Format-Chart.ps1'
 }
 
 task NumericValues {
@@ -46,7 +41,7 @@ task NumericValues {
 task InvalidMinimumMaximum {
 	$ErrorActionPreference = 'Continue'
 	($e = try {Get-Process PowerShell | Format-Chart Name, WS -Minimum 1gb} catch {$_ | Out-String})
-	assert ($e -like "*\Format-Chart.ps1 : Invalid Minimum and Maximum: *, *.*\Format-Chart.test.ps1:*")
+	assert ($e -like "*\Format-Chart.ps1 : Invalid Minimum, Maximum: *, *.*\Format-Chart.test.ps1:*")
 }
 
 task NoData {

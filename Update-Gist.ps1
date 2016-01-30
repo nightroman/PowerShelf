@@ -38,14 +38,15 @@
 #>
 
 param(
-	[Parameter(Mandatory=1)][string]$FileName,
+	[Parameter(Mandatory=1)]
+	[string]$FileName,
 	[string]$GistId,
 	[PSCredential]$Credential,
 	[switch]$Show
 )
 
+trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
-trap {Write-Error $_}
 
 # get the file content
 $FileName = Resolve-Path -LiteralPath $FileName

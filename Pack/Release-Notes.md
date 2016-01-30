@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.5.1
+
+Cmdlet binding in scripts.
+
 ## v1.5.0
 
 New `Save-NuGetTool.ps1` - Downloads a NuGet package and extracts /tools.

@@ -63,7 +63,8 @@ param(
 	[Parameter(Mandatory=1)]
 	[string]$Directory2
 )
-try {&{ # amend errors
+
+trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -234,9 +235,4 @@ switch(Get-Choice Choose 'What would you like to do?' @(
 			Write-Warning "%MERGE% is not defined or does not exist."
 		}
 	}
-}
-
-}}
-catch {
-	Write-Error $_ -ErrorAction Stop
 }

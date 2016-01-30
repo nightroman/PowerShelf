@@ -4,7 +4,7 @@
 	Format-High.ps1 tests.
 #>
 
-Set-StrictMode -Version 2
+Set-StrictMode -Version Latest
 
 task Examples {
 	# file system items
@@ -20,22 +20,25 @@ task Examples {
 	Get-Process | Format-High Name 80 {@{f=if($_.WS -gt 10mb){'red'}else{'green'}}}
 }
 
-task UnknownArguments {
+task BadParameter {
 	$ErrorActionPreference = 'Continue'
-	($e = try {1 | Format-High.ps1 -Unknown foo} catch {$_ | Out-String})
-	assert ($e -like '*\Format-High.ps1 : Unknown arguments: -Unknown foo*\Format-High.test.ps1:*')
+	($r = try {1 | <##> Format-High.ps1 -Unknown foo} catch {$_})
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+	equals $r.FullyQualifiedErrorId 'NamedParameterNotFound,Format-High.ps1'
 }
 
 task BadProperty {
 	$ErrorActionPreference = 'Continue'
-	($e = try {1..11 | Format-High.ps1 {throw 'Oops.'}} catch {$_ | Out-String})
-	assert ($e -like '*\Format-High.ps1 : Error on Property evaluation: Oops.*\Format-High.test.ps1:*')
+	($r = try {1..11 | <##> Format-High.ps1 {throw 'Oops.'}} catch {$_})
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+	equals $r.FullyQualifiedErrorId 'Error on Property evaluation: Oops.,Format-High.ps1'
 }
 
 task BadColorThrow {
 	$ErrorActionPreference = 'Continue'
-	($e = try {1..11 | Format-High.ps1 -Color {throw 'Oops.'}} catch {$_ | Out-String})
-	assert ($e -like '*\Format-High.ps1 : Error on Color evaluation: Oops.*\Format-High.test.ps1:*')
+	($r = try {1..11 | <##> Format-High.ps1 -Color {throw 'Oops.'}} catch {$_})
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+	equals $r.FullyQualifiedErrorId 'Error on Color evaluation: Oops.,Format-High.ps1'
 }
 
 task BadColorKeyButWorks {

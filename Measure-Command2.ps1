@@ -41,15 +41,19 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
-param (
-	[Parameter()][scriptblock]$Expression = {},
+param(
+	[Parameter()]
+	[scriptblock]$Expression = {},
 	[int]$Count = 1000,
 	[switch]$NoProgress,
 	[switch]$NoEscape,
 	[switch]$Test
 )
 
-try {
+trap {
+	Write-Warning 'For more details try to examine $Error.'
+	$PSCmdlet.ThrowTerminatingError($_)
+}
 
 ${private:-Expression} = $Expression
 ${private:-Count} = $Count
@@ -98,8 +102,3 @@ for(${private:-n} = 1; ${-n} -le ${-Count}; ++${-n}) {
 
 # result
 ([timespan][int64](${-ticks} / ${-Count})).TotalMilliseconds
-
-} catch {
-	Write-Warning 'For more details try to examine previous errors in $Error'
-	Write-Error $_ -ErrorAction Stop
-}
