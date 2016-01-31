@@ -5,11 +5,12 @@
 	Author: Roman Kuzmin
 
 .Description
-	The command watches for changed, created, deleted, and renamed files in the
-	given directories. On changes it periodically invokes the specified command
-	with a hastable, the last portion of change information.
+	The script watches for changed, created, deleted, and renamed files in the
+	given directories. On changes it invokes the specified command with change
+	info. It is a hashtable which keys are changed file paths, values are last
+	change types.
 
-	The hashtable keys are changed file paths, values are last change types.
+	If the command is omitted then the script outputs change info as text.
 
 .Parameter Path
 		Specifies the watched directory paths.
@@ -37,7 +38,7 @@ param(
 	[Parameter(Position=1, Mandatory=1)]
 	[string[]]$Path,
 	[Parameter(Position=2)]
-	$Command = {$args[0]},
+	$Command,
 	[string]$Filter,
 	[string]$Include,
 	[string]$Exclude,
@@ -109,14 +110,18 @@ try {
 		if (([datetime]::Now - $lastTime).TotalSeconds -lt $WaitSeconds) {continue}
 
 		# call
-		try {
-			& $Command $changes
+		if ($Command) {
+			try {
+				& $Command $changes
+			}
+			catch {
+				"$($_.ToString())`r`n$($_.InvocationInfo.PositionMessage)"
+			}
 		}
-		catch {
-			@"
-$($_.ToString())
-$($_.InvocationInfo.PositionMessage)
-"@
+		else {
+			foreach($key in $changes.Keys | Sort-Object) {
+				"$($changes[$key]) $key"
+			}
 		}
 
 		# reset

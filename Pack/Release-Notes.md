@@ -1,6 +1,11 @@
 
 # PowerShelf Release Notes
 
+## v1.6.1
+
+`Watch-Directory.ps1`: If the command is omitted then the script outputs change
+info as text.
+
 ## v1.6.0
 
 New `Watch-Directory.ps1` - File change watcher and handler.
