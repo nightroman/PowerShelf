@@ -9,7 +9,7 @@
 	given directories. On changes it periodically invokes the specified command
 	with a hastable, the last portion of change information.
 
-	The hashtable keys are path of changed files, values are last change types.
+	The hashtable keys are changed file paths, values are last change types.
 
 .Parameter Path
 		Specifies the watched directory paths.
@@ -57,7 +57,7 @@ $Path = foreach($_ in $Path) {
 }
 
 $watchers = @()
-$SourceIdentifier = @()
+$events = @()
 try {
 	$i = 0
 	foreach($_ in $Path) {
@@ -74,7 +74,7 @@ try {
 		Register-ObjectEvent $watcher -EventName Created -SourceIdentifier "FileCreated_$i"
 		Register-ObjectEvent $watcher -EventName Deleted -SourceIdentifier "FileDeleted_$i"
 		Register-ObjectEvent $watcher -EventName Renamed -SourceIdentifier "FileRenamed_$i"
-		$SourceIdentifier += "FileChanged_$i", "FileCreated_$i", "FileDeleted_$i", "FileRenamed_$i"
+		$events += "FileChanged_$i", "FileCreated_$i", "FileDeleted_$i", "FileRenamed_$i"
 	}
 
 	$changes = @{}
@@ -84,7 +84,7 @@ try {
 
 		# events
 		foreach($e in Get-Event) {
-			if ($SourceIdentifier -notcontains $e.SourceIdentifier) {continue}
+			if ($events -notcontains $e.SourceIdentifier) {continue}
 
 			$isMatch = $true
 			if ($Include) {
@@ -125,7 +125,7 @@ $($_.InvocationInfo.PositionMessage)
 	}
 }
 finally {
-	foreach($_ in $SourceIdentifier) {
+	foreach($_ in $events) {
 		Unregister-Event -SourceIdentifier $_ -ErrorAction Continue
 	}
 	foreach($_ in $watchers) {
