@@ -6,19 +6,21 @@
 
 .Description
 	The tool watches for changed, created, deleted, and renamed files in the
-	directory. On changes it periodically invokes the specified command with
+	given directories. On changes it periodically invokes the specified command with
 	a hastable, the last portion of change information.
 
 	The hashtable keys are path of changed files, values are last change types.
 
 .Parameter Path
-		Specifies the watched directory path.
+		Specifies the watched directory paths.
 .Parameter Command
 		Specifies the command to process changes.
 .Parameter Filter
 		Simple and effective file system filter. Default *.*
 .Parameter Pattern
-		Regular expression pattern applied in after Filter.
+		Inclusion regular expression pattern applied after Filter.
+.Parameter Exclude
+		Exclusion regular expression pattern applied after Filter.
 .Parameter Recurse
 		Tells to watch files in subdirectories as well.
 .Parameter TestSeconds
@@ -32,33 +34,49 @@
 
 param(
 	[Parameter(Position=1, Mandatory=1)]
-	[string]$Path,
+	[array]$Path,
 	[Parameter(Position=2)]
 	$Command = {$args[0]},
 	[string]$Filter,
 	[string]$Pattern,
+	[string]$Exclude,
 	[switch]$Recurse,
 	[int]$TestSeconds = 5,
 	[int]$WaitSeconds = 5
 )
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
-$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+$Path = $Path |% { $PSCmdlet.GetUnresolvedProviderPathFromPSPath($_) }
 
-$watcher = [System.IO.FileSystemWatcher]$Path
-$watcher.NotifyFilter = 'FileName,LastWrite'
-$watcher.IncludeSubdirectories = $Recurse
-if ($Filter) {
-	$watcher.Filter = $Filter
+$watchers = $Path |% {
+	$watcher = [System.IO.FileSystemWatcher]$_
+	$watcher.NotifyFilter = 'FileName,LastWrite'
+	$watcher.IncludeSubdirectories = $Recurse
+	if ($Filter) {
+		$watcher.Filter = $Filter
+	}
+	$watcher
 }
 
+$events = @()
+$SourceIdentifier = @()
 $FileChanged, $FileCreated, $FileDeleted, $FileRenamed = $null
 try {
-	$FileChanged = Register-ObjectEvent $watcher -EventName Changed -SourceIdentifier FileChanged
-	$FileCreated = Register-ObjectEvent $watcher -EventName Created -SourceIdentifier FileCreated
-	$FileDeleted = Register-ObjectEvent $watcher -EventName Deleted -SourceIdentifier FileDeleted
-	$FileRenamed = Register-ObjectEvent $watcher -EventName Renamed -SourceIdentifier FileRenamed
-	$SourceIdentifier = 'FileChanged', 'FileCreated', 'FileDeleted', 'FileRenamed'
+	for ($i = 0; $i -lt $watchers.Count; $i++) {
+		$WatcherEvents = "FileChanged_$i", "FileCreated_$i", "FileDeleted_$i", "FileRenamed_$i"
+		$WatcherEvents |% {
+			if (Get-EventSubscriber $_ -ErrorAction SilentlyContinue) {
+				Unregister-Event $_
+			}
+		}
+
+		$events += Register-ObjectEvent $watchers[$i] -EventName Changed -SourceIdentifier "FileChanged_$i"
+		$events += Register-ObjectEvent $watchers[$i] -EventName Created -SourceIdentifier "FileCreated_$i"
+		$events += Register-ObjectEvent $watchers[$i] -EventName Deleted -SourceIdentifier "FileDeleted_$i"
+		$events += Register-ObjectEvent $watchers[$i] -EventName Renamed -SourceIdentifier "FileRenamed_$i"
+
+		$SourceIdentifier += $WatcherEvents
+	}
 
 	$changes = @{}
 	$lastTime = [datetime]::Now
@@ -68,7 +86,16 @@ try {
 		# events
 		foreach($e in Get-Event) {
 			if ($SourceIdentifier -notcontains $e.SourceIdentifier) {continue}
-			if (!$Pattern -or $e.SourceEventArgs.Name -match $Pattern) {
+
+			$isMatch = $true
+			if ($Pattern) {
+				$isMatch = $isMatch -and ($e.SourceEventArgs.Name -match $Pattern)
+			}
+			if ($Exclude) {
+				$isMatch = $isMatch -and ($e.SourceEventArgs.Name -notmatch $Exclude)
+			}
+
+			if ($isMatch) {
 				$changes[$e.SourceEventArgs.FullPath] = $e.SourceEventArgs.ChangeType
 				$time = $e.TimeGenerated
 				if ($lastTime -lt $time) {
@@ -96,9 +123,8 @@ try {
 	}
 }
 finally {
-	if ($FileChanged) {Unregister-Event -SourceIdentifier FileChanged}
-	if ($FileCreated) {Unregister-Event -SourceIdentifier FileCreated}
-	if ($FileDeleted) {Unregister-Event -SourceIdentifier FileDeleted}
-	if ($FileRenamed) {Unregister-Event -SourceIdentifier FileRenamed}
-	$watcher.Dispose()
+	$events |% {
+		Unregister-Event -SourceIdentifier $_.Name -ErrorAction SilentlyContinue
+	}
+	$watchers |% { $_.Dispose() }
 }
