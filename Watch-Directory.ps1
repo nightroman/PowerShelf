@@ -59,6 +59,7 @@ $Path = foreach($_ in $Path) {
 $watchers = @()
 $SourceIdentifier = @()
 try {
+	$i = 0
 	foreach($_ in $Path) {
 		$watcher = [System.IO.FileSystemWatcher]$_
 		$watcher.NotifyFilter = 'FileName,LastWrite'
@@ -67,10 +68,7 @@ try {
 			$watcher.Filter = $Filter
 		}
 		$watchers += $watcher
-	}
 
-	$i = 0
-	foreach($watcher in $watchers) {
 		++$i
 		Register-ObjectEvent $watcher -EventName Changed -SourceIdentifier "FileChanged_$i"
 		Register-ObjectEvent $watcher -EventName Created -SourceIdentifier "FileCreated_$i"
