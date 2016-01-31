@@ -5,9 +5,9 @@
 	Author: Roman Kuzmin
 
 .Description
-	The tool watches for changed, created, deleted, and renamed files in the
-	given directories. On changes it periodically invokes the specified command with
-	a hastable, the last portion of change information.
+	The command watches for changed, created, deleted, and renamed files in the
+	given directories. On changes it periodically invokes the specified command
+	with a hastable, the last portion of change information.
 
 	The hashtable keys are path of changed files, values are last change types.
 
@@ -15,9 +15,10 @@
 		Specifies the watched directory paths.
 .Parameter Command
 		Specifies the command to process changes.
+		It may be a script block or a command name.
 .Parameter Filter
 		Simple and effective file system filter. Default *.*
-.Parameter Pattern
+.Parameter Include
 		Inclusion regular expression pattern applied after Filter.
 .Parameter Exclude
 		Exclusion regular expression pattern applied after Filter.
@@ -34,11 +35,11 @@
 
 param(
 	[Parameter(Position=1, Mandatory=1)]
-	[array]$Path,
+	[string[]]$Path,
 	[Parameter(Position=2)]
 	$Command = {$args[0]},
 	[string]$Filter,
-	[string]$Pattern,
+	[string]$Include,
 	[string]$Exclude,
 	[switch]$Recurse,
 	[int]$TestSeconds = 5,
@@ -46,36 +47,36 @@ param(
 )
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
-$Path = $Path |% { $PSCmdlet.GetUnresolvedProviderPathFromPSPath($_) }
 
-$watchers = $Path |% {
-	$watcher = [System.IO.FileSystemWatcher]$_
-	$watcher.NotifyFilter = 'FileName,LastWrite'
-	$watcher.IncludeSubdirectories = $Recurse
-	if ($Filter) {
-		$watcher.Filter = $Filter
+$Path = foreach($_ in $Path) {
+	$_ = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
+	if (!([System.IO.Directory]::Exists($_))) {
+		throw "Missing directory: $_"
 	}
-	$watcher
+	$_
 }
 
-$events = @()
+$watchers = @()
 $SourceIdentifier = @()
-$FileChanged, $FileCreated, $FileDeleted, $FileRenamed = $null
 try {
-	for ($i = 0; $i -lt $watchers.Count; $i++) {
-		$WatcherEvents = "FileChanged_$i", "FileCreated_$i", "FileDeleted_$i", "FileRenamed_$i"
-		$WatcherEvents |% {
-			if (Get-EventSubscriber $_ -ErrorAction SilentlyContinue) {
-				Unregister-Event $_
-			}
+	foreach($_ in $Path) {
+		$watcher = [System.IO.FileSystemWatcher]$_
+		$watcher.NotifyFilter = 'FileName,LastWrite'
+		$watcher.IncludeSubdirectories = $Recurse
+		if ($Filter) {
+			$watcher.Filter = $Filter
 		}
+		$watchers += $watcher
+	}
 
-		$events += Register-ObjectEvent $watchers[$i] -EventName Changed -SourceIdentifier "FileChanged_$i"
-		$events += Register-ObjectEvent $watchers[$i] -EventName Created -SourceIdentifier "FileCreated_$i"
-		$events += Register-ObjectEvent $watchers[$i] -EventName Deleted -SourceIdentifier "FileDeleted_$i"
-		$events += Register-ObjectEvent $watchers[$i] -EventName Renamed -SourceIdentifier "FileRenamed_$i"
-
-		$SourceIdentifier += $WatcherEvents
+	$i = 0
+	foreach($watcher in $watchers) {
+		++$i
+		Register-ObjectEvent $watcher -EventName Changed -SourceIdentifier "FileChanged_$i"
+		Register-ObjectEvent $watcher -EventName Created -SourceIdentifier "FileCreated_$i"
+		Register-ObjectEvent $watcher -EventName Deleted -SourceIdentifier "FileDeleted_$i"
+		Register-ObjectEvent $watcher -EventName Renamed -SourceIdentifier "FileRenamed_$i"
+		$SourceIdentifier += "FileChanged_$i", "FileCreated_$i", "FileDeleted_$i", "FileRenamed_$i"
 	}
 
 	$changes = @{}
@@ -88,11 +89,11 @@ try {
 			if ($SourceIdentifier -notcontains $e.SourceIdentifier) {continue}
 
 			$isMatch = $true
-			if ($Pattern) {
-				$isMatch = $isMatch -and ($e.SourceEventArgs.Name -match $Pattern)
+			if ($Include) {
+				$isMatch = $e.SourceEventArgs.Name -match $Include
 			}
-			if ($Exclude) {
-				$isMatch = $isMatch -and ($e.SourceEventArgs.Name -notmatch $Exclude)
+			if ($Exclude -and $isMatch) {
+				$isMatch = $e.SourceEventArgs.Name -notmatch $Exclude
 			}
 
 			if ($isMatch) {
@@ -109,12 +110,15 @@ try {
 		if (!$changes.Count) {continue}
 		if (([datetime]::Now - $lastTime).TotalSeconds -lt $WaitSeconds) {continue}
 
-		# process
+		# call
 		try {
 			& $Command $changes
 		}
 		catch {
-			Write-Error $_ -ErrorAction Continue
+			@"
+$($_.ToString())
+$($_.InvocationInfo.PositionMessage)
+"@
 		}
 
 		# reset
@@ -123,8 +127,10 @@ try {
 	}
 }
 finally {
-	$events |% {
-		Unregister-Event -SourceIdentifier $_.Name -ErrorAction SilentlyContinue
+	foreach($_ in $SourceIdentifier) {
+		Unregister-Event -SourceIdentifier $_ -ErrorAction Continue
 	}
-	$watchers |% { $_.Dispose() }
+	foreach($_ in $watchers) {
+		$_.Dispose()
+	}
 }
