@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.6.0
+
+New `Watch-Directory.ps1` - File change watcher and handler.
+
 ## v1.5.1
 
 Cmdlet binding in scripts.
