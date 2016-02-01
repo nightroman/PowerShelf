@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.6.2
+
+Reworked `Watch-Directory.ps1` to avoid `Get-Event` issues (#4).
+
 ## v1.6.1
 
 `Watch-Directory.ps1`: If the command is omitted then the script outputs change

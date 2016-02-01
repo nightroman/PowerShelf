@@ -7,10 +7,12 @@
 .Description
 	The script watches for changed, created, deleted, and renamed files in the
 	given directories. On changes it invokes the specified command with change
-	info. It is a hashtable which keys are changed file paths, values are last
+	info. It is a dictionary where keys are changed file paths, values are last
 	change types.
 
 	If the command is omitted then the script outputs change info as text.
+
+	The script works until it is forcedly stopped (Ctrl-C).
 
 .Parameter Path
 		Specifies the watched directory paths.
@@ -57,59 +59,103 @@ $Path = foreach($_ in $Path) {
 	$_
 }
 
-$watchers = @()
-$events = @()
-try {
-	$i = 0
-	foreach($_ in $Path) {
-		$watcher = [System.IO.FileSystemWatcher]$_
-		$watcher.NotifyFilter = 'FileName,LastWrite'
-		$watcher.IncludeSubdirectories = $Recurse
-		if ($Filter) {
-			$watcher.Filter = $Filter
-		}
-		$watchers += $watcher
+Add-Type @'
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 
-		++$i
-		Register-ObjectEvent $watcher -EventName Changed -SourceIdentifier "FileChanged_$i"
-		Register-ObjectEvent $watcher -EventName Created -SourceIdentifier "FileCreated_$i"
-		Register-ObjectEvent $watcher -EventName Deleted -SourceIdentifier "FileDeleted_$i"
-		Register-ObjectEvent $watcher -EventName Renamed -SourceIdentifier "FileRenamed_$i"
-		$events += "FileChanged_$i", "FileCreated_$i", "FileDeleted_$i", "FileRenamed_$i"
+public class FileSystemWatcherHelper : IDisposable
+{
+	public string[] Path;
+	public string Filter;
+	public bool Recurse;
+
+	public DateTime LastTime { get { return _lastTime; } }
+	public bool HasChanges { get { return _changes.Count > 0; } }
+
+	Dictionary<string, WatcherChangeTypes> _changes = new Dictionary<string, WatcherChangeTypes>(StringComparer.OrdinalIgnoreCase);
+	readonly List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
+	readonly object _lock = new object();
+	DateTime _lastTime;
+	Regex _include;
+	Regex _exclude;
+
+	public void Include(string pattern)
+	{
+		if (!string.IsNullOrEmpty(pattern))
+			_include = new Regex(pattern, RegexOptions.IgnoreCase);
 	}
+	public void Exclude(string pattern)
+	{
+		if (!string.IsNullOrEmpty(pattern))
+			_exclude = new Regex(pattern, RegexOptions.IgnoreCase);
+	}
+	public void Start()
+	{
+		foreach (string p in Path)
+		{
+			FileSystemWatcher watcher = new FileSystemWatcher(p);
+			watcher.IncludeSubdirectories = Recurse;
+			watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+			if (!string.IsNullOrEmpty(Filter))
+				watcher.Filter = Filter;
 
-	$changes = @{}
-	$lastTime = [datetime]::Now
+			watcher.Created += OnChanged;
+			watcher.Changed += OnChanged;
+			watcher.Deleted += OnChanged;
+			watcher.Renamed += OnChanged;
+			watcher.EnableRaisingEvents = true;
+		}
+	}
+	public object GetChanges()
+	{
+		lock (_lock)
+		{
+			object r = _changes;
+			_changes = new Dictionary<string, WatcherChangeTypes>(StringComparer.OrdinalIgnoreCase);
+			return r;
+		}
+	}
+	public void Dispose()
+	{
+		foreach (FileSystemWatcher watcher in _watchers)
+			watcher.Dispose();
+		_watchers.Clear();
+		_changes.Clear();
+	}
+	void OnChanged(object sender, FileSystemEventArgs e)
+	{
+		if (_include != null && !_include.IsMatch(e.Name))
+			return;
+
+		if (_exclude != null && _exclude.IsMatch(e.Name))
+			return;
+
+		lock (_lock)
+		{
+			_changes[e.FullPath] = e.ChangeType;
+			_lastTime = DateTime.Now;
+		}
+	}
+}
+'@
+
+$watcher = New-Object FileSystemWatcherHelper
+$watcher.Path = $Path
+$watcher.Filter = $Filter
+$watcher.Recurse = $Recurse
+try {$watcher.Include($Include)} catch {throw "Parameter Include: $_"}
+try {$watcher.Exclude($Exclude)} catch {throw "Parameter Exclude: $_"}
+try {
+	$watcher.Start()
 	for() {
 		Start-Sleep -Seconds $TestSeconds
 
-		# events
-		foreach($e in Get-Event) {
-			if ($events -notcontains $e.SourceIdentifier) {continue}
+		if (!$watcher.HasChanges) {continue}
+		if (([datetime]::Now - $watcher.LastTime).TotalSeconds -lt $WaitSeconds) {continue}
 
-			$isMatch = $true
-			if ($Include) {
-				$isMatch = $e.SourceEventArgs.Name -match $Include
-			}
-			if ($Exclude -and $isMatch) {
-				$isMatch = $e.SourceEventArgs.Name -notmatch $Exclude
-			}
-
-			if ($isMatch) {
-				$changes[$e.SourceEventArgs.FullPath] = $e.SourceEventArgs.ChangeType
-				$time = $e.TimeGenerated
-				if ($lastTime -lt $time) {
-					$lastTime = $time
-				}
-			}
-			Remove-Event -EventIdentifier $e.EventIdentifier
-		}
-
-		# skip
-		if (!$changes.Count) {continue}
-		if (([datetime]::Now - $lastTime).TotalSeconds -lt $WaitSeconds) {continue}
-
-		# call
+		$changes = $watcher.GetChanges()
 		if ($Command) {
 			try {
 				& $Command $changes
@@ -123,17 +169,8 @@ try {
 				"$($changes[$key]) $key"
 			}
 		}
-
-		# reset
-		$changes = @{}
-		$lastTime = [datetime]::Now
 	}
 }
 finally {
-	foreach($_ in $events) {
-		Unregister-Event -SourceIdentifier $_ -ErrorAction Continue
-	}
-	foreach($_ in $watchers) {
-		$_.Dispose()
-	}
+	$watcher.Dispose()
 }

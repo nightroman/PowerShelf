@@ -1,6 +1,21 @@
 
 $env:BuildRoot = $BuildRoot
 
+task BadPath {
+	($r = try {<##> Watch-Directory.ps1 Missing} catch {$_})
+	assert (($r | Out-String) -clike '*Missing directory:*<##>*FullyQualifiedErrorId : Missing directory: *\Missing,Watch-Directory.ps1*')
+}
+
+task BadInclude {
+	($r = try {<##> Watch-Directory.ps1 . -Include *} catch {$_})
+	assert (($r | Out-String) -clike '*Parameter Include:*<##>*FullyQualifiedErrorId : Parameter Include:*')
+}
+
+task BadExclude {
+	($r = try {<##> Watch-Directory.ps1 . -Exclude *} catch {$_})
+	assert (($r | Out-String) -clike '*Parameter Exclude:*<##>*FullyQualifiedErrorId : Parameter Exclude:*')
+}
+
 function Start-Test($Command) {
 	Set-Variable -Scope 1 -Name ps -Value ([PowerShell]::Create().AddScript($Command))
 	$null = $ps.BeginInvoke()
