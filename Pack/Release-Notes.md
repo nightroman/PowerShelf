@@ -1,6 +1,16 @@
 
 # PowerShelf Release Notes
 
+## v1.7.0
+
+`Sync-Directory.ps1`
+
+- More effective comparison using Robocopy output.
+- New parameter Arguments: Robocopy arguments.
+- Do not warn about extra files in both.
+- Show information about all files.
+- Reworked logged info and colors.
+
 ## v1.6.2
 
 Reworked `Watch-Directory.ps1` to avoid `Get-Event` issues (#4).
