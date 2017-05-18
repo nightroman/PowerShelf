@@ -32,7 +32,7 @@
 		If it is missing then the first should exist.
 .Parameter Arguments
 		Additional Robocopy arguments. Example:
-		... -Arguments /XD, bin, obj, /XF *.tmp, *.bak
+		... -Arguments /XD, bin, obj, /XF, *.tmp, *.bak
 
 .Example
 	>

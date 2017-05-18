@@ -13,8 +13,8 @@ $File2 = "$env:TEMP\Test Invoke-Environment.cmd" # with spaces
 
 Set-StrictMode -Version Latest
 
-# called in the end, removes the temp file
-function Exit-Build {
+# clean
+Exit-Build {
 	Remove-Item -LiteralPath $File, $File2 -ErrorAction 0 -Verbose
 }
 

@@ -1,8 +1,17 @@
 
+<#PSScriptInfo
+.VERSION 1.0.0
+.AUTHOR Roman Kuzmin
+.COPYRIGHT (c) Roman Kuzmin
+.TAGS Test
+.GUID 1707aec3-6f77-41bd-8df4-953c7704f4a6
+.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
+.PROJECTURI https://github.com/nightroman/PowerShelf
+#>
+
 <#
 .Synopsis
 	Compares the sample and result files.
-	Author: Roman Kuzmin
 
 .Description
 	This script automates one typical test scenario, it compares the sample and
@@ -28,11 +37,6 @@
 .Parameter View
 		Specifies a command invoked when the files are different. It is an
 		application name or a script block. The arguments are file paths.
-
-.Inputs
-	None
-.Outputs
-	None
 
 .Example
 	Assert-SameFile Sample.log Result.log Merge.exe

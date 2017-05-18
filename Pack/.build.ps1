@@ -48,7 +48,7 @@ task PushRelease Version, {
 
 # Push NuGet package.
 task PushNuGet NuGet, {
-	exec { NuGet push "PowerShelf.$Version.nupkg" }
+	exec { NuGet push "PowerShelf.$Version.nupkg" -source nuget.org }
 },
 Clean
 
