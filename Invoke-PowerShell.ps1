@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -29,5 +29,5 @@ if ($PSVersionTable.PSVersion.Major -eq 2) {
 	powershell.exe -Version 2 @args
 }
 else {
-	& ((Get-Process -Id $PID).Path) @args
+	& ([System.Diagnostics.Process]::GetCurrentProcess().Path) @args
 }
