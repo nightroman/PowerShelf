@@ -1,6 +1,10 @@
 
 # NuGetDebugTools Release Notes
 
+## v1.4.2
+
+*Debug-Error.ps1* tweaks and help.
+
 ## v1.4.1
 
 Set package `developmentDependency` to true.

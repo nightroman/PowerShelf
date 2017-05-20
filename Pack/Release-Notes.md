@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.8.1
+
+More effective `Invoke-PowerShell.ps1`.
+
 ## v1.8.0
 
 New script `Invoke-PowerShell.ps1`.

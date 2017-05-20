@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug Test
@@ -14,20 +14,21 @@
 	Enables debugging on terminating errors.
 
 .Description
-	VS Code example. Let the PowerShell extension start and open its terminal.
+	Enables breaking into the debugger on terminating errors automatically. The
+	script works in any host with a debugger, in the console it breaks into the
+	debugger, too. But troubleshooting is not that easy as in VS Code.
+
+	VS Code scenario. Let the PowerShell extension start and open its terminal.
 	For example, open a script. In the terminal invoke Debug-Error.ps1. Then
 	invoke a script. As a result, on errors VS Code breaks into the debugger
-	and opens the culprit script, not necessarily the invoked, in the editor.
-	The line with a terminating error is highlighted.
+	and opens the culprit script in the editor at the line with an error.
 
-	The script works in any host with a debugger, e.g. in the console it breaks
-	into the debugger, too. But troubleshooting is not that easy as in VS Code.
+	Without parameters this command enables debugging on failures globally.
+	Use the parameter Script in order to narrow the location of errors.
+	Use the switch Off in order to stop debugging on errors.
 
 	The command exploits updates of the variable StackTrace on terminating
 	errors. Setting this variable breakpoint enables debugging on failures.
-
-	Without parameters this command enables debugging on failures globally.
-	Use the switch Off in order to stop debugging on errors.
 
 .Parameter Script
 		Sets a breakpoint in each of the specified script files.
@@ -36,8 +37,8 @@
 		Specifies commands that run at each breakpoint.
 		See: Get-Help Set-PSBreakpoint -Parameter Action
 .Parameter Off
-		Tells to stop debugging on errors, i.e. remove all StackTrace
-		breakpoints. Other parameters are ignored.
+		Tells to stop debugging on errors.
+		Other parameters are ignored.
 
 .Link
 	https://github.com/nightroman/PowerShelf
