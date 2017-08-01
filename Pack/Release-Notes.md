@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.8.2
+
+Remove zip after extraction in `Save-NuGetTool.ps1` (#7).
+
 ## v1.8.1
 
 More effective `Invoke-PowerShell.ps1`.

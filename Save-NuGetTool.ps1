@@ -5,9 +5,10 @@
 	Author: Roman Kuzmin
 
 .Description
-	The command downloads PackageId.zip from the NuGet Gallery to the current
-	location and extracts /tools as the directory PackageId. If these items
-	exist remove them manually or use another location.
+	The command downloads "PackageId.zip" from the NuGet Gallery to the current
+	location and extracts "/tools" as the directory "PackageId". If these items
+	exist remove them manually or use another location. "PackageId.zip" is
+	removed after successful unzipping.
 
 .Parameter PackageId
 	Specifies the package ID.
@@ -22,9 +23,8 @@ $ErrorActionPreference = 'Stop'
 $here = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
 $zip = "$here\$PackageId.zip"
 $dir = "$here\$PackageId"
-if ((Test-Path -LiteralPath $zip, $dir) -eq $true) {
-	Write-Error "Remove '$zip' and '$dir' or use another directory."
-}
+if (Test-Path -LiteralPath $zip) {Write-Error "Remove '$zip' or use another directory."}
+if (Test-Path -LiteralPath $dir) {Write-Error "Remove '$dir' or use another directory."}
 
 $web = New-Object System.Net.WebClient
 $web.UseDefaultCredentials = $true
@@ -47,3 +47,5 @@ if (!$two -and $one.Name -eq $PackageId) {
 
 $null = mkdir $dir
 $shell.NameSpace($dir).CopyHere($from.Items(), 4)
+
+Remove-Item -LiteralPath $zip
