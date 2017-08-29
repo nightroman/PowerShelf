@@ -96,6 +96,8 @@ public class FileSystemWatcherHelper : IDisposable
 		foreach (string p in Path)
 		{
 			FileSystemWatcher watcher = new FileSystemWatcher(p);
+			_watchers.Add(watcher);
+
 			watcher.IncludeSubdirectories = Recurse;
 			watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
 			if (!string.IsNullOrEmpty(Filter))

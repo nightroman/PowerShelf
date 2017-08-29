@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.8.3
+
+Dispose watchers in `Watch-Directory.ps1`.
+
 ## v1.8.2
 
 Remove zip after extraction in `Save-NuGetTool.ps1` (#7).

@@ -5,6 +5,6 @@
 #>
 
 task SameVersion {
-	($r = exec {Invoke-PowerShell.ps1 -NoProfile '$PSVersionTable.PSVersion.ToString()'})
+	($r = exec {Invoke-PowerShell.ps1 -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'})
 	equals $r ($PSVersionTable.PSVersion.ToString())
 }
