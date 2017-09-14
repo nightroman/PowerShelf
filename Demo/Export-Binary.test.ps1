@@ -4,6 +4,7 @@
 	Export-Binary.ps1 and Import-Binary.ps1 tests.
 #>
 
+$Version = $PSVersionTable.PSVersion.Major
 Set-StrictMode -Version Latest
 
 task Hashtable {
@@ -39,7 +40,7 @@ task Primitives {
 	assert ($r[4] -is [guid])
 }
 
-task FileSystemItems {
+task FileSystemItems -If ($Version -le 5) {
 	$items = Get-ChildItem
 	$items | Export-Binary.ps1 z.binary
 
