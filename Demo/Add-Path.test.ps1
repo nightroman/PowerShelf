@@ -54,3 +54,9 @@ task AddExisting {
 	Add-Path "$BuildRoot/" TEST
 	equals $env:TEST "a;$BuildRoot\;c"
 }
+
+task AddMany {
+	$env:TEST = "a;C:\TEMP;c"
+	Add-Path -Name TEST -Path C:\TEMP, $env:TEMP, $BuildRoot
+	equals $env:TEST "$BuildRoot;$env:TEMP;a;C:\TEMP;c"
+}

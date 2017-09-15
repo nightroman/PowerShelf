@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.8.4
+
+`Add-Path.ps1` accepts one or many paths.
+
 ## v1.8.3
 
 Dispose watchers in `Watch-Directory.ps1`.

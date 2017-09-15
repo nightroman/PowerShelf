@@ -35,24 +35,35 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
-param (
+param(
 	[Parameter()]
-	[string]$Path = '.',
+	[string[]]$Path = '.',
 	[string]$Name = 'PATH'
 )
 
-# resolve and check
-$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-if (![System.IO.Directory]::Exists($Path)) { Write-Error "Missing directory '$Path'." -ErrorAction Stop }
+function Add-Path($Path) {
+	# resolve and check
+	$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+	if (![System.IO.Directory]::Exists($Path)) { Write-Error "Missing directory '$Path'." -ErrorAction Stop }
 
-# already added?
-$var = [Environment]::GetEnvironmentVariable($Name)
-$trimmed = $Path.TrimEnd('\')
-foreach($dir in $var.Split(';')) {
-	if ($dir.TrimEnd('\') -eq $trimmed) {
-		return
+	# already added?
+	$var = [Environment]::GetEnvironmentVariable($Name)
+	$trimmed = $Path.TrimEnd('\')
+	foreach($dir in $var.Split(';')) {
+		if ($dir.TrimEnd('\') -eq $trimmed) {
+			return
+		}
 	}
+
+	# add the path
+	[Environment]::SetEnvironmentVariable($Name, $Path + ';' + $var)
 }
 
-# add the path
-[Environment]::SetEnvironmentVariable($Name, $Path + ';' + $var)
+try {
+	foreach($Path in $Path) {
+		Add-Path $Path
+	}
+}
+catch {
+	$PSCmdlet.ThrowTerminatingError($_)
+}
