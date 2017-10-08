@@ -22,7 +22,7 @@ task DifferentFileFail {
 
 task MissingSample {
 	$data = @{}
-	Remove-Item [z]
+	Get-Item [z] | Remove-Item
 
 	# fake
 	function Write-Warning {

@@ -39,7 +39,7 @@ task Missing {
 }
 
 task MissingSource {
-	Remove-Item [z] -Force -Recurse -ErrorAction 0
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\target
 	1 > z\target\new.txt
 
@@ -68,7 +68,7 @@ task MissingSource {
 }
 
 task MissingTarget {
-	Remove-Item [z] -Force -Recurse -ErrorAction 0
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\source
 	1 > z\source\new.txt
 
@@ -97,7 +97,7 @@ task MissingTarget {
 }
 
 task Cases {
-	Remove-Item [z] -Force -Recurse -ErrorAction 0
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\source\source-dir
 	$null = mkdir z\target\target-dir
 	$oldTime = [datetime]'2000-01-01'

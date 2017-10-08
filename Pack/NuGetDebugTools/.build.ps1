@@ -19,7 +19,7 @@ task Clean {
 # Make package directory z\tools.
 task Package Markdown, {
 	# temp package folder
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\tools
 
 	# copy files
