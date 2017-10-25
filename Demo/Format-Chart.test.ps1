@@ -40,7 +40,7 @@ task NumericValues {
 
 task InvalidMinimumMaximum {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Get-Process PowerShell | Format-Chart Name, WS -Minimum 1gb} catch {$_ | Out-String})
+	($e = try {Get-Process -PID $PID | Format-Chart Name, WS -Minimum 1gb} catch {$_ | Out-String})
 	assert ($e -like "*\Format-Chart.ps1 : Invalid Minimum, Maximum: *, *.*\Format-Chart.test.ps1:*")
 }
 
