@@ -19,7 +19,7 @@ task NoGistId {
 	assert ($e -like "*\Submit-Gist.ps1 : GistId is not specified and the file does not contain the gist URL.*At *\Submit-Gist.test.ps1:*")
 }
 
-task SafeSubmitNotChanged (job SubmitNotChanged -Safe)
+task SafeSubmitNotChanged ?SubmitNotChanged
 task SubmitNotChanged {
 	$repo1303971 = "$HOME\gist-1303971"
 

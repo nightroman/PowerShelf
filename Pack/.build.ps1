@@ -7,8 +7,8 @@
 # Convert markdown files to HTML.
 # <http://johnmacfarlane.net/pandoc/>
 task Markdown {
-	exec { pandoc.exe --standalone --from=markdown_strict --output=README.htm ../README.md }
-	exec { pandoc.exe --standalone --from=markdown_strict --output=Release-Notes.htm Release-Notes.md }
+	exec {pandoc.exe --standalone --from=gfm --output=README.htm ../README.md --metadata=pagetitle=README}
+	exec {pandoc.exe --standalone --from=gfm --output=Release-Notes.htm Release-Notes.md --metadata=pagetitle=Release-Notes}
 }
 
 # Remove temp files

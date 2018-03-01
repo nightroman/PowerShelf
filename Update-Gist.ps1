@@ -95,6 +95,7 @@ $headers = @{
 }
 
 # send the request
+[System.Net.ServicePointManager]::SecurityProtocol = 'Ssl3,Tls,Tls11,Tls12'
 $r = Invoke-RestMethod -Uri "https://api.github.com/gists/$GistId" -Method Patch -Headers $headers -Body $body
 
 # show the web page

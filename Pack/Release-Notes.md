@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.8.5
+
+*Update-Gist.ps1* - use proper `SecurityProtocol`.
+
 ## v1.8.4
 
 `Add-Path.ps1` accepts one or many paths.
