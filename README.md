@@ -35,19 +35,12 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 
 The scripts are distributed as two NuGet packages:
 
-[PowerShelf](https://www.nuget.org/packages/PowerShelf) (all scripts).
-Download it to the current location as the directory *"PowerShelf"* by this PowerShell command:
+- [PowerShelf](https://www.nuget.org/packages/PowerShelf) (all scripts).
+- [NuGetDebugTools](https://www.nuget.org/packages/NuGetDebugTools) (debugging).
 
-    Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} PowerShelf"
+Download them by NuGet tools or directly:
 
-[NuGetDebugTools](https://www.nuget.org/packages/NuGetDebugTools) (debugging).
-Download it to the current location as the directory *"NuGetDebugTools"* by this PowerShell command:
+- [PowerShelf](http://nuget.org/api/v2/package/PowerShelf)
+- [NuGetDebugTools](http://nuget.org/api/v2/package/NuGetDebugTools)
 
-    Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} NuGetDebugTools"
-
-Alternatively, get them by NuGet tools or download
-[PowerShelf](http://nuget.org/api/v2/package/PowerShelf) or
-[NuGetDebugTools](http://nuget.org/api/v2/package/NuGetDebugTools).
 In the latter case save as *".zip"* and unzip. Use the package subdirectory *"tools"*.
-
-***
