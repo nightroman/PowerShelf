@@ -13,13 +13,13 @@ task Markdown {
 
 # Remove temp files
 task Clean {
-	Remove-Item z, README.htm, Release-Notes.htm, NuGetDebugTools.*.nupkg -Force -Recurse -ErrorAction 0
+	remove z, README.htm, Release-Notes.htm, NuGetDebugTools.*.nupkg
 }
 
 # Make package directory z\tools.
 task Package Markdown, {
 	# temp package folder
-	Get-Item [z] | Remove-Item -Force -Recurse
+	remove z
 	$null = mkdir z\tools
 
 	# copy files

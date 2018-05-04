@@ -22,7 +22,7 @@ task DifferentFileFail {
 
 task MissingSample {
 	$data = @{}
-	Get-Item [z] | Remove-Item
+	remove z
 
 	# fake
 	function Write-Warning {
@@ -35,7 +35,7 @@ task MissingSample {
 	assert (Test-Path z)
 	Assert-SameFile z $BuildFile
 
-	Remove-Item z
+	remove z
 }
 
 task DifferentFile {
@@ -59,7 +59,7 @@ task DifferentFile {
 	equals $fake.Caption 'Different result'
 	equals $fake.View 0
 	equals (Get-Content z) '0'
-	Remove-Item z
+	remove z
 
 	### Update
 
@@ -71,7 +71,7 @@ task DifferentFile {
 	equals $fake.Caption 'Different result'
 	equals $fake.View 1
 	Assert-SameFile z $BuildFile
-	Remove-Item z
+	remove z
 
 	### Abort
 
@@ -84,5 +84,5 @@ task DifferentFile {
 	equals $fake.View 2
 	assert ($e -like "*Different sample 'z' and result '$BuildFile'.")
 	equals (Get-Content z) '2'
-	Remove-Item z
+	remove z
 }
