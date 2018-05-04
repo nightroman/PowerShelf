@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.9.1
+
+Add *Show-SolutionDgml.ps1*.
+
 ## v1.8.5
 
 *Update-Gist.ps1* - use proper `SecurityProtocol`.
