@@ -1,9 +1,9 @@
 
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
-.TAGS Test
+.TAGS DGML, solution, project, graph
 .GUID 5a3b9854-4349-43e6-93f0-599e608ba81c
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
 .PROJECTURI https://github.com/nightroman/PowerShelf
@@ -78,14 +78,16 @@ $csprojType = '{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}'
 $folderType = '{2150E333-8FDC-42A3-9474-1A3956D46DE8}'
 $fsprojType = '{F2A71F9B-5D33-465A-A702-920D77279786}'
 $fsprojTypeSdk = '{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}'
+$sfprojType = '{A07B5EB6-E848-4116-A8D0-A826331D98C6}'
 $vcxprojType = '{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}'
 function Get-ProjectCategory($Project) {
 	switch($Project.type) {
-		$ccprojType {return 'Cloud'}
+		$ccprojType {return 'CloudService'}
 		$csprojType {return 'CSharp'}
 		$folderType {return 'Folder'}
 		$fsprojType {return 'FSharp'}
 		$fsprojTypeSdk {return 'FSharp.Sdk'}
+		$sfprojType {return 'ServiceFabric'}
 		$vcxprojType {return 'CPlusPlusCLI'}
 		default {return $_}
 	}

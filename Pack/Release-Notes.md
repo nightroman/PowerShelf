@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.9.2
+
+*Show-SolutionDgml.ps1* - add ServiceFabric type, amend tags.
+
 ## v1.9.1
 
 Add *Show-SolutionDgml.ps1*.
