@@ -1,6 +1,11 @@
 
 # PowerShelf Release Notes
 
+## v1.9.3
+
+- *Show-SolutionDgml.ps1* - add CSharp.Sdk type.
+- *Watch-Directory.ps1* - use ordered dictionary for collected changes.
+
 ## v1.9.2
 
 *Show-SolutionDgml.ps1* - add ServiceFabric type, amend tags.

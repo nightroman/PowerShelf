@@ -62,6 +62,7 @@ $Path = foreach($_ in $Path) {
 Add-Type @'
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -74,7 +75,7 @@ public class FileSystemWatcherHelper : IDisposable
 	public DateTime LastTime { get { return _lastTime; } }
 	public bool HasChanges { get { return _changes.Count > 0; } }
 
-	Dictionary<string, WatcherChangeTypes> _changes = new Dictionary<string, WatcherChangeTypes>(StringComparer.OrdinalIgnoreCase);
+	OrderedDictionary _changes = new OrderedDictionary();
 	readonly List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
 	readonly object _lock = new object();
 	DateTime _lastTime;
@@ -115,7 +116,7 @@ public class FileSystemWatcherHelper : IDisposable
 		lock (_lock)
 		{
 			object r = _changes;
-			_changes = new Dictionary<string, WatcherChangeTypes>(StringComparer.OrdinalIgnoreCase);
+			_changes = new OrderedDictionary();
 			return r;
 		}
 	}
@@ -167,8 +168,8 @@ try {
 			}
 		}
 		else {
-			foreach($key in $changes.Keys | Sort-Object) {
-				"$($changes[$key]) $key"
+			foreach($kv in $changes.GetEnumerator()) {
+				"$($kv.Value) $($kv.Key)"
 			}
 		}
 	}

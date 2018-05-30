@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS DGML, solution, project, graph
@@ -75,6 +75,7 @@ $RootPath = Split-Path $SolutionPath
 
 $ccprojType = '{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}'
 $csprojType = '{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}'
+$csprojTypeSdk = '{9A19103F-16F7-4668-BE54-9A1E7A4F7556}'
 $folderType = '{2150E333-8FDC-42A3-9474-1A3956D46DE8}'
 $fsprojType = '{F2A71F9B-5D33-465A-A702-920D77279786}'
 $fsprojTypeSdk = '{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}'
@@ -84,6 +85,7 @@ function Get-ProjectCategory($Project) {
 	switch($Project.type) {
 		$ccprojType {return 'CloudService'}
 		$csprojType {return 'CSharp'}
+		$csprojTypeSdk {return 'CSharp.Sdk'}
 		$folderType {return 'Folder'}
 		$fsprojType {return 'FSharp'}
 		$fsprojTypeSdk {return 'FSharp.Sdk'}
