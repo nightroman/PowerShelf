@@ -1,6 +1,13 @@
 
 # PowerShelf Release Notes
 
+## v1.9.4
+
+*Show-SolutionDgml.ps1*
+
+- New parameter `Exclude`.
+- On missing links write warnings, not errors.
+
 ## v1.9.3
 
 - *Show-SolutionDgml.ps1* - add CSharp.Sdk type.
