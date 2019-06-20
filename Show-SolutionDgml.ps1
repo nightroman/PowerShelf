@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.1.0
+.VERSION 1.1.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS DGML, solution, project, graph
@@ -27,8 +27,8 @@
 		file in the current location is used, there must be one such file.
 
 .Parameter Exclude
-		Specifies the projects to exclude.
-		Use project names without extensions.
+		Specifies the projects to exclude. Wilcards are supported.
+		The patterns should match project names without extensions.
 
 .Parameter JustProject
 		Tells to show just references defined in project files and ignore build
@@ -170,7 +170,7 @@ $ns = @{x = 'http://schemas.microsoft.com/developer/msbuild/2003'}
 
 function Test-Exclude($Name) {
 	foreach($_ in $Exclude) {
-		if ($_ -eq $Name) {return $true}
+		if ($Name -like $_) {return $true}
 	}
 }
 

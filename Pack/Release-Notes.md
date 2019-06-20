@@ -1,6 +1,10 @@
 
 # PowerShelf Release Notes
 
+## v1.9.5
+
+*Show-SolutionDgml.ps1* - `Exclude` supports wildcards.
+
 ## v1.9.4
 
 *Show-SolutionDgml.ps1*
