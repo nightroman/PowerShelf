@@ -1,5 +1,10 @@
-
 # PowerShelf Release Notes
+
+## v1.9.6
+
+*Invoke-PowerShell.ps1* - refresh comments and slightly improve error handling.
+Errors are possible on invoking with a script block argument due to the special
+treatment by PowerShell.
 
 ## v1.9.5
 

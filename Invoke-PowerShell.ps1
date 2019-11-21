@@ -1,29 +1,30 @@
-
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
 .GUID 77483ce2-8c29-495b-9cca-cf079804f832
-.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
 .PROJECTURI https://github.com/nightroman/PowerShelf
+.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
 #>
 
 <#
 .Synopsis
-	Invokes PowerShell of the currently running version.
+	Invokes new PowerShell of the currently running version.
 
 .Description
-	This script invokes powershell.exe of the same version as the current:
+	This script invokes powershell/pwsh of the same version as the current:
 	- Windows PowerShell -Version 2
 	- Windows PowerShell v3+
-	- PowerShell Core v6
+	- PowerShell Core v6+
 
-	Arguments of the script are passed in powershell.exe
+	Arguments of the script are passed in powershell/pwsh.
 
 .Link
 	https://github.com/nightroman/PowerShelf
 #>
+
+trap {Write-Error -ErrorRecord $_}
 
 if ($PSVersionTable.PSVersion.Major -eq 2) {
 	powershell.exe -Version 2 @args

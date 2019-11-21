@@ -56,7 +56,6 @@ Clean
 task NuGet Package, Version, {
 	$text = @'
 PowerShell tools for various tasks implemented as scripts, mostly standalone.
-They are designed for PowerShell v2.0 and v3.0.
 '@
 	# NuGet file
 	Set-Content z\Package.nuspec @"
