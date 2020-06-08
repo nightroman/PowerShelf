@@ -13,6 +13,7 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 * *Format-High.ps1* - Formats output by columns with optional custom item colors.
 * *Import-Binary.ps1* - Imports objects using binary serialization.
 * *Invoke-Environment.ps1* - Invokes a command and imports its environment variables.
+* *Invoke-Ngen.ps1* - Invokes the Native Image Generator tool (ngen.exe).
 * *Invoke-PowerShell.ps1* - Invokes PowerShell of the currently running version.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Measure-Property.ps1* -  Counts properties grouped by names and types.

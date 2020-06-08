@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.10.0
+
+New script *Invoke-Ngen.ps1*.
+
 ## v1.9.6
 
 *Invoke-PowerShell.ps1* - refresh comments and slightly improve error handling.
