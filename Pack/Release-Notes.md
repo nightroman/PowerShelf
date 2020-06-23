@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.11.0
+
+New script *Expand-Diff.ps1*.
+
 ## v1.10.0
 
 New script *Invoke-Ngen.ps1*.

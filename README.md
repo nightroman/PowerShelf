@@ -8,6 +8,7 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 * *Add-Path.ps1* - Adds a directory to an environment path variable.
 * *Assert-SameFile.ps1* - Compares the sample and result files.
 * *Debug-Error.ps1* - Enables debugging on terminating errors.
+* *Expand-Diff.ps1* - Expands the diff into directories "a" and "b".
 * *Export-Binary.ps1* - Exports objects using binary serialization.
 * *Format-Chart.ps1* - Formats output as a table with the last chart column.
 * *Format-High.ps1* - Formats output by columns with optional custom item colors.
