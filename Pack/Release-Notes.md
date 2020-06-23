@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.11.1
+
+*Expand-Diff.ps1* - deal with encoded file names.
+
 ## v1.11.0
 
 New script *Expand-Diff.ps1*.

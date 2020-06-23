@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Git Diff Compare Merge
@@ -10,7 +10,7 @@
 
 <#
 .Synopsis
-	Expands the diff into directories "a" and "b".
+	Expands git diff into directories "a" and "b".
 
 .Description
 	The script is designed for diff and patch files created by git. It expands
@@ -20,16 +20,14 @@
 	Then you can use your diff tool of choice in order to compare the
 	directories "a" and "b", i.e. to visualize the original diff file.
 
-	Diff file lines are processed as:
+	The following diff lines are recognized and processed:
 
-		--- /dev/null - "a" is missing
-		+++ /dev/null - "b" is missing
-		--- a/...     - "a" file path
-		+++ b/...     - "b" file path
-		@@...         - chunk header
-		 ...          - common line
-		-...          - "a" line
-		+...          - "b" line
+	|--- a/... | "a/..." | /dev/null ~ file "a"
+	|+++ b/... | "b/..." | /dev/null ~ file "b"
+	|@@... ~ chunk header
+	| ... ~ common line
+	|-... ~ "a" line
+	|+... ~ "b" line
 
 	Other lines are ignored.
 
@@ -86,6 +84,21 @@ function Write-B {
 	}
 }
 
+$regexOctets = [regex]'(\\\d\d\d)+'
+
+$decodeOctets = {
+	$x = $args[0].Value
+	$a = [System.Collections.Generic.List[byte]]@()
+	for($i = 1; $i -lt $x.Length; $i += 4) {
+		$a.Add([byte][Convert]::ToInt32($x.Substring($i, 3), 8))
+	}
+	[System.Text.Encoding]::UTF8.GetString($a)
+}
+
+function Decode-Path($Path) {
+	$regexOctets.Replace($Path, $decodeOctets)
+}
+
 foreach($line in Get-Content -LiteralPath $Diff -Encoding UTF8) {
 	if ($line.StartsWith('@@')) {
 		if ($fileA -and $fileB) {
@@ -95,25 +108,31 @@ foreach($line in Get-Content -LiteralPath $Diff -Encoding UTF8) {
 			$linesB.Add($line)
 		}
 	}
-	elseif ($line.StartsWith('---')) {
+	elseif ($line -cmatch '^--- (a/.+)(\t|$)') {
 		Write-A
-		if ($line.StartsWith('--- a/')) {
-			$fileA = $line.Substring(4)
-			$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileA)")
-		}
-		elseif ($line -cne '--- /dev/null') {
-			throw "Unknown line: $line"
-		}
+		$fileA = $matches[1]
+		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileA)")
 	}
-	elseif ($line.StartsWith('+++')) {
+	elseif ($line -cmatch '^--- "(a/.+)"') {
+		Write-A
+		$fileA = Decode-Path ($matches[1])
+		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileA)")
+	}
+	elseif ($line.StartsWith('--- /dev/null')) {
+		Write-A
+	}
+	elseif ($line -cmatch '^\+\+\+ (b/.+)(\t|$)') {
 		Write-B
-		if ($line.StartsWith('+++ b/')) {
-			$fileB = $line.Substring(4)
-			$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileB)")
-		}
-		elseif ($line -cne '+++ /dev/null') {
-			throw "Unknown line: $line"
-		}
+		$fileB = $matches[1]
+		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileB)")
+	}
+	elseif ($line -cmatch '^\+\+\+ "(b/.+)"') {
+		Write-B
+		$fileB = Decode-Path ($matches[1])
+		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileB)")
+	}
+	elseif ($line.StartsWith('+++ /dev/null')) {
+		Write-B
 	}
 	elseif ($line.StartsWith(' ')) {
 		$text = $line.Substring(1)
