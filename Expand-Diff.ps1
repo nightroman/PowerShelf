@@ -1,8 +1,8 @@
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
-.TAGS Git Diff Compare Merge
+.TAGS Git Diff Patch Compare Merge
 .GUID 964fe648-2547-4062-a2ce-6a0756b50223
 .PROJECTURI https://github.com/nightroman/PowerShelf
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
@@ -15,19 +15,19 @@
 .Description
 	The script is designed for diff and patch files created by git. It expands
 	the specified diff file into directories "a" and "b" (original and changes)
-	with pieces of files provided by the diff.
+	with pieces of files stored in the diff.
 
 	Then you can use your diff tool of choice in order to compare the
 	directories "a" and "b", i.e. to visualize the original diff file.
 
 	The following diff lines are recognized and processed:
 
-	|--- a/... | "a/..." | /dev/null ~ file "a"
-	|+++ b/... | "b/..." | /dev/null ~ file "b"
-	|@@... ~ chunk header
-	| ... ~ common line
-	|-... ~ "a" line
-	|+... ~ "b" line
+		--- a/... | "a/..." | /dev/null ~ file "a"
+		+++ b/... | "b/..." | /dev/null ~ file "b"
+		@@... ~ chunk header
+		 ... ~ common line
+		-... ~ "a" line
+		+... ~ "b" line
 
 	Other lines are ignored.
 
@@ -58,15 +58,15 @@ $Root = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Root)
 
 $RootA = Join-Path $Root a
 $RootB = Join-Path $Root b
-if (Test-Path -LiteralPath $RootA) {throw "The path '$RootA' exists. Remove it or specify a different root."}
-if (Test-Path -LiteralPath $RootB) {throw "The path '$RootB' exists. Remove it or specify a different root."}
+if (Test-Path -LiteralPath $RootA) {throw "The item '$RootA' exists. Remove it or specify a different root."}
+if (Test-Path -LiteralPath $RootB) {throw "The item '$RootB' exists. Remove it or specify a different root."}
 $null = [System.IO.Directory]::CreateDirectory($RootA)
 $null = [System.IO.Directory]::CreateDirectory($RootB)
 
 $fileA = ''
 $fileB = ''
-$linesA = [System.Collections.Generic.List[string]]@()
-$linesB = [System.Collections.Generic.List[string]]@()
+$linesA = [Activator]::CreateInstance([System.Collections.Generic.List[string]])
+$linesB = [Activator]::CreateInstance([System.Collections.Generic.List[string]])
 
 function Write-A {
 	if ($fileA) {
@@ -88,9 +88,10 @@ $regexOctets = [regex]'(\\\d\d\d)+'
 
 $decodeOctets = {
 	$x = $args[0].Value
-	$a = [System.Collections.Generic.List[byte]]@()
-	for($i = 1; $i -lt $x.Length; $i += 4) {
-		$a.Add([byte][Convert]::ToInt32($x.Substring($i, 3), 8))
+	$n = $x.Length / 4
+	$a = [Activator]::CreateInstance([byte[]], $n)
+	for($i = 0; $i -lt $n; ++$i) {
+		$a[$i] = [Convert]::ToByte($x.Substring($i * 4 + 1, 3), 8)
 	}
 	[System.Text.Encoding]::UTF8.GetString($a)
 }

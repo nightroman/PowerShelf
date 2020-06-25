@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.11.2
+
+*Expand-Diff.ps1* - PowerShell v2 support, tests.
+
 ## v1.11.1
 
 *Expand-Diff.ps1* - deal with encoded file names.
