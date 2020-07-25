@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.11.3
+
+*Expand-Diff.ps1* - support reversed patches.
+
 ## v1.11.2
 
 *Expand-Diff.ps1* - PowerShell v2 support, tests.

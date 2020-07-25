@@ -1,0 +1,11 @@
+Make a patch from uncommitted changes using gitk.
+~> --- b and +++ a instead of --- a and +++ b.
+
+diff --git b/Test.txt a/Test.txt
+index 6ae994d..ac2dd81 100644
+--- b/Test.txt
++++ a/Test.txt
+@@ -1,3 +1,2 @@
+ Line1
+-added
+ Line2

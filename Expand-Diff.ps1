@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.2
+.VERSION 1.0.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Git Diff Patch Compare Merge
@@ -109,12 +109,12 @@ foreach($line in Get-Content -LiteralPath $Diff -Encoding UTF8) {
 			$linesB.Add($line)
 		}
 	}
-	elseif ($line -cmatch '^--- (a/.+)(\t|$)') {
+	elseif ($line -cmatch '^--- ([ab]/.+)(\t|$)') {
 		Write-A
 		$fileA = $matches[1]
 		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileA)")
 	}
-	elseif ($line -cmatch '^--- "(a/.+)"') {
+	elseif ($line -cmatch '^--- "([ab]/.+)"') {
 		Write-A
 		$fileA = Decode-Path ($matches[1])
 		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileA)")
@@ -122,12 +122,12 @@ foreach($line in Get-Content -LiteralPath $Diff -Encoding UTF8) {
 	elseif ($line.StartsWith('--- /dev/null')) {
 		Write-A
 	}
-	elseif ($line -cmatch '^\+\+\+ (b/.+)(\t|$)') {
+	elseif ($line -cmatch '^\+\+\+ ([ab]/.+)(\t|$)') {
 		Write-B
 		$fileB = $matches[1]
 		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileB)")
 	}
-	elseif ($line -cmatch '^\+\+\+ "(b/.+)"') {
+	elseif ($line -cmatch '^\+\+\+ "([ab]/.+)"') {
 		Write-B
 		$fileB = Decode-Path ($matches[1])
 		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileB)")

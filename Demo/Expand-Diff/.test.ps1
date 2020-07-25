@@ -66,3 +66,21 @@ task Change {
 
 	remove a, b
 }
+
+task Reversed {
+	remove a, b
+
+	Expand-Diff.ps1 Test-Reversed.diff
+
+	$r = @(Get-ChildItem a -Recurse -Force)
+	equals $r.Count 1
+	equals $r[0].FullName "$BuildRoot\a\Test.txt"
+	equals ((Get-Content a\Test.txt -Encoding UTF8) -join '|') '@@ -1,3 +1,2 @@|Line1|Line2'
+
+	$r = @(Get-ChildItem b -Recurse -Force)
+	equals $r.Count 1
+	equals $r[0].FullName "$BuildRoot\b\Test.txt"
+	equals ((Get-Content b\Test.txt -Encoding UTF8) -join '|') '@@ -1,3 +1,2 @@|Line1|added|Line2'
+
+	remove a, b
+}
