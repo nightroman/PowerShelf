@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.11.4
+
+Add `File` and `Argument` parameters to `Invoke-Environment`, #9
+
 ## v1.11.3
 
 *Expand-Diff.ps1* - support reversed patches.

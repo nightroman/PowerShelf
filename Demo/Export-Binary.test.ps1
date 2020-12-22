@@ -40,15 +40,15 @@ task Primitives {
 	assert ($r[4] -is [guid])
 }
 
+#! skip v6+, "System.IO.DirectoryInfo is not marked as serializable".
 task FileSystemItems -If ($Version -le 5) {
 	$items = Get-ChildItem
 	$items | Export-Binary.ps1 z.binary
 
-	$r = Import-Binary.ps1 z.binary
-	$r
+	($r = Import-Binary.ps1 z.binary)
 
 	equals $r.Count $items.Count
-	assert ($r[0] -is [System.IO.FileInfo])
+	assert ($r[0] -is [System.IO.FileSystemInfo])
 }
 
 task CustomObjects -If ($PSVersionTable.PSVersion.Major -ge 3) {

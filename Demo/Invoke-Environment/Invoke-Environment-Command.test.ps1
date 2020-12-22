@@ -1,7 +1,6 @@
-
 <#
 .Synopsis
-	Invoke-Environment.ps1 tests.
+	Invoke-Environment.ps1 [-Command] ... tests.
 
 .Description
 	It uses the environment variable TEST.
@@ -15,7 +14,7 @@ Set-StrictMode -Version Latest
 
 # clean
 Exit-Build {
-	Remove-Item -LiteralPath $File, $File2 -ErrorAction 0 -Verbose
+	remove $File, $File2
 }
 
 task Simple {
