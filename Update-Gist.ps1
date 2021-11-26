@@ -1,6 +1,3 @@
-
-#requires -version 3.0
-
 <#
 .Synopsis
 	Updates or creates a gist file using Invoke-RestMethod.
@@ -13,6 +10,7 @@
 
 .Parameter FileName
 		Specifies the file to be updated or created in the gist.
+
 .Parameter GistId
 		The existing gist ID. If it is not specified then the script searches
 		for a gist URL in the file, the first matching URL is used for the ID.
@@ -22,20 +20,28 @@
 			https://gist.github.com/gist-id
 		If the Credential is not specified then the first form is preferable
 		because the user name is automatically provided in the login dialog.
+
 .Parameter Credential
-		Specifies a GitHub user account.
+		Specifies GitHub OAUTH-TOKEN token as password.
 		If it is omitted then the login dialog is shown.
+
 .Parameter Show
 		Tells to show the gist web page after updating.
 
 .Inputs
-	None. Use the parameters.
+	None.
+
 .Outputs
 	None.
 
 .Link
+	https://docs.github.com/en/rest/reference/gists
+
+.Link
 	https://github.com/nightroman/PowerShelf
 #>
+
+#requires -version 3.0
 
 param(
 	[Parameter(Mandatory=1)]
@@ -53,17 +59,12 @@ $FileName = Resolve-Path -LiteralPath $FileName
 $content = [System.IO.File]::ReadAllText($FileName)
 
 # get the gist ID
-$userName = ''
 if (!$GistId) {
-	if ($content -notmatch 'https://gist.github.com/(\w+)(?:/(\w+))?') {
-		throw 'GistId is not specified and the file does not contain the gist URL.'
-	}
-	if ($matches[2]) {
-		$userName = $matches[1]
-		$GistId = $matches[2]
+	if ($content -match 'https://gist.github.com/\w+/(\w+)' -or $content -match 'https://gist.github.com/(\w+)') {
+		$GistId = $matches[1]
 	}
 	else {
-		$GistId = $matches[1]
+		throw 'GistId is not specified and the file does not contain a gist URL.'
 	}
 }
 
@@ -79,23 +80,22 @@ $body = [System.Text.Encoding]::UTF8.GetBytes((
 	} | ConvertTo-Json -Compress
 ))
 
-# get request credential
+# get credential
 if (!$Credential) {
-	$Credential = Get-Credential -Message 'GitHub account' -UserName $userName
-	if (!$Credential) {return}
+	$Credential = Get-Credential -Message 'GitHub OAUTH-TOKEN'
+	if (!$Credential) {
+		return
+	}
 }
 
 # make request headers
 $headers = @{
-	Authorization = 'Basic ' + (
-		[Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(
-			"$($Credential.UserName):$($Credential.GetNetworkCredential().Password)"
-		))
-	)
+	accept = 'application/vnd.github.v3+json'
+	Authorization = "Bearer $($Credential.GetNetworkCredential().Password)"
 }
 
 # send the request
-[System.Net.ServicePointManager]::SecurityProtocol = 'Ssl3,Tls,Tls11,Tls12'
+[System.Net.ServicePointManager]::SecurityProtocol = "$([System.Net.ServicePointManager]::SecurityProtocol),Tls11,Tls12"
 $r = Invoke-RestMethod -Uri "https://api.github.com/gists/$GistId" -Method Patch -Headers $headers -Body $body
 
 # show the web page

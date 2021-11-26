@@ -1,5 +1,11 @@
 # PowerShelf Release Notes
 
+## v1.12.0
+
+- New script `Set-Env.ps1` and supportive `Set-Env.ArgumentCompleters.ps1`.
+- `Submit-Gist.ps1` uses `https://gist.github.com/$GistId.git` for cloning.
+- `Update-Gist.ps1` `-Credential` password is the GitHub OAUTH token.
+
 ## v1.11.4
 
 Add `File` and `Argument` parameters to `Invoke-Environment`, #9

@@ -1,43 +1,37 @@
-
 <#
 .Synopsis
-	Build script (https://github.com/nightroman/Invoke-Build)
+	Build script, https://github.com/nightroman/Invoke-Build
 #>
 
-# Convert markdown files to HTML.
-# <http://johnmacfarlane.net/pandoc/>
-task Markdown {
-	exec {pandoc.exe --standalone --from=gfm --output=README.htm ../README.md --metadata=pagetitle=README}
-	exec {pandoc.exe --standalone --from=gfm --output=Release-Notes.htm Release-Notes.md --metadata=pagetitle=Release-Notes}
+# Synopsis: Convert markdown to HTML.
+task markdown {
+	exec { pandoc.exe --standalone --from=gfm --output=README.htm ../README.md --metadata=pagetitle=README }
 }
 
-# Remove temp files
-task Clean {
+# Synopsis: Remove temp files.
+task clean {
 	remove z, README.htm, Release-Notes.htm, PowerShelf.*.nupkg
 }
 
-# Make package directory z\tools.
-task Package Markdown, {
-	# temp package folder
+# Synopsis: Copy files to z\tools.
+task package markdown, {
 	remove z
 	$null = mkdir z\tools
 
-	# copy files
-	Copy-Item -Destination z\tools `
-	..\*-*.ps1,
-	..\LICENSE.txt,
-	README.htm,
-	Release-Notes.htm
+	Copy-Item -Destination z\tools @(
+		'..\*-*.ps1'
+		'..\LICENSE'
+		'README.htm'
+	)
 }
 
-# Get version.
-task Version {
-	assert ([IO.File]::ReadAllText('Release-Notes.md') -match '##\s+v(\d+\.\d+\.\d+)')
-	($script:Version = $Matches[1])
+# Synopsis: Set $script:Version.
+task version {
+	($script:Version = switch -File Release-Notes.md -Regex {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}})
 }
 
-# Push commits with a version tag.
-task PushRelease Version, {
+# Synopsis: Push with a version tag.
+task pushRelease version, {
 	$changes = exec { git status --short }
 	assert (!$changes) "Please, commit changes."
 
@@ -46,18 +40,19 @@ task PushRelease Version, {
 	exec { git push origin "v$Version" }
 }
 
-# Push NuGet package.
-task PushNuGet NuGet, {
-	exec { NuGet push "PowerShelf.$Version.nupkg" -source nuget.org }
+# Synopsis: Push NuGet package.
+task pushNuGet nuget, {
+	$NuGetApiKey = Read-Host NuGetApiKey
+	exec { nuget.exe push "PowerShelf.$Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
 },
 Clean
 
-# Make NuGet package.
-task NuGet Package, Version, {
-	$text = @'
+# Synopsis: Make NuGet package.
+task nuget package, version, {
+	$description = @'
 PowerShell tools for various tasks implemented as scripts, mostly standalone.
 '@
-	# NuGet file
+
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -69,13 +64,12 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 		<projectUrl>https://github.com/nightroman/PowerShelf</projectUrl>
 		<license type="expression">Apache-2.0</license>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<summary>$text</summary>
-		<description>$text</description>
+		<description>$description</description>
 		<tags>NuGet PowerShell Debugging Tracing Coverage Tools</tags>
 		<developmentDependency>true</developmentDependency>
 	</metadata>
 </package>
 "@
-	# pack
-	exec { NuGet.exe pack z\Package.nuspec -NoPackageAnalysis }
+
+	exec { nuget.exe pack z\Package.nuspec -NoPackageAnalysis }
 }

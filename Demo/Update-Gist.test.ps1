@@ -23,7 +23,7 @@ task MissingFile {
 task NoGistId {
 	$ErrorActionPreference = 'Continue'
 	($e = try {Update-Gist.ps1 $BuildFile} catch {$_ | Out-String})
-	assert ($e -like "*\Update-Gist.ps1 : GistId is not specified and the file does not contain the gist URL.*At *\Update-Gist.test.ps1:*")
+	assert ($e -like "*\Update-Gist.ps1 : GistId is not specified and the file does not contain a gist URL.*At *\Update-Gist.test.ps1:*")
 }
 
 <#

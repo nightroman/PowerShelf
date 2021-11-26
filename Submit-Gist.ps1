@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Submits a file to its GitHub gist repository.
@@ -10,7 +9,7 @@
 	* Git client is installed, configured, and available in the path.
 	* Use PowerShell.exe, git may require some console based interaction.
 
-	The script uses the local gist repository $HOME\gist-<GistId>. If it does
+	The script uses the local gist repository $HOME\gist-{GistId}. If it does
 	not exist then it is cloned. Then the file is copied to this repository.
 	Then git `add`, `status`, `commit`, and `push` are invoked.
 
@@ -21,6 +20,7 @@
 
 .Parameter FileName
 		The file to be submitted (existing is updated, new is added).
+
 .Parameter GistId
 		The existing gist ID. If it is not specified then the script searches
 		for a gist URL in the file, the first matching URL is used for the ID.
@@ -28,13 +28,15 @@
 			https://gist.github.com/user/gist-id
 		or
 			https://gist.github.com/gist-id
+
 .Parameter Keep
 		Tells to keep the local gist repository.
 
 .Inputs
-	None. Use the parameters.
+	None.
+
 .Outputs
-	Text from git.
+	git output.
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -59,8 +61,8 @@ $FileName = Resolve-Path -LiteralPath $FileName
 
 # extract the gist ID from the file
 if (!$GistId) {
-	foreach($$ in Get-Content -LiteralPath $FileName) {
-		if ($$ -match 'https://gist.github.com/\w+/(\w+)' -or $$ -match 'https://gist.github.com/(\w+)') {
+	foreach($_ in Get-Content -LiteralPath $FileName) {
+		if ($_ -match 'https://gist.github.com/\w+/(\w+)' -or $_ -match 'https://gist.github.com/(\w+)') {
 			$GistId = $matches[1]
 			break
 		}
@@ -76,7 +78,7 @@ try {
 		$Keep = $true
 	}
 	else {
-		exec { git clone git@gist.github.com:$GistId.git $repo }
+		exec { git clone "https://gist.github.com/$GistId.git" $repo }
 	}
 
 	Push-Location -LiteralPath $repo

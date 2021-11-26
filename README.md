@@ -20,6 +20,8 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 * *Measure-Property.ps1* -  Counts properties grouped by names and types.
 * *Save-NuGetTool.ps1* - Downloads a NuGet package and extracts /tools.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
+* *Set-Env.ArgumentCompleters.ps1* - Completes Set-Env.ps1 -Name .
+* *Set-Env.ps1* - Sets or removes environment variables (Windows User/Machine).
 * *Show-Color.ps1* - Shows all color combinations, color names and codes.
 * *Show-Coverage.ps1* - Converts to HTML and shows script coverage data.
 * *Show-SolutionDgml.ps1* - Generates and shows the solution project graph.
@@ -54,3 +56,7 @@ Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.g
 # NuGetDebugTools
 Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/nightroman/PowerShelf/master/Save-NuGetTool.ps1'))} NuGetDebugTools"
 ```
+
+## See Also
+
+- [PowerShelf Release Notes](https://github.com/nightroman/PowerShelf/blob/master/Pack/Release-Notes.md)
