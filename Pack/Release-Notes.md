@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.12.1
+
+Amend `Invoke-PowerShell` for PS v3-5 and possible not `ConsoleHost`.
+
 ## v1.12.0
 
 - New script `Set-Env.ps1` and supportive `Set-Env.ArgumentCompleters.ps1`.

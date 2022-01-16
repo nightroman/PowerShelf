@@ -16,8 +16,16 @@ task ScriptBlockAsEncodedCommand {
 
 	($r = Invoke-PowerShell.ps1 $script)
 	if ($Version -ge 3) {
-		equals $r.Count 7
-		equals "$($r[1..6])" "-encodedCommand $base64 -inputFormat xml -outputFormat xml"
+		if ($Host.Name -eq 'ConsoleHost')
+		{
+			equals $r.Count 7
+			equals "$($r[1..6])" "-encodedCommand $base64 -inputFormat xml -outputFormat xml"
+		}
+		else {
+			#_220116_pz FarHost so far, not sure why -noninteractive is added
+			equals $r.Count 8
+			equals "$($r[1..7])" "-noninteractive -encodedCommand $base64 -inputFormat xml -outputFormat xml"
+		}
 	}
 	else {
 		equals $r.Count 9
@@ -26,8 +34,16 @@ task ScriptBlockAsEncodedCommand {
 
 	($r = Invoke-PowerShell.ps1 -OutputFormat Text $script)
 	if ($Version -ge 3) {
-		equals $r.Count 7
-		equals "$($r[1..6])" "-outputFormat text -encodedCommand $base64 -inputFormat xml"
+		if ($Host.Name -eq 'ConsoleHost')
+		{
+			equals $r.Count 7
+			equals "$($r[1..6])" "-outputFormat text -encodedCommand $base64 -inputFormat xml"
+		}
+		else {
+			#_220116_pz
+			equals $r.Count 8
+			equals "$($r[1..7])" "-noninteractive -outputFormat text -encodedCommand $base64 -inputFormat xml"
+		}
 	}
 	else {
 		equals $r.Count 9

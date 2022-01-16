@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.2
+.VERSION 1.0.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -28,6 +28,9 @@ trap {Write-Error -ErrorRecord $_}
 
 if ($PSVersionTable.PSVersion.Major -eq 2) {
 	powershell.exe -Version 2 @args
+}
+elseif ($PSVersionTable.PSVersion.Major -le 5) {
+	powershell.exe @args
 }
 else {
 	& ([System.Diagnostics.Process]::GetCurrentProcess().Path) @args
