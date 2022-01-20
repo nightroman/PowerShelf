@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.3
+.VERSION 1.0.4
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -31,6 +31,9 @@ if ($PSVersionTable.PSVersion.Major -eq 2) {
 }
 elseif ($PSVersionTable.PSVersion.Major -le 5) {
 	powershell.exe @args
+}
+elseif (Get-Command pwsh -ErrorAction Ignore) {
+	pwsh @args
 }
 else {
 	& ([System.Diagnostics.Process]::GetCurrentProcess().Path) @args

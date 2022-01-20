@@ -1,5 +1,10 @@
 # PowerShelf Release Notes
 
+## v1.12.2
+
+Amend `Invoke-PowerShell` for PS Core: if `pwsh` is available then call it else
+try the current process. This works for `pwsh` installed as the dotnet tool.
+
 ## v1.12.1
 
 Amend `Invoke-PowerShell` for PS v3-5 and possible not `ConsoleHost`.
