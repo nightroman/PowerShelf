@@ -1,8 +1,13 @@
-
 <#
 .Synopsis
 	Measure-Property.ps1 tests.
 #>
+
+Set-StrictMode -Version Latest
+
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+	$ErrorView = 'NormalView'
+}
 
 task UnknownArguments {
 	$ErrorActionPreference = 'Continue'

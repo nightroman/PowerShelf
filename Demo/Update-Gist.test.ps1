@@ -1,5 +1,4 @@
-﻿
-<#
+﻿<#
 .Synopsis
 	Update-Gist.ps1 tests.
 
@@ -13,6 +12,10 @@ if ($PSVersionTable.PSVersion.Major -lt 3) {
 }
 
 Set-StrictMode -Version Latest
+
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+	$ErrorView = 'NormalView'
+}
 
 task MissingFile {
 	$ErrorActionPreference = 'Continue'

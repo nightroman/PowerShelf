@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Add-Path.ps1 tests.
@@ -7,7 +6,11 @@
 	Tests use the environment variable TEST.
 #>
 
-Set-StrictMode -Version 2
+Set-StrictMode -Version Latest
+
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+	$ErrorView = 'NormalView'
+}
 
 task MissingDirectory {
 	$ErrorActionPreference = 'Continue'

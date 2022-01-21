@@ -27,14 +27,14 @@ task User {
 	equals $env:q1 UserValue
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r UserValue
 
 	Set-Env q1
 	equals $env:q1 $null
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r $null
 
 	. Reset-Test
@@ -47,14 +47,14 @@ task Machine {
 	equals $env:q1 MachineValue
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r MachineValue
 
 	Set-Env q1 -Machine
 	equals $env:q1 $null
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r $null
 
 	. Reset-Test
@@ -68,7 +68,7 @@ task UserValueOverrides {
 	equals $env:q1 UserValue
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r UserValue
 
 	# set machine
@@ -77,7 +77,7 @@ task UserValueOverrides {
 	equals $Warnings.Count 1
 	equals $Warnings[0] "Set-Env: Existing User variable 'q1' takes over."
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r UserValue
 
 	. Reset-Test
@@ -91,7 +91,7 @@ task MachineValueOverrides {
 	equals $env:q1 MachineValue
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r MachineValue
 
 	# set user
@@ -99,7 +99,7 @@ task MachineValueOverrides {
 	equals $env:q1 UserValue
 	equals $Warnings.Count 0
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r UserValue
 
 	# remove user
@@ -108,7 +108,7 @@ task MachineValueOverrides {
 	equals $Warnings.Count 1
 	equals $Warnings[0] "Set-Env: Existing Machine variable 'q1' takes over."
 
-	$r = Invoke-PowerShell '$env:q1'
+	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r MachineValue
 
 	. Reset-Test

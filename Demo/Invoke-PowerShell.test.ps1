@@ -3,10 +3,12 @@
 	Tests Invoke-PowerShell.ps1.
 #>
 
-$Version = $PSVersionTable.PSVersion.Major
+$Version = $PSVersionTable.PSVersion
+${3.0.0} = [Version]'3.0.0'
+${6.0.0} = [Version]'6.0.0'
 
 task SameVersion {
-	($r = exec {Invoke-PowerShell.ps1 -NoProfile -Command '$PSVersionTable.PSVersion.Major'})
+	($r = exec {Invoke-PowerShell.ps1 -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'})
 	equals $r "$Version"
 }
 
@@ -15,7 +17,7 @@ task ScriptBlockAsEncodedCommand {
 	$base64 = 'WwBFAG4AdgBpAHIAbwBuAG0AZQBuAHQAXQA6ADoARwBlAHQAQwBvAG0AbQBhAG4AZABMAGkAbgBlAEEAcgBnAHMAKAApAA=='
 
 	($r = Invoke-PowerShell.ps1 $script)
-	if ($Version -ge 3) {
+	if ($Version -ge ${3.0.0}) {
 		if ($Host.Name -eq 'ConsoleHost')
 		{
 			equals $r.Count 7
@@ -33,7 +35,7 @@ task ScriptBlockAsEncodedCommand {
 	}
 
 	($r = Invoke-PowerShell.ps1 -OutputFormat Text $script)
-	if ($Version -ge 3) {
+	if ($Version -ge ${3.0.0}) {
 		if ($Host.Name -eq 'ConsoleHost')
 		{
 			equals $r.Count 7
@@ -55,16 +57,24 @@ task ScriptBlockAsEncodedCommand {
 # v1.0.2 improves its handling by `trap {Write-Error -ErrorRecord $_}`.
 # NB Without Out-String or $ErrorActionPreference Stop it works.
 task case1_1 {
-	$err = ''
+	$res, $err = ''
 	try {
-		Invoke-PowerShell.ps1 {.\missing.ps1} | Out-String
+		$res = Invoke-PowerShell.ps1 {.\missing.ps1} | Out-String
 	}
 	catch {
 		$err = $_
 	}
-	$err | Out-String
-	equals $err.FullyQualifiedErrorId CommandNotFoundException
-	equals $err.InvocationInfo.ScriptName $BuildFile
+	'$res', $res, '$err', $err | Out-String
+
+	if ($Version -lt ${6.0.0}) {
+		equals $res ''
+		equals $err.FullyQualifiedErrorId CommandNotFoundException
+		equals $err.InvocationInfo.ScriptName $BuildFile
+	}
+	else {
+		equals $res ''
+		equals $err $null
+	}
 }
 
 # Case 1 works without Out-String.

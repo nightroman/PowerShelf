@@ -6,6 +6,12 @@
 	Task SubmitNotChanged is hardcoded for gist-1303971 ...\Markdown.tasks.ps1
 #>
 
+Set-StrictMode -Version Latest
+
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+	$ErrorView = 'NormalView'
+}
+
 $SubmitNotChangedFile = "C:\-\zip\DEV\MarkdownDeep\Markdown.tasks.ps1"
 
 task MissingFile {

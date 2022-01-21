@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Format-Chart.ps1 tests.
@@ -9,6 +8,11 @@
 #>
 
 Set-StrictMode -Version Latest
+
+if ($PSVersionTable.PSVersion.Major -ge 7) {
+	$ErrorView = 'NormalView'
+	$PSStyle.OutputRendering = 'PlainText'
+}
 
 task BadParameter {
 	$ErrorActionPreference = 'Continue'

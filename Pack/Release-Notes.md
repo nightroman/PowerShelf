@@ -1,5 +1,11 @@
 # PowerShelf Release Notes
 
+## v1.12.3
+
+Amend `Invoke-PowerShell` for PS Core: if the current process is `pwsh` then
+call its path else call `pwsh`. This works for custom `pwsh` and the dotnet
+global tool, assuming the latter is in the path.
+
 ## v1.12.2
 
 Amend `Invoke-PowerShell` for PS Core: if `pwsh` is available then call it else
