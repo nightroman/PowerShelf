@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.12.4
+
+`Expand-Diff.ps1` - amend regex with tabs in path lines.
+
 ## v1.12.3
 
 Amend `Invoke-PowerShell` for PS Core: if the current process is `pwsh` then

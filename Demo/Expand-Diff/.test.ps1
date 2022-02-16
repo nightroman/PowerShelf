@@ -84,3 +84,23 @@ task Reversed {
 
 	remove a, b
 }
+
+# fixed regex with paths and trailing tabs
+task Test-x_220216_trailing_tabs.diff {
+	remove a, b
+
+	Expand-Diff.ps1 Test-x_220216_trailing_tabs.diff
+
+	$r = @(Get-ChildItem a, b -Recurse -Force -File)
+	equals $r.Count 2
+	equals $r[0].FullName "$BuildRoot\a\repo\file.cs"
+	equals $r[1].FullName "$BuildRoot\b\repo\file.cs"
+
+	$r1 = ($r[0] | Get-Content) -join '|'
+	equals $r1 '@@ -20,6 +20,8 @@ namespace My.Namespace||        int OrderQuantity { get; }||        IEnumerable Solutions { get; }|    }|}'
+
+	$r2 = ($r[1] | Get-Content) -join '|'
+	equals $r2 '@@ -20,6 +20,8 @@ namespace My.Namespace||        int OrderQuantity { get; }||        string UniqueId { get; }||        IEnumerable Solutions { get; }|    }|}'
+
+	remove a, b
+}

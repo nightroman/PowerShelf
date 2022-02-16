@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.3
+.VERSION 1.0.4
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Git Diff Patch Compare Merge
@@ -109,7 +109,7 @@ foreach($line in Get-Content -LiteralPath $Diff -Encoding UTF8) {
 			$linesB.Add($line)
 		}
 	}
-	elseif ($line -cmatch '^--- ([ab]/.+)(\t|$)') {
+	elseif ($line -cmatch '^--- ([ab]/.+?)(\t|$)') {
 		Write-A
 		$fileA = $matches[1]
 		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileA)")
@@ -122,7 +122,7 @@ foreach($line in Get-Content -LiteralPath $Diff -Encoding UTF8) {
 	elseif ($line.StartsWith('--- /dev/null')) {
 		Write-A
 	}
-	elseif ($line -cmatch '^\+\+\+ ([ab]/.+)(\t|$)') {
+	elseif ($line -cmatch '^\+\+\+ ([ab]/.+?)(\t|$)') {
 		Write-B
 		$fileB = $matches[1]
 		$null = [System.IO.Directory]::CreateDirectory("$Root/$(Split-Path $fileB)")
