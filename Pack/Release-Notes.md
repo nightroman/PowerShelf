@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.0
+
+New script `Update-ReadmeIndex.ps1`.
+
 ## v1.12.4
 
 `Expand-Diff.ps1` - amend regex with tabs in path lines.

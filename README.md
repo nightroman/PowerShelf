@@ -30,6 +30,7 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
 * *Trace-Debugger.ps1* - Provides script tracing and coverage data collection.
 * *Update-Gist.ps1* - Updates or creates a gist file using Invoke-RestMethod.
+* *Update-ReadmeIndex.ps1* - Updates markdown index from article directories.
 * *Watch-Command.ps1* - Invokes a command repeatedly and shows its one screen output.
 * *Watch-Directory.ps1* - File change watcher and handler.
 
