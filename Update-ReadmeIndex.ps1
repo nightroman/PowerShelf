@@ -1,8 +1,8 @@
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
-.TAGS Markdown README
+.TAGS Markdown README Index TOC
 .GUID 0ab2bbcb-6552-415f-a102-7799e8a051b8
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
 .PROJECTURI https://github.com/nightroman/PowerShelf
@@ -10,38 +10,42 @@
 
 <#
 .Synopsis
-	Updates markdown index from article directories.
+	Updates README index from content directories.
 	Author: Roman Kuzmin
 
 .Description
-	The command scans the articles recursively, finds README.md files and
-	builds the index from their first line headings in the main README.md.
+	The command scans the contents recursively, finds README.md files and
+	builds the index from their first line headings in the root README.md.
 
-	The generated list with links is inserted into the specified markdown file.
-	The index start and end are defined by the HTML comments Mark1 and Mark2.
+	The generated list with links is inserted into the root README.md.
+	The index start/end marks are defined by the HTML comments like:
+	given $Content='docs', marks are '<!--docs-->'.
 
-.Parameter Path
-		Specifies the source markdown file to be updated.
-		Default: README.md
+.Parameter Content
+		Specifies the directory to scan with the path relative to root.
+		Use '/' as directory separators if it is not the top directory.
 
-.Parameter Articles
-		Specifies the directory to scan for folders with README.md files.
-		Default: 'Articles'
+.Parameter Root
+		Specifies the root directory with README.md to be updated.
+		The typical use case is a git repository root.
+		Default: the current location
 
 .Parameter Depth
 		Specifies the recursive scan depth.
-		Default: 0, non-recursive scan.
+		Default: 0, just top directories.
 
 .Parameter Descending
-		Tells to sort root directories descending.
+		Tells to sort top directories descending.
 
-.Parameter Mark1
-		The HTML comment that marks the start of generated index.
-		Default: '<!--Generated-->'
+.Parameter NoWarning
+		Tells not to write warnings about no README.
 
-.Parameter Mark2
-		The HTML comment that marks the end of generated index.
-		Default: '<!--Generated-->'
+.Parameter Skip
+		The script returning true for the directories to skip.
+		Argument 1: directory path like $Content[/dir1[/...]]
+
+.Link
+	Example: https://github.com/nightroman/PowerShellTraps
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -49,85 +53,106 @@
 
 [CmdletBinding()]
 param(
-	[string]$Path = 'README.md'
+	[Parameter(Position=0, Mandatory=1)]
+	[string]$Content
 	,
-	[string]$Articles = 'Articles'
+	[string]$Root = '.'
 	,
 	[int]$Depth
 	,
 	[switch]$Descending
 	,
-	[string]$Mark1 = '<!--Generated-->'
+	[switch]$NoWarning
 	,
-	[string]$Mark2 = '<!--Generated-->'
+	[scriptblock]$Skip
 )
 
 $ErrorActionPreference = 1
-Set-StrictMode -Version 3
 trap { Write-Error $_ }
 
-$escape = [regex]@'
-[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^_\`\{\|\}\~]
-'@
-
-# Gets markdown list lines with links for folders recursively.
+# Gets markdown list lines with links to folders recursively.
 function Get-List($Path, $Level) {
-	$tab = '    ' * $Level
+	$indent = '    ' * $Level
 
-	# get and sort directories
-	$items = Get-ChildItem -LiteralPath $Path -Name -Directory
+	# get and sort (top) directory names
+	$dirNames = Get-ChildItem -LiteralPath $Path -Name -Directory
 	if ($Level -eq 0) {
-		$items = $items | Sort-Object -Descending:$Descending
+		$dirNames = $dirNames | Sort-Object -Descending:$Descending
 	}
 
-	foreach($dir in $items) {
-		# skip the folder without README
-		$readme = "$Path/$dir/README.md"
-		if (!(Test-Path -LiteralPath $readme)) {
+	foreach($dirName in $dirNames) {
+		$dirPath = "$Path/$dirName"
+		if ($Skip -and (& $Skip $dirPath)) {
 			continue
 		}
 
-		# the first README line must be heading, get the topic text
-		switch -File $readme -Regex {
+		$README = "$dirPath/README.md"
+
+		# case: no README
+		if (!(Test-Path -LiteralPath $README)) {
+			if ($Level -lt $Depth -and (Get-ChildItem -LiteralPath $dirPath -Recurse -Filter README.md)) {
+				# output the list line with the folder name
+				'{0}- {1}' -f $indent, $dirName
+
+				# process sub-folders
+				Get-List $dirPath ($Level + 1)
+			}
+			elseif (!$NoWarning) {
+				Write-Warning "Found no README in '$dirPath'."
+			}
+			continue
+		}
+
+		# the first README line is heading, get the topic text
+		switch -File $README -Regex {
 			'^#{1,6}(.*)' {
-				$topic = $escape.Replace($matches[1].Trim(), '\$0')
+				$topic = $matches[1].Trim()
 				break
 			}
 			default {
-				throw "Expected first line heading in '$readme'"
+				throw "Expected first line heading in '$README'."
 			}
 		}
 
 		# output the list line with the topic link
-		'{0}- [{1}]({2})' -f $tab, $topic, "$Path/$dir"
+		'{0}- [{1}]({2})' -f $indent, $topic, $dirPath
 
 		# process sub-folders
 		if ($Level -lt $Depth) {
-			Get-List "$Path/$dir" ($Level + 1)
+			Get-List $dirPath ($Level + 1)
 		}
 	}
 }
 
-$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-if (!(Test-Path -LiteralPath $Path)) {
-	throw "'$Path' does not exist."
+### main
+
+$Root = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Root)
+if (!(Test-Path -LiteralPath $Root)) {
+	throw "Cannot find '$Root'."
 }
 
-# collect lines before and after marks
+$README = "$Root/README.md"
+if (!(Test-Path -LiteralPath $README)) {
+	throw "Cannot find '$README'."
+}
+
+$Mark = "<!--$Content-->"
+
+### collect lines before and after marks
 $lines1 = [System.Collections.Generic.List[string]]@()
 $lines2 = [System.Collections.Generic.List[string]]@()
 $step = 1
-foreach($_ in Get-Content -LiteralPath $Path) {
+foreach($_ in Get-Content -LiteralPath $README) {
 	if ($step -eq 1) {
 		$lines1.Add($_)
-		if ($_ -eq $Mark1) {
+		if ($_ -eq $Mark) {
 			++$step
 		}
 		continue
 	}
 
 	if ($step -eq 2) {
-		if ($_ -eq $Mark2) {
+		if ($_ -eq $Mark) {
 			$lines2.Add($_)
 			++$step
 		}
@@ -138,12 +163,18 @@ foreach($_ in Get-Content -LiteralPath $Path) {
 }
 
 if ($step -ne 3) {
-	throw "Cannot find mark '$Mark1' or '$Mark2' in '$Path'."
+	throw "Cannot find two marks '$Mark' in '$README'."
 }
 
-# update source file
+### update README
 $(
-	$lines1
-	Get-List $Articles 0
-	$lines2
-) | Set-Content -LiteralPath $Path -Encoding UTF8
+	Push-Location -LiteralPath $Root
+	try {
+		$lines1
+		Get-List $Content 0
+		$lines2
+	}
+	finally {
+		Pop-Location
+	}
+) | Set-Content -LiteralPath $README -Encoding UTF8

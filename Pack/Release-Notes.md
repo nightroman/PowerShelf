@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.1
+
+Redesign `Update-ReadmeIndex.ps1`.
+
 ## v1.13.0
 
 New script `Update-ReadmeIndex.ps1`.
