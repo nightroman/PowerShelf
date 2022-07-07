@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.2
+
+`Assert-SameFile` - fix handling paths with spaces.
+
 ## v1.13.1
 
 Redesign `Update-ReadmeIndex.ps1`.

@@ -1,6 +1,5 @@
-
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -32,8 +31,10 @@
 .Parameter Sample
 		Specifies the sample file path. If it does not exist then it is
 		created as a copy of the result.
+
 .Parameter Result
 		Specifies the result file path. The file must exist.
+
 .Parameter View
 		Specifies a command invoked when the files are different. It is an
 		application name or a script block. The arguments are file paths.
@@ -57,9 +58,11 @@
 
 param(
 	[Parameter(Mandatory=1)]
-	[string]$Sample,
+	[string]$Sample
+	,
 	[Parameter(Mandatory=1)]
-	[string]$Result,
+	[string]$Result
+	,
 	$View
 )
 
@@ -101,7 +104,7 @@ if ($same) {
 	return
 }
 
-# abort
+# fail
 if (!$View) {
 	Write-Error "Different sample '$Sample' and result '$Result'."
 }
@@ -113,7 +116,7 @@ if ($View -is [scriptblock]) {
 	& $View $fileSample.FullName $fileResult.FullName
 }
 elseif ($View -is [string]) {
-	Start-Process $View $fileSample.FullName, $fileResult.FullName
+	Start-Process $View ('"{0}" "{1}"' -f $fileSample.FullName, $fileResult.FullName)
 }
 else {
 	Write-Error "Invalid view command: '$View'."
@@ -129,10 +132,10 @@ function New-Choice {
 
 # prompt
 switch(Get-Choice 'Different result' 'How would you like to proceed?' @(
-		New-Choice '&0. Ignore' 'Do nothing.'
-		New-Choice '&1. Update' 'Copy result to sample.'
-		New-Choice '&2. Abort' 'Write terminating error.'
-	))
+	New-Choice '&0. Ignore' 'Do nothing.'
+	New-Choice '&1. Update' 'Copy result to sample.'
+	New-Choice '&2. Abort' 'Write terminating error.'
+))
 {
 	1 {
 		Copy-Item -LiteralPath $fileResult.FullName -Destination $fileSample.FullName -Force
