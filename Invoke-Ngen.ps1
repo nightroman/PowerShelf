@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Performance Tool Ngen
@@ -43,15 +43,16 @@
 		exe and dll files.
 
 .Parameter Recurse
-		Tells to include child directories. It is used with -Directory.
+		With -Directory, tells to include child directories and sets
+		-NoDependencies to true.
 
 .Parameter Current
 		Tells to generate native images for the currently loaded app assemblies.
 		Of course, it is a PowerShell hosting app, either console or another host.
 
 .Parameter NoDependencies
-		Tells to generate the minimum number of native images required.
-		It is used with -Directory and -Current.
+		With -Directory or -Current, tells to generate the minimum number of
+		native images required. With -Recurse, tt is ignored and used as true.
 
 .Example
 	>
@@ -134,7 +135,7 @@ if ($PSCmdlet.ParameterSetName -eq 'Directory') {
 	Get-ChildItem -LiteralPath $Directory -Recurse:$Recurse | .{process{
 		if ($_.Extension -match '\.(exe|dll)$') {
 			Write-Host $_.FullName -ForegroundColor Cyan
-			if ($NoDependencies) {
+			if ($NoDependencies -or $Recurse) {
 				ngen install $_.FullName /NoDependencies /nologo
 			}
 			else {

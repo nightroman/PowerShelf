@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.3
+
+`Invoke-Ngen.ps1` - with `Recurse` assume `NoDependencies`.
+
 ## v1.13.2
 
 `Assert-SameFile` - fix handling paths with spaces.
