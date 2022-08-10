@@ -1,4 +1,13 @@
-
+<#PSScriptInfo
+.DESCRIPTION Debugger for hosts with no own debugger.
+.VERSION 1.0.0
+.AUTHOR Roman Kuzmin
+.COPYRIGHT (c) Roman Kuzmin
+.TAGS Debug
+.GUID e187060e-ad39-425c-a6e3-b1e1e92ab59d
+.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
+.PROJECTURI https://github.com/nightroman/PowerShelf
+#>
 <#
 .Synopsis
 	Adds a script debugger to PowerShell.
@@ -11,20 +20,21 @@
 	instead of build-in debuggers as well.
 
 	The script should be called once at any moment when debugging is needed.
-	In order to restore the original debugger invoke Restore-Debugger.
+	In order to restore the original debugger invoke Restore-Debugger. This
+	function is defined by Add-Debugger.
 
 	For output of debug commands the script uses Out-Host or a file with a
-	separate console started for watching the data.
+	separate console started for watching its tail.
 
-	For input the GUI input box is used for typing of PowerShell and debugger
+	For input the GUI input box is used for typing PowerShell and debugger
 	commands. Use the switch ReadHost in order to use Read-Host instead.
 
 .Parameter Path
 		Specifies the output file used instead of Out-Host.
-		A separate console is opened for watching the data.
+		A separate console is opened for watching its tail.
 
 .Parameter ReadHost
-		Tells to use Read-Host for input instead of the default GUI input box.
+		Tells to use Read-Host for input instead of the GUI input box.
 
 .Inputs
 	None
@@ -58,7 +68,9 @@
 param(
 	[Parameter()]
 	[string]$Path,
-	[switch]$ReadHost
+	[switch]$ReadHost,
+	[int]$XPos = -1,
+	[int]$YPos = -1
 )
 
 # Restore another debugger by its Restore-Debugger.
@@ -101,6 +113,8 @@ if (!(Test-Path Variable:\_Debugger)) {
 		DefaultContext = 0
 		Context = [ref]0
 		Action = '?'
+		XPos = $XPos
+		YPos = $YPos
 	}
 	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({. Invoke-DebuggerStop})
 }
@@ -145,7 +159,7 @@ else {
 		$Default
 	)
 	{
-		[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title, $Default)
+		[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title, $Default, $_Debugger.XPos, $_Debugger.YPos)
 	}
 }
 
@@ -153,7 +167,9 @@ else {
 function global:Watch-Debugger($Path)
 {
 	$Path = $Path.Replace("'", "''")
-	Start-Process PowerShell.exe "-NoProfile Get-Content -LiteralPath '$Path' -Wait -ErrorAction 0"
+	$me = Get-Process -Id $PID
+	$app = if ($me.Name -eq 'pwsh') {$me.Path} else {'powershell.exe'}
+	Start-Process $app "-NoProfile -Command Get-Content -LiteralPath '$Path' -Wait -ErrorAction 0"
 }
 
 # Writes the current invocation info.
@@ -163,7 +179,9 @@ function global:Write-DebuggerInfo(
 )
 {
 	# write position message
-	Write-Debugger ($InvocationInfo.PositionMessage.Trim())
+	if ($_ = $InvocationInfo.PositionMessage) {
+		Write-Debugger ($_.Trim())
+	}
 
 	# done?
 	$file = $InvocationInfo.ScriptName
@@ -184,7 +202,7 @@ function global:Write-DebuggerFile(
 {
 	# amend negative start
 	if ($LineIndex -lt 0) {
-		$LineCount += $lineIndex
+		$LineCount += $LineIndex
 		$LineIndex = 0
 	}
 
@@ -269,6 +287,18 @@ function global:Invoke-DebuggerStop
 			return
 		}
 
+		### Detach
+		if ($_Debugger.Action -eq 'd' -or $_Debugger.Action -eq 'Detach') {
+			if ($_Debugger.Handlers) {
+				Write-Debugger 'd, Detach - not supported in this environment.'
+				continue
+			}
+
+			$_Debugger.e.ResumeAction = 'Continue'
+			Restore-Debugger
+			return
+		}
+
 		### history
 		if ($_Debugger.Action -eq 'r') {
 			Write-Debugger $_Debugger.History
@@ -307,31 +337,37 @@ function global:Invoke-DebuggerStop
 
 		### help
 		if ($_Debugger.Action -eq '?' -or $_Debugger.Action -eq 'h') {
-			Write-Debugger @'
+			Write-Debugger (@(
+				''
+				'  s, StepInto  Step to the next statement into functions, scripts, etc.'
+				'  v, StepOver  Step to the next statement over functions, scripts, etc.'
+				'  o, StepOut   Step out of the current function, script, etc.'
+				'  c, Continue  Continue operation (also on empty input).'
 
-  s, StepInto  Step to the next statement into functions, scripts, etc.
-  v, StepOver  Step to the next statement over functions, scripts, etc.
-  o, StepOut   Step out of the current function, script, etc.
-  c, Continue  Continue operation (also on empty input).
-  q, Quit      Stop operation and exit the debugger.
-  ?, h         Write this help message.
-  k            Write call stack (Get-PSCallStack).
-  K            Write detailed call stack using Format-List.
+				if (!$_Debugger.Handlers) {
+					'  d, Detach    Continue operation and detach the debugger.'
+				}
 
-  <n>          Write debug location in context of <n> lines.
-  +<n>         Set location context preference to <n> lines.
-  k <s> <n>    Write source at stack <s> in context of <n> lines.
-
-  w            Restart watching the debugger output file.
-  r            Write last PowerShell commands invoked on debugging.
-  <command>    Invoke any PowerShell <command> and write its output.
-
-'@
+				'  q, Quit      Stop operation and exit the debugger.'
+				'  ?, h         Write this help message.'
+				'  k            Write call stack (Get-PSCallStack).'
+				'  K            Write detailed call stack using Format-List.'
+				''
+				'  <n>          Write debug location in context of <n> lines.'
+				'  +<n>         Set location context preference to <n> lines.'
+				'  k <s> <n>    Write source at stack <s> in context of <n> lines.'
+				''
+				'  w            Restart watching the debugger output file.'
+				'  r            Write last PowerShell commands invoked on debugging.'
+				'  <command>    Invoke any PowerShell <command> and write its output.'
+				''
+			) -join [System.Environment]::NewLine)
 			continue
 		}
 
 		### stack <s> <n>
-		function k([Parameter()][int]$s, [int]$n) {
+		Set-Alias k debug_stack
+		function debug_stack([Parameter()][int]$s, [int]$n) {
 			$stack = @(Get-PSCallStack)
 			if ($s -ge $stack.Count) {
 				Write-Debugger 'Out of range of the call stack.'

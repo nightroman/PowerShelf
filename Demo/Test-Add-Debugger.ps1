@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests Add-Debugger.ps1.
@@ -85,8 +84,7 @@ function Read-Debugger
 }
 
 # test breakpoints
-Test-Debugger.ps1 # set
-Test-Debugger.ps1 # run
+Test-Debugger.ps1
 
 # test a script module breakpoint
 $null = Set-PSBreakpoint -Command TestModule1

@@ -1,27 +1,30 @@
-
 <#
 .Synopsis
 	Tests PowerShell debugging with breakpoints.
 	Author: Roman Kuzmin
 
 .Description
-	This scripts helps to get familiar with most kinds of breakpoints, i.e.
-	command, variable (reading, writing, reading and writing), and custom
-	actions. It is also used for testing of debuggers (Add-Debugger.ps1).
+	This scripts helps to get familiar with various breakpoints: command,
+	variable (reading, writing, reading and writing), and custom actions.
+	It is also useful for testing debuggers, e.g. Add-Debugger.ps1.
 
-	On the first run the script sets some breakpoints in itself. Run it again
-	in order to see how the debugger works when breakpoints are hit. In order
-	to remove test breakpoints invoke Test-Debugger.ps1 -RemoveBreakpoints.
+	The script sets some breakpoints in itself and triggers them all during
+	execution. In order to set breakpoints without testing, use NoTest. In
+	order to remove breakpoints, use RemoveBreakpoints.
 
 	With built-in debuggers it is ready to use, e.g. with
 	- ConsoleHost
+	- VSCode PowerShell host
 	- Windows PowerShell ISE Host
 	- FarHost (in the main session)
 
 	Use it with a custom debugger, e.g. Add-Debugger.ps1, with
 	- Default Host (simple calls of PowerShell from .NET)
 	- Package Manager Host (Visual Studio NuGet console)
-	- FarHost (editor console with a local session)
+	- FarHost
+
+.Parameter NoTest
+		Tells to set breakpoints and exit without testing.
 
 .Parameter RemoveBreakpoints
 		Tells to remove breakpoints set for this script.
@@ -31,16 +34,17 @@
 	# add debugger (or use the built-in and skip this)
 	Add-Debugger.ps1
 
-	# test breakpoints
-	Test-Debugger.ps1 # set
-	Test-Debugger.ps1 # run
+	# set and test breakpoints
+	Test-Debugger.ps1
 
 .Link
 	https://github.com/nightroman/PowerShelf
 #>
 
+[CmdletBinding()]
 param(
-	[Parameter()]
+	[switch]$NoTest
+	,
 	[switch]$RemoveBreakpoints
 )
 
@@ -79,7 +83,9 @@ if (!$breakpoints) {
 		++$script:VarAccessCount
 	}
 
-	return 'Breakpoints are set, invoke the script again to test.'
+	if ($NoTest) {
+		return 'Breakpoints are set, invoke the script again to test.'
+	}
 }
 
 ### proceed with the breakpoints

@@ -1,5 +1,19 @@
 # PowerShelf Release Notes
 
+## v1.13.4
+
+- `Add-Debugger.ps1`
+
+    - Published at PSGallery.
+    - New parameters `XPos`, `YPos`, for input box.
+    - Use `pwsh` when the current process is `pwsh`.
+    - New `d, Detach` commands for hosts with no debugger.
+
+- `Test-Debugger.ps1`
+
+    Slight change of default behaviour: set breakpoints and test them
+    right away. Use -NoTest in order to set breakpoints without testing.
+
 ## v1.13.3
 
 `Invoke-Ngen.ps1` - with `Recurse` assume `NoDependencies`.

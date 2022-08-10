@@ -36,26 +36,15 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 
 ## Get Scripts
 
-The scripts are distributed as two NuGet packages:
+The scripts are published as the NuGet package [PowerShelf](https://www.nuget.org/packages/PowerShelf).
 
-- [PowerShelf](https://www.nuget.org/packages/PowerShelf) (all scripts).
-- [NuGetDebugTools](https://www.nuget.org/packages/NuGetDebugTools) (debugging).
+Download by NuGet tools or [directly](http://nuget.org/api/v2/package/PowerShelf).
+Save as `.zip` and unzip. Use the package subdirectory `tools`.
 
-Download them by NuGet tools or directly:
-
-- [PowerShelf](http://nuget.org/api/v2/package/PowerShelf)
-- [NuGetDebugTools](http://nuget.org/api/v2/package/NuGetDebugTools)
-
-Save as *".zip"* and unzip. Use the package subdirectory *"tools"*.
-
-Or, using downloaded on the fly *Save-NuGetTool.ps1*, download and unzip:
+Or, using downloaded on the fly `Save-NuGetTool.ps1` download and unzip:
 
 ```powershell
-# PowerShelf
 Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/nightroman/PowerShelf/master/Save-NuGetTool.ps1'))} PowerShelf"
-
-# NuGetDebugTools
-Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/nightroman/PowerShelf/master/Save-NuGetTool.ps1'))} NuGetDebugTools"
 ```
 
 ## See Also
