@@ -13,20 +13,18 @@ if ($PSVersionTable.PSVersion.Major -lt 3) {
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-	$ErrorView = 'NormalView'
-}
-
 task MissingFile {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Update-Gist.ps1 MissingFile} catch {$_ | Out-String})
-	assert ($e -like "*\Update-Gist.ps1 : Cannot find path 'MissingFile' because it does not exist.*At *\Update-Gist.test.ps1:*")
+	($r = try {Update-Gist.ps1 MissingFile} catch {$_})
+	equals "$r" "Cannot find path 'MissingFile' because it does not exist."
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Update-Gist.test.ps1:*')
 }
 
 task NoGistId {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Update-Gist.ps1 $BuildFile} catch {$_ | Out-String})
-	assert ($e -like "*\Update-Gist.ps1 : GistId is not specified and the file does not contain a gist URL.*At *\Update-Gist.test.ps1:*")
+	($r = try {Update-Gist.ps1 $BuildFile} catch {$_})
+	equals "$r" "GistId is not specified and the file does not contain a gist URL."
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Update-Gist.test.ps1:*')
 }
 
 <#

@@ -9,11 +9,6 @@
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-	$ErrorView = 'NormalView'
-	$PSStyle.OutputRendering = 'PlainText'
-}
-
 task BadParameter {
 	$ErrorActionPreference = 'Continue'
 	($r = try {<##> Format-Chart.ps1 Name -Unknown foo} catch {$_})
@@ -38,14 +33,16 @@ task NumericValues {
 		)
 	}
 
-	($e = try {$NonNumeric | Format-Chart Name, Data} catch {$_ | Out-String})
-	assert ($e -like "*\Format-Chart.ps1 : Property 'Data' should have numeric values.*\Format-Chart.test.ps1:*")
+	($r = try {$NonNumeric | Format-Chart Name, Data} catch {$_})
+	equals "$r" "Property 'Data' should have numeric values."
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Format-Chart.test.ps1:*')
 }
 
 task InvalidMinimumMaximum {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Get-Process -PID $PID | Format-Chart Name, WS -Minimum 1gb} catch {$_ | Out-String})
-	assert ($e -like "*\Format-Chart.ps1 : Invalid Minimum, Maximum: *, *.*\Format-Chart.test.ps1:*")
+	($r = try {Get-Process -PID $PID | Format-Chart Name, WS -Minimum 1gb} catch {$_})
+	assert ("$r" -like "Invalid Minimum, Maximum: *.")
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Format-Chart.test.ps1:*')
 }
 
 task NoData {
@@ -62,8 +59,7 @@ task NoData {
 	equals $null $res
 }
 
-function Trim
-{
+function Trim {
 	$(foreach($_ in $Input) {if ($_ = $_.TrimEnd()) {$_}}) -join "`r`n"
 }
 

@@ -5,14 +5,11 @@
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-	$ErrorView = 'NormalView'
-}
-
 task UnknownArguments {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Measure-Property Bad1 Bad2} catch {$_ | Out-String})
-	assert ($e -like "*Unknown arguments: Bad1 Bad2*At*\Measure-Property.test.ps1:*")
+	($r = try {Measure-Property Bad1 Bad2} catch {$_})
+	equals "$r" 'Unknown arguments: Bad1 Bad2'
+	assert ($r.InvocationInfo.PositionMessage -like 'At*Measure-Property.test.ps1:*')
 }
 
 task ObjectProperty {

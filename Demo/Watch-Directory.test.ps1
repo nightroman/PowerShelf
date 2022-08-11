@@ -5,25 +5,24 @@
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-	$ErrorView = 'NormalView'
-}
-
 $env:BuildRoot = $BuildRoot
 
 task BadPath {
 	($r = try {<##> Watch-Directory.ps1 Missing} catch {$_})
-	assert (($r | Out-String) -clike '*Missing directory:*<##>*FullyQualifiedErrorId : Missing directory: *\Missing,Watch-Directory.ps1*')
+	assert ("$r" -like 'Missing directory: *Missing')
+	assert $r.InvocationInfo.Line.Contains('<##>')
 }
 
 task BadInclude {
 	($r = try {<##> Watch-Directory.ps1 . -Include *} catch {$_})
-	assert (($r | Out-String) -clike '*Parameter Include:*<##>*FullyQualifiedErrorId : Parameter Include:*')
+	assert ("$r" -like 'Parameter Include:*')
+	assert $r.InvocationInfo.Line.Contains('<##>')
 }
 
 task BadExclude {
 	($r = try {<##> Watch-Directory.ps1 . -Exclude *} catch {$_})
-	assert (($r | Out-String) -clike '*Parameter Exclude:*<##>*FullyQualifiedErrorId : Parameter Exclude:*')
+	assert ("$r" -like 'Parameter Exclude:*')
+	assert $r.InvocationInfo.Line.Contains('<##>')
 }
 
 function Start-Test($Command) {

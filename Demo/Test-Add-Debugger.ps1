@@ -24,21 +24,53 @@ function TestModule1 {
 Add-Debugger.ps1 $log
 if (!(Test-Path Variable:\_Debugger)) {throw}
 
-# steps
-$global:step = 0
-$global:steps = @(
+# fake
+$global:nWatchDebugger = 0
+function Watch-Debugger {
+	++$global:nWatchDebugger
+}
+
+# fake
+function Read-Debugger {
+	if ($global:step -ge $steps.Count) {throw}
+	$data = $steps[$step]
+	++$global:step
+
+	if ($data -is [string]) {
+		return $data
+	}
+
+	& $data.test
+	$data.read
+}
+
+function Test-All {
+	$global:step = 0
+	$global:steps = $args[0].steps
+
+	# test breakpoints
+	Test-Debugger.ps1
+
+	# test a script module breakpoint
+	$null = Set-PSBreakpoint -Command TestModule1
+	Import-Module $env:TEMP\debug.psm1
+	TestModule1
+}
+
+#! define steps after functions, to avoid line shifts and noise in diffs
+Test-All @{steps = @(
 	@{
-		read = '?'
 		test = { if ($nWatchDebugger -ne 1) {throw} }
+		read = '?'
 	}
 	@{
-		read = '3'
 		test = { if ($nWatchDebugger -ne 1) {throw} }
+		read = '3'
 	}
 	's'
 	'+3'
 	's'
-	's'
+	'' # repeats s
 	'k'
 	'K'
 	'k 1'
@@ -57,36 +89,13 @@ $global:steps = @(
 	'c'
 	'c'
 	'c'
+	'$_ = 2208130916' # $_ should be set in the parent scope and be live and visible later
 	'c'
+	@{
+		# $_ is live and visible
+		test = { if ($_ -ne 2208130916) {throw} }
+		read = '$_'
+	}
 	'c'
 	'q'
-)
-
-# fake
-$global:nWatchDebugger = 0
-function Watch-Debugger {
-	++$global:nWatchDebugger
-}
-
-# fake
-function Read-Debugger
-{
-	if ($global:step -ge $steps.Count) {throw}
-	$data = $steps[$step]
-	++$global:step
-
-	if ($data -is [string]) {
-		return $data
-	}
-
-	& $data.test
-	$data.read
-}
-
-# test breakpoints
-Test-Debugger.ps1
-
-# test a script module breakpoint
-$null = Set-PSBreakpoint -Command TestModule1
-Import-Module $env:TEMP\debug.psm1
-TestModule1
+)}

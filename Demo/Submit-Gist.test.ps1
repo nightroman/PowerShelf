@@ -8,22 +8,20 @@
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-	$ErrorView = 'NormalView'
-}
-
 $SubmitNotChangedFile = "C:\-\zip\DEV\MarkdownDeep\Markdown.tasks.ps1"
 
 task MissingFile {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Submit-Gist.ps1 MissingFile} catch {$_ | Out-String})
-	assert ($e -like "*\Submit-Gist.ps1 : Cannot find path 'MissingFile' because it does not exist.*At *\Submit-Gist.test.ps1:*")
+	($r = try {Submit-Gist.ps1 MissingFile} catch {$_})
+	equals "$r" "Cannot find path 'MissingFile' because it does not exist."
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Submit-Gist.test.ps1:*')
 }
 
 task NoGistId {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Submit-Gist.ps1 $BuildFile} catch {$_ | Out-String})
-	assert ($e -like "*\Submit-Gist.ps1 : GistId is not specified and the file does not contain the gist URL.*At *\Submit-Gist.test.ps1:*")
+	($r = try {Submit-Gist.ps1 $BuildFile} catch {$_})
+	equals "$r" "GistId is not specified and the file does not contain the gist URL."
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Submit-Gist.test.ps1:*')
 }
 
 task SafeSubmitNotChanged ?SubmitNotChanged

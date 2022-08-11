@@ -130,13 +130,13 @@ else {
 if ($true) { $_ = 1 } # step through the pieces of command
 
 $varRead = 1 # no break
-$_ = $varRead # break on reading
+$null = $varRead # break on reading
 
 $varWrite = 2 # break on writing
-$_ = $varWrite # no break
+$null = $varWrite # no break
 
 $varReadWrite = 3 # break on writing
-$_ = $varReadWrite # break on reading
+$null = $varReadWrite # break on reading
 
 # it was updated by the breakpoint action
 "Watched variables have been accessed $($script:VarAccessCount) times."

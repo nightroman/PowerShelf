@@ -8,14 +8,11 @@
 
 Set-StrictMode -Version Latest
 
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-	$ErrorView = 'NormalView'
-}
-
 task MissingDirectory {
 	$ErrorActionPreference = 'Continue'
-	($e = try {Add-Path MissingDirectory TEST} catch {$_ | Out-String})
-	assert ($e -like "*\Add-Path.ps1 : Missing directory '*\MissingDirectory'.*At *\Add-Path.test.ps1:*")
+	($r = try {Add-Path MissingDirectory TEST} catch {$_})
+	assert ("$r" -like "Missing directory '*MissingDirectory'.")
+	assert ($r.InvocationInfo.PositionMessage -like 'At *Add-Path.test.ps1:*')
 }
 
 task AddTwiceNoSlash {

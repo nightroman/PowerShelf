@@ -1,5 +1,14 @@
 # PowerShelf Release Notes
 
+## v1.13.6
+
+`Add-Debugger.ps1`
+
+- use WinForms dialog as input box
+- omit `w` in help when not available
+- restore `$_` from parent scope if any
+- `<empty>` repeats the last StepInto, StepOver
+
 ## v1.13.5
 
 `Add-Debugger.ps1`
