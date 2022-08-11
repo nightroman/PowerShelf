@@ -1,5 +1,12 @@
 # PowerShelf Release Notes
 
+## v1.13.5
+
+`Add-Debugger.ps1`
+
+- recognise `$name = ...` and assign "expected" scope variable
+- prettify
+
 ## v1.13.4
 
 - `Add-Debugger.ps1`

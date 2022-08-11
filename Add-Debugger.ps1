@@ -1,6 +1,5 @@
 <#PSScriptInfo
-.DESCRIPTION Debugger for hosts with no own debugger.
-.VERSION 1.0.0
+.VERSION 1.1.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -8,33 +7,43 @@
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
 .PROJECTURI https://github.com/nightroman/PowerShelf
 #>
+
 <#
 .Synopsis
 	Adds a script debugger to PowerShell.
-	Author: Roman Kuzmin
 
 .Description
-	This script is designed for PowerShell runspaces which do not have their
-	own debuggers, e.g. Visual Studio NuGet console ("Package Manager Host"),
-	the default runspace host ("Default Host"), and etc. But it can be used
-	instead of build-in debuggers as well.
+	This script is for PowerShell hosts with no own debuggers, e.g. Visual
+	Studio NuGet console ("Package Manager Host"), the default runspace host
+	("Default Host"). But it may be used instead of the default debuggers as
+	well ("ConsoleHost").
 
-	The script should be called once at any moment when debugging is needed.
-	In order to restore the original debugger invoke Restore-Debugger. This
-	function is defined by Add-Debugger.
+	The script is called once at any moment when debugging is needed. In order
+	to restore the original debugger, invoke Restore-Debugger which is defined
+	by Add-Debugger.
 
 	For output of debug commands the script uses Out-Host or a file with a
 	separate console started for watching its tail.
 
-	For input the GUI input box is used for typing PowerShell and debugger
-	commands. Use the switch ReadHost in order to use Read-Host instead.
+	For input the input box is used for typing PowerShell and debugger
+	commands. Specify the switch ReadHost for using Read-Host instead.
+
+	PowerShell commands are invoked in a child of the current scope. In order
+	to change current scope variables you would use `Set-Variable -Scope 1`.
+	But the script recognises `$name = ...` and assigns the "proper" $name.
 
 .Parameter Path
 		Specifies the output file used instead of Out-Host.
 		A separate console is opened for watching its tail.
 
+.Parameter XPos
+		Horizontal position of the input box.
+
+.Parameter YPos
+		Vertical position of the input box.
+
 .Parameter ReadHost
-		Tells to use Read-Host for input instead of the GUI input box.
+		Tells to use Read-Host instead of the input box.
 
 .Inputs
 	None
@@ -44,15 +53,15 @@
 .Example
 	>
 	How to debug terminating errors in a bare runspace. Use cases:
-	- In .NET the similar code is typical for invoking PowerShell.
-	- In PowerShell BeginInvoke() makes sense for background jobs.
+	- In .NET, the similar code is typical for invoking PowerShell.
+	- In PowerShell, when using BeginInvoke() for background jobs.
 
 	$ps = [PowerShell]::Create()
 	$null = $ps.AddScript({
 		# add debugger with file output
-		Add-Debugger.ps1 $env:TEMP\debug.log
+		Add-Debugger $env:TEMP\debug.log
 
-		# enable debugging on terminating errors
+		# trick: stop debugger on terminating errors
 		$null = Set-PSBreakpoint -Variable StackTrace -Mode Write
 
 		# from now on the debugger dialog is shown on failures
@@ -68,14 +77,14 @@
 param(
 	[Parameter()]
 	[string]$Path,
-	[switch]$ReadHost,
 	[int]$XPos = -1,
-	[int]$YPos = -1
+	[int]$YPos = -1,
+	[switch]$ReadHost
 )
 
-# Restore another debugger by its Restore-Debugger.
-if ((Test-Path Variable:\_Debugger) -and (Get-Variable _Debugger).Description -ne 'Add-Debugger.ps1') {
-	Restore-Debugger
+# All done?
+if (Test-Path Variable:\_Debugger) {
+	return
 }
 
 # Removes and gets debugger handlers.
@@ -95,7 +104,9 @@ function global:Remove-Debugger {
 
 # Restores original debugger handlers.
 function global:Restore-Debugger {
-	if (!(Test-Path Variable:\_Debugger)) {return}
+	if (!(Test-Path Variable:\_Debugger)) {
+		return
+	}
 	$null = Remove-Debugger
 	if ($_Debugger.Handlers) {
 		foreach($handler in $_Debugger.Handlers) {
@@ -105,26 +116,27 @@ function global:Restore-Debugger {
 	Remove-Variable _Debugger -Scope Global -Force
 }
 
-# Add the debugger and data once
-if (!(Test-Path Variable:\_Debugger)) {
-	$null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
-		History = [System.Collections.ArrayList]@()
-		Handlers = Remove-Debugger
-		DefaultContext = 0
-		Context = [ref]0
-		Action = '?'
-		XPos = $XPos
-		YPos = $YPos
-	}
-	[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({. Invoke-DebuggerStop})
+### Set debugger data.
+$null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
+	Path = $null
+	XPos = $XPos
+	YPos = $YPos
+	Args = $null
+	Watch = $false
+	History = [System.Collections.ArrayList]@()
+	Handlers = Remove-Debugger
+	DefaultContext = 0
+	Context = [ref]0
+	Action = '?'
+	Match = $null
 }
 
-# Writes debugger output.
+### Define how to write debugger output.
 if ($Path) {
 	$_Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
 	$_Debugger.Watch = $true
-	function global:Write-Debugger($Data)
-	{
+	function global:Write-Debugger {
+		param($Data)
 		[System.IO.File]::AppendAllText($_Debugger.Path, ($Data | Out-String), [System.Text.Encoding]::Unicode)
 		if ($_Debugger.Watch) {
 			$_Debugger.Watch = $false
@@ -133,39 +145,30 @@ if ($Path) {
 	}
 }
 else {
-	$_Debugger.Path = $null
-	function global:Write-Debugger($Data)
-	{
+	function global:Write-Debugger {
+		param($Data)
 		$Data | Out-Host
 	}
 }
 
-# Reads debugger input.
+### Define how to reads debugger input.
 if ($ReadHost) {
-	function global:Read-Debugger(
-		$Prompt,
-		$Title,
-		$Default
-	)
-	{
+	function global:Read-Debugger {
+		param($Prompt)
 		Read-Host $Prompt
 	}
 }
 else {
 	Add-Type -AssemblyName Microsoft.VisualBasic
-	function global:Read-Debugger(
-		$Prompt,
-		$Title,
-		$Default
-	)
-	{
-		[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title, $Default, $_Debugger.XPos, $_Debugger.YPos)
+	function global:Read-Debugger {
+		param($Prompt, $Default)
+		[Microsoft.VisualBasic.Interaction]::InputBox($Prompt, 'Add-Debugger', $Default, $_Debugger.XPos, $_Debugger.YPos)
 	}
 }
 
 # Starts an external file viewer.
-function global:Watch-Debugger($Path)
-{
+function global:Watch-Debugger {
+	param($Path)
 	$Path = $Path.Replace("'", "''")
 	$me = Get-Process -Id $PID
 	$app = if ($me.Name -eq 'pwsh') {$me.Path} else {'powershell.exe'}
@@ -173,11 +176,9 @@ function global:Watch-Debugger($Path)
 }
 
 # Writes the current invocation info.
-function global:Write-DebuggerInfo(
-	$InvocationInfo,
-	$Context
-)
-{
+function global:Write-DebuggerInfo {
+	param($InvocationInfo, $Context)
+
 	# write position message
 	if ($_ = $InvocationInfo.PositionMessage) {
 		Write-Debugger ($_.Trim())
@@ -185,7 +186,9 @@ function global:Write-DebuggerInfo(
 
 	# done?
 	$file = $InvocationInfo.ScriptName
-	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {return}
+	if ($Context -le 0 -or !$file -or !(Test-Path -LiteralPath $file)) {
+		return
+	}
 
 	# write file lines
 	$markIndex = $InvocationInfo.ScriptLineNumber - 1
@@ -193,13 +196,9 @@ function global:Write-DebuggerInfo(
 }
 
 # Writes the specified file lines.
-function global:Write-DebuggerFile(
-	$Path,
-	$LineIndex,
-	$LineCount,
-	$MarkIndex
-)
-{
+function global:Write-DebuggerFile {
+	param($Path, $LineIndex, $LineCount, $MarkIndex)
+
 	# amend negative start
 	if ($LineIndex -lt 0) {
 		$LineCount += $LineIndex
@@ -222,16 +221,15 @@ function global:Write-DebuggerFile(
 		if (($line = $lines[$LineIndex]) -match '^(\s*)(\S.*)') {
 			$line = ($matches[1] -replace "`t", '    ').Substring($space) + $matches[2]
 		}
-		$mark = if ($LineIndex -eq $MarkIndex) {'=>'} else {'  '}
-		Write-Debugger ('{0,4} {1} {2}' -f ($LineIndex + 1), $mark, $line)
+		$mark = if ($LineIndex -eq $MarkIndex) {'>>'} else {'  '}
+		Write-Debugger ('{0,4}:{1} {2}' -f ($LineIndex + 1), $mark, $line)
 	}
 	while(++$LineIndex -lt $lines.Length)
 	Write-Debugger ''
 }
 
-# Processes DebuggerStop events.
-function global:Invoke-DebuggerStop
-{
+### Add DebuggerStop handler.
+[System.Management.Automation.Runspaces.Runspace]::DefaultRunspace.Debugger.add_DebuggerStop({
 	# write breakpoints
 	if ($_.Breakpoints) {&{
 		Write-Debugger ''
@@ -250,40 +248,40 @@ function global:Invoke-DebuggerStop
 	Write-Debugger ''
 
 	# REPL
-	$_Debugger.e = $_
+	$_Debugger.Args = $_
 	for() {
 		### prompt
-		$_Debugger.Action = Read-Debugger "Enter PowerShell and debug commands.`nUse h or ? for help" Debugger $_Debugger.Action
+		$_Debugger.Action = Read-Debugger "Enter PowerShell and debug commands.`nUse h or ? for help" $_Debugger.Action
 		$_Debugger.Action = if ($null -eq $_Debugger.Action) {''} else {$_Debugger.Action.Trim()}
 		Write-Debugger "DBG> $($_Debugger.Action)"
 
 		### Continue
 		if (!$_Debugger.Action -or $_Debugger.Action -eq 'c' -or $_Debugger.Action -eq 'Continue') {
-			$_Debugger.e.ResumeAction = 'Continue'
+			$_Debugger.Args.ResumeAction = 'Continue'
 			return
 		}
 
 		### StepInto
 		if ($_Debugger.Action -eq 's' -or $_Debugger.Action -eq 'StepInto') {
-			$_Debugger.e.ResumeAction = 'StepInto'
+			$_Debugger.Args.ResumeAction = 'StepInto'
 			return
 		}
 
 		### StepOver
 		if ($_Debugger.Action -eq 'v' -or $_Debugger.Action -eq 'StepOver') {
-			$_Debugger.e.ResumeAction = 'StepOver'
+			$_Debugger.Args.ResumeAction = 'StepOver'
 			return
 		}
 
 		### StepOut
 		if ($_Debugger.Action -eq 'o' -or $_Debugger.Action -eq 'StepOut') {
-			$_Debugger.e.ResumeAction = 'StepOut'
+			$_Debugger.Args.ResumeAction = 'StepOut'
 			return
 		}
 
 		### Quit
 		if ($_Debugger.Action -eq 'q' -or $_Debugger.Action -eq 'Quit') {
-			$_Debugger.e.ResumeAction = 'Stop'
+			$_Debugger.Args.ResumeAction = 'Stop'
 			return
 		}
 
@@ -294,7 +292,7 @@ function global:Invoke-DebuggerStop
 				continue
 			}
 
-			$_Debugger.e.ResumeAction = 'Continue'
+			$_Debugger.Args.ResumeAction = 'Continue'
 			Restore-Debugger
 			return
 		}
@@ -317,7 +315,7 @@ function global:Invoke-DebuggerStop
 
 		### <number>
 		if ([int]::TryParse($_Debugger.Action, $_Debugger.Context)) {
-			Write-DebuggerInfo $_Debugger.e.InvocationInfo $_Debugger.Context.Value
+			Write-DebuggerInfo $_Debugger.Args.InvocationInfo $_Debugger.Context.Value
 			if ($_Debugger.Action[0] -eq "+") {
 				$_Debugger.DefaultContext = $_Debugger.Context.Value
 			}
@@ -388,10 +386,19 @@ function global:Invoke-DebuggerStop
 		try {
 			$_Debugger.History.Remove($_Debugger.Action)
 			$null = $_Debugger.History.Add($_Debugger.Action)
-			Write-Debugger (.([scriptblock]::Create($_Debugger.Action)))
+			$_Debugger.Match = [regex]::Match($_Debugger.Action, '^\s*\$(\w+)\s*=(.*)')
+			if ($_Debugger.Match.Success) {
+				$value = . ([scriptblock]::Create($_Debugger.Match.Groups[2]))
+				Set-Variable -Name ($_Debugger.Match.Groups[1]) -Value $value -Scope 1
+				$value = "$value"
+				Write-Debugger $(if ($value.Length -gt 100) {$value.Substring(0, 100) + '...'} else {$value})
+			}
+			else {
+				Write-Debugger (. ([scriptblock]::Create($_Debugger.Action)))
+			}
 		}
 		catch {
 			Write-Debugger $(if ($_.InvocationInfo.ScriptName -like '*\Add-Debugger.ps1') {$_.ToString()} else {$_})
 		}
 	}
-}
+})
