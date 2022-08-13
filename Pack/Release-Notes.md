@@ -1,5 +1,14 @@
 # PowerShelf Release Notes
 
+## v1.13.7
+
+`Add-Debugger.ps1` 2.0.0
+
+- use `Out-File` and support ANSI when PS 7.2+
+- new parameter `Environment`, persist state
+- use context with before/after line numbers
+- replace `w` with `new` which removes output file
+
 ## v1.13.6
 
 `Add-Debugger.ps1`
