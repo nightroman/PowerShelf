@@ -44,9 +44,9 @@ Save as `.zip` and unzip. Use the package subdirectory `tools`.
 Or, using downloaded on the fly `Save-NuGetTool.ps1` download and unzip:
 
 ```powershell
-Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/nightroman/PowerShelf/master/Save-NuGetTool.ps1'))} PowerShelf"
+Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/nightroman/PowerShelf/main/Save-NuGetTool.ps1'))} PowerShelf"
 ```
 
 ## See Also
 
-- [PowerShelf Release Notes](https://github.com/nightroman/PowerShelf/blob/master/Pack/Release-Notes.md)
+- [PowerShelf Release Notes](https://github.com/nightroman/PowerShelf/blob/main/Pack/Release-Notes.md)

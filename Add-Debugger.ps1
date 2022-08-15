@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.0.0
+.VERSION 2.1.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -16,7 +16,7 @@
 	The script adds or replaces existing debugger in any PowerShell runspace.
 	It is useful for hosts with no own debuggers, e.g. Visual Studio NuGet
 	console ("Package Manager Host"), bare runspace host ("Default Host").
-	And it may be used instead of existing debuggers ("ConsoleHost").
+	But it may replace and improve existing debuggers ("ConsoleHost").
 
 	The script is called at any moment when debugging is needed. To restore
 	the original debuggers, invoke Restore-Debugger defined by Add-Debugger.
@@ -25,7 +25,9 @@
 	separate console started for watching its tail.
 
 	For input the input box is used for typing PowerShell and debugger
-	commands. Specify the switch ReadHost for using Read-Host instead.
+	commands. Specify the switch ReadHost for using Read-Host instead
+	or PSReadLine if this module is imported, with its addons, e.g.
+	https://www.powershellgallery.com/packages/GuiCompletion
 
 	PowerShell commands are invoked in a child of the current scope. In order
 	to change current scope variables you would use `Set-Variable -Scope 1`.
@@ -164,23 +166,21 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	Environment = $Environment
 	State = Read-DebuggerState $Environment $Context
 	Args = $null
-	Watch = $false
-	Console = $null
+	Watch = $null
 	History = [System.Collections.ArrayList]@()
 	Handlers = Remove-Debugger
 	Action = '?'
-	Match = $null
 	REIndent1 = [regex]'^(\s*)'
 	REIndent2 = [regex]'^(\s+)(.*)'
 	RECommand = [regex]'^\s*\$(\w+)\s*=(.*)'
-	REContext = [regex]'^(\+)?\s*(\d+)\s*(\d+)?\s*$'
+	REContext = [regex]'^\s*(=)?\s*(\d+)\s*(\d+)?\s*$'
 	UseAnsi = $PSVersionTable.PSVersion -ge ([Version]'7.2')
+	PSReadLine = if ($ReadHost -and (Get-Module PSReadLine)) {Get-PSReadLineOption}
 }
 
 ### Define how to write debugger output.
 if ($Path) {
 	$_Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
-	$_Debugger.Watch = $true
 	function global:Write-Debugger {
 		param($Data)
 		if ($_Debugger.UseAnsi) {
@@ -191,10 +191,7 @@ if ($Path) {
 		if ($_Debugger.UseAnsi) {
 			$PSStyle.OutputRendering = $OutputRendering
 		}
-		if ($_Debugger.Watch) {
-			$_Debugger.Watch = $false
-			Watch-Debugger
-		}
+		Watch-Debugger
 	}
 }
 else {
@@ -204,11 +201,20 @@ else {
 	}
 }
 
-### Define how to reads debugger input.
+### Define how to read debugger input.
 if ($ReadHost) {
 	function global:Read-Debugger {
-		param($Prompt)
-		Read-Host $Prompt
+		param($Prompt, $Default)
+		if ($_Debugger.PSReadLine) {
+			$_Debugger.temp = $_Debugger.PSReadLine.HistorySaveStyle
+			$_Debugger.PSReadLine.HistorySaveStyle = 'SaveNothing'
+			Write-Host "${Prompt}: " -NoNewline
+			PSConsoleHostReadline
+			$_Debugger.PSReadLine.HistorySaveStyle = $_Debugger.temp
+		}
+		else {
+			Read-Host $Prompt
+		}
 	}
 }
 else {
@@ -286,12 +292,18 @@ function global:Read-InputBox {
 
 # Starts an external file viewer.
 function global:Watch-Debugger {
-	if (($last = $_Debugger.Console) -and !$last.HasExited) {
-		try { $last.Kill() } catch {}
+	param([switch]$New)
+	if (($exe = $_Debugger.Watch) -and !$exe.HasExited) {
+		if ($New) {
+			try { $exe.Kill() } catch {}
+		}
+		else {
+			return
+		}
 	}
 	$path = $_Debugger.Path.Replace("'", "''")
 	$app = if ($PSVersionTable.PSEdition -eq 'Core' -and (Get-Command pwsh -ErrorAction 0)) {'pwsh'} else {'powershell'}
-	$_Debugger.Console = Start-Process $app "-NoProfile -Command `$Host.UI.RawUI.WindowTitle = 'Debug output'; Get-Content -LiteralPath '$path' -Encoding UTF8 -Wait" -PassThru
+	$_Debugger.Watch = Start-Process $app "-NoProfile -Command `$Host.UI.RawUI.WindowTitle = 'Debug output'; Get-Content -LiteralPath '$path' -Encoding UTF8 -Wait" -PassThru
 }
 
 # Writes the current invocation info.
@@ -336,6 +348,12 @@ function global:Write-DebuggerFile {
 		$re.Match($_).Groups[1].Value.Replace("`t", '    ').Length
 	}} | Measure-Object -Minimum).Minimum
 
+	if ($ansi = $_Debugger.UseAnsi) {
+		$sMark = $PSStyle.Bold+$PSStyle.Background.Yellow
+		$sLine = $PSStyle.Bold
+		$sReset = $PSStyle.Reset
+	}
+
 	# write lines with a mark
 	Write-Debugger ''
 	$re = $_Debugger.REIndent2
@@ -344,8 +362,15 @@ function global:Write-DebuggerFile {
 		if (($m = $re.Match($line)).Success) {
 			$line = $m.Groups[1].Value.Replace("`t", '    ').Substring($indent) + $m.Groups[2].Value
 		}
-		$mark = if ($LineIndex -eq $MarkIndex) {'>>'} else {'  '}
-		Write-Debugger ('{0,4}:{1} {2}' -f ($LineIndex + 1), $mark, $line)
+		$isMark = $LineIndex -eq $MarkIndex
+		if ($isMark -and $ansi) {
+			$line = "$sMark{0,4}:$sReset>> $sLine{1}$sReset" -f ($LineIndex + 1), $line
+		}
+		else {
+			$mark = if ($isMark) {'>>'} else {'  '}
+			$line = '{0,4}:{1} {2}' -f ($LineIndex + 1), $mark, $line
+		}
+		Write-Debugger $line
 	}
 	while(++$LineIndex -lt $lines.Length)
 	Write-Debugger ''
@@ -471,7 +496,7 @@ function global:Write-DebuggerFile {
 		if ('new' -eq $_Debugger.Action -and $_Debugger.Path) {
 			Remove-Item -LiteralPath $_Debugger.Path
 			Write-Debugger (Get-Date)
-			Watch-Debugger
+			Watch-Debugger -New
 			continue
 		}
 
@@ -492,7 +517,7 @@ function global:Write-DebuggerFile {
 				'  K            Write detailed call stack using Format-List.'
 				''
 				'  n1 [n2]      Write debug location in context of n lines.'
-				'  + n1 [n2]    Set location context preference to n lines.'
+				'  = n1 [n2]    Set location context preference to n lines.'
 				'  k s n1 [n2]  Write source at stack s in context of n lines.'
 				''
 				'  r            Write last commands invoked on debugging.'
@@ -536,10 +561,10 @@ function global:Write-DebuggerFile {
 		try {
 			$_Debugger.History.Remove($_Debugger.Action)
 			$null = $_Debugger.History.Add($_Debugger.Action)
-			$_Debugger.Match = $_Debugger.RECommand.Match($_Debugger.Action)
-			if ($_Debugger.Match.Success) {
-				$value = . ([scriptblock]::Create($_Debugger.Match.Groups[2]))
-				Set-Variable -Name ($_Debugger.Match.Groups[1]) -Value $value -Scope 1
+			$_Debugger.temp = $_Debugger.RECommand.Match($_Debugger.Action)
+			if ($_Debugger.temp.Success) {
+				$value = . ([scriptblock]::Create($_Debugger.temp.Groups[2]))
+				Set-Variable -Name ($_Debugger.temp.Groups[1]) -Value $value -Scope 1
 				$value = "$value"
 				Write-Debugger $(if ($value.Length -gt 100) {$value.Substring(0, 100) + '...'} else {$value})
 			}

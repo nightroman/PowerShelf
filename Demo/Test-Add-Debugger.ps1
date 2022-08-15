@@ -60,15 +60,16 @@ function Test-All {
 #! define steps after functions, to avoid line shifts and noise in diffs
 Test-All @{steps = @(
 	@{
-		test = { if ($nWatchDebugger -ne 1) {throw} }
+		test = { if ($nWatchDebugger -ne 4) {throw "Unexpected `$nWatchDebugger $nWatchDebugger"} }
 		read = '?'
 	}
 	@{
-		test = { if ($nWatchDebugger -ne 1) {throw} }
+		test = { if ($nWatchDebugger -ne 6) {throw "Unexpected `$nWatchDebugger $nWatchDebugger"} }
 		read = '3'
 	}
 	's'
-	'+3'
+	'=2 3'
+	'=3'
 	's'
 	'' # repeats s
 	'k'

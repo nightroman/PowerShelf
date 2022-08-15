@@ -1,5 +1,13 @@
 # PowerShelf Release Notes
 
+## v1.13.8
+
+`Add-Debugger.ps1` 2.1.0
+
+- Open a new output console if the old is closed.
+- Use PSReadLine for input when applicable.
+- Use ANSI colors for source listing.
+
 ## v1.13.7
 
 `Add-Debugger.ps1` 2.0.0
@@ -255,4 +263,4 @@ compares the sample and result files and performs copy and view operations.
 
 ## v1.0.0
 
-NuGetDebugTools [v1.3.0](https://github.com/nightroman/PowerShelf/blob/master/Pack/NuGetDebugTools/Release-Notes.md#v130)
+NuGetDebugTools 1.3.0

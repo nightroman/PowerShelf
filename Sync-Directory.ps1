@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Syncs two directories with some interaction.
@@ -27,23 +26,21 @@
 .Parameter Directory1
 		Specifies the first directory.
 		If it is missing then the second should exist.
+
 .Parameter Directory2
 		Specifies the second directory.
 		If it is missing then the first should exist.
+
 .Parameter Arguments
 		Additional Robocopy arguments. Example:
 		... -Arguments /XD, bin, obj, /XF, *.tmp, *.bak
 
 .Example
 	>
-	Lets $env:pc_master and $env:pc_slave are names of two machines. Then this
-	code syncs the current directory on the current machine and the directory
-	with the same path on another machine:
+	# Sync the current directory with its conventional backup
+	# e.g. C:\Scripts\Project1 -> C:\Backup\Scripts\Project1
 
-	$that = if ($env:COMPUTERNAME -eq $env:pc_master) {$env:pc_slave} else {$env:pc_master}
-	$dir1 = "$pwd"
-	$dir2 = "\\$that\$($dir1 -replace '^(.):', '$1$')"
-	Sync-Directory $dir1 $dir2
+	Sync-Directory $pwd ($pwd -replace '^(.:)', '$1\Backup')
 
 .Link
 	https://github.com/nightroman/PowerShelf
