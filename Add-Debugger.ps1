@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.1.0
+.VERSION 2.2.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -28,10 +28,6 @@
 	commands. Specify the switch ReadHost for using Read-Host instead
 	or PSReadLine if this module is imported, with its addons, e.g.
 	https://www.powershellgallery.com/packages/GuiCompletion
-
-	PowerShell commands are invoked in a child of the current scope. In order
-	to change current scope variables you would use `Set-Variable -Scope 1`.
-	But the script recognises `$var = ...` and assigns in the proper scope.
 
 .Parameter Path
 		Specifies the output file used instead of Out-Host.
@@ -165,6 +161,7 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	Path = $null
 	Environment = $Environment
 	State = Read-DebuggerState $Environment $Context
+	Module = $null
 	Args = $null
 	Watch = $null
 	History = [System.Collections.ArrayList]@()
@@ -172,7 +169,6 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	Action = '?'
 	REIndent1 = [regex]'^(\s*)'
 	REIndent2 = [regex]'^(\s+)(.*)'
-	RECommand = [regex]'^\s*\$(\w+)\s*=(.*)'
 	REContext = [regex]'^\s*(=)?\s*(\d+)\s*(\d+)?\s*$'
 	UseAnsi = $PSVersionTable.PSVersion -ge ([Version]'7.2')
 	PSReadLine = if ($ReadHost -and (Get-Module PSReadLine)) {Get-PSReadLineOption}
@@ -206,11 +202,11 @@ if ($ReadHost) {
 	function global:Read-Debugger {
 		param($Prompt, $Default)
 		if ($_Debugger.PSReadLine) {
-			$_Debugger.temp = $_Debugger.PSReadLine.HistorySaveStyle
+			$_Debugger.q1 = $_Debugger.PSReadLine.HistorySaveStyle
 			$_Debugger.PSReadLine.HistorySaveStyle = 'SaveNothing'
 			Write-Host "${Prompt}: " -NoNewline
 			PSConsoleHostReadline
-			$_Debugger.PSReadLine.HistorySaveStyle = $_Debugger.temp
+			$_Debugger.PSReadLine.HistorySaveStyle = $_Debugger.q1
 		}
 		else {
 			Read-Host $Prompt
@@ -376,30 +372,48 @@ function global:Write-DebuggerFile {
 	Write-Debugger ''
 }
 
+Add-Type @'
+using System;
+using System.Management.Automation;
+public class AddDebuggerHelpers
+{
+	public ScriptBlock DebuggerStopProxy;
+	public EventHandler<DebuggerStopEventArgs> DebuggerStopHandler { get { return OnDebuggerStop; } }
+	void OnDebuggerStop(object sender, DebuggerStopEventArgs e)
+	{
+		SessionState state = ((EngineIntrinsics)ScriptBlock.Create("$ExecutionContext").Invoke()[0].BaseObject).SessionState;
+		state.InvokeCommand.InvokeScript(false, DebuggerStopProxy, null, state.Module, e);
+	}
+}
+'@
+
 ### Add DebuggerStop handler.
-[runspace]::DefaultRunspace.Debugger.add_DebuggerStop({
+$AddDebuggerHelpers = New-Object AddDebuggerHelpers
+[runspace]::DefaultRunspace.Debugger.add_DebuggerStop($AddDebuggerHelpers.DebuggerStopHandler)
+$AddDebuggerHelpers.DebuggerStopProxy = {
+	param($_module, $_args)
+
 	# write breakpoints
-	if ($_.Breakpoints) {&{
+	if ($_args.Breakpoints) {&{
 		Write-Debugger ''
-		foreach($b in $_.Breakpoints) {
-			if ($b -is [System.Management.Automation.VariableBreakpoint] -and $b.Variable -eq 'StackTrace') {
+		foreach($bp in $_args.Breakpoints) {
+			if ($bp -is [System.Management.Automation.VariableBreakpoint] -and $bp.Variable -eq 'StackTrace') {
 				Write-Debugger 'TERMINATING ERROR BREAKPOINT'
 			}
 			else {
-				Write-Debugger "Hit $b"
+				Write-Debugger "Hit $bp"
 			}
 		}
 	}}
 
 	# write debug location
-	Write-DebuggerInfo $_.InvocationInfo $_Debugger.State
+	Write-DebuggerInfo $_args.InvocationInfo $_Debugger.State
 	Write-Debugger ''
 
-	# restore parent $_
-	$_Debugger.Args = $_
-	if ($_ = Get-Variable [_] -Scope 1 -ErrorAction 0) {
-		$_ = $_.Value
-	}
+	# hide local variables
+	$_Debugger.Module = $_module
+	$_Debugger.Args = $_args
+	Remove-Variable _module, _args -Scope 0
 
 	# REPL
 	for() {
@@ -409,7 +423,7 @@ function global:Write-DebuggerFile {
 		if ($_Debugger.Action) {
 			$_Debugger.Action = $_Debugger.Action.Trim()
 		}
-		Write-Debugger "DBG> $($_Debugger.Action)"
+		Write-Debugger "[DBG]: $($_Debugger.Action)"
 
 		### repeat
 		if ($_Debugger.Action -eq '' -and ('s', 'StepInto', 'v', 'StepOver') -contains $_Debugger.LastAction) {
@@ -561,19 +575,20 @@ function global:Write-DebuggerFile {
 		try {
 			$_Debugger.History.Remove($_Debugger.Action)
 			$null = $_Debugger.History.Add($_Debugger.Action)
-			$_Debugger.temp = $_Debugger.RECommand.Match($_Debugger.Action)
-			if ($_Debugger.temp.Success) {
-				$value = . ([scriptblock]::Create($_Debugger.temp.Groups[2]))
-				Set-Variable -Name ($_Debugger.temp.Groups[1]) -Value $value -Scope 1
-				$value = "$value"
-				Write-Debugger $(if ($value.Length -gt 100) {$value.Substring(0, 100) + '...'} else {$value})
+			$_Debugger.q1 = [scriptblock]::Create($_Debugger.Action)
+			$_Debugger.q2 = $global:Error.Count
+			if ($_Debugger.Module) {
+				$_Debugger.q1 = $_Debugger.Module.NewBoundScriptBlock($_Debugger.q1)
 			}
-			else {
-				Write-Debugger (. ([scriptblock]::Create($_Debugger.Action)))
+			Write-Debugger (. $_Debugger.q1)
+			if ($_Debugger.q2 -ne $global:Error.Count) {
+				$_ = $global:Error[0]
+				Write-Debugger $(if ($_.InvocationInfo.ScriptName) {$_} else {"ERROR: $_"})
 			}
 		}
 		catch {
-			Write-Debugger $(if ($_.InvocationInfo.ScriptName -like '*\Add-Debugger.ps1') {$_.ToString()} else {$_})
+			Write-Debugger $(if ($_.InvocationInfo.ScriptName) {$_} else {"ERROR: $_"})
 		}
+		Write-Debugger ''
 	}
-})
+}

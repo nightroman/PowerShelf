@@ -1,5 +1,12 @@
 # PowerShelf Release Notes
 
+## v1.13.9
+
+`Add-Debugger.ps1` 2.2.0
+
+- Support script modules properly.
+- Invoke commands in the current scope.
+
 ## v1.13.8
 
 `Add-Debugger.ps1` 2.1.0
