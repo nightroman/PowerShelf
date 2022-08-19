@@ -15,8 +15,8 @@ if (Test-Path -LiteralPath $log) { Remove-Item -LiteralPath $log }
 # make a mini script module to be tested as well
 @'
 # test module
-function TestModule1 {
-	'In TestModule1'
+function TestModule1($Param1) {
+	"In TestModule1 Param1=$Param1"
 }
 '@ > $env:TEMP\debug.psm1
 
@@ -54,7 +54,8 @@ function Test-All {
 	# test a script module breakpoint
 	$null = Set-PSBreakpoint -Command TestModule1
 	Import-Module $env:TEMP\debug.psm1
-	TestModule1
+	$r = TestModule1 value1
+	if ($r -ne 'In TestModule1 Param1=changed-value') {throw}
 }
 
 #! define steps after functions, to avoid line shifts and noise in diffs
@@ -92,13 +93,19 @@ Test-All @{steps = @(
 	'c'
 	'c'
 	'c'
-	'$_ = 2208130916' # $_ should be set in the parent scope and be live and visible later
+	'$ErrorActionPreference'
+	'Remove-Variable missing' #! non-terminating
+	'$myVar = 2208130916' # $_ should be set in the parent scope and be live and visible later
 	'c'
 	@{
 		# $_ is live and visible
-		test = { if ($_ -ne 2208130916) {throw} }
-		read = '$_'
+		test = { if ($myVar -ne 2208130916) {throw} }
+		read = '$myVar'
 	}
-	'c'
+	'c' # command TestModule1
+	'$ErrorActionPreference'
+	'Remove-Variable missing' #! non-terminating
+	'$param1' # should be 'value1'
+	'$param1 = "changed-value"' # change it, tested later
 	'q'
 )}
