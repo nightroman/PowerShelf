@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.10
+
+`Add-Debugger.ps1` 2.2.1, minor tweaks.
+
 ## v1.13.9
 
 `Add-Debugger.ps1` 2.2.0

@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.2.0
+.VERSION 2.2.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -14,8 +14,8 @@
 
 .Description
 	The script adds or replaces existing debugger in any PowerShell runspace.
-	It is useful for hosts with no own debuggers, e.g. Visual Studio NuGet
-	console ("Package Manager Host"), bare runspace host ("Default Host").
+	It is useful for hosts with no own debuggers, e.g. bare runspace host
+	"Default Host", Visual Studio NuGet console "Package Manager Host".
 	But it may replace and improve existing debuggers ("ConsoleHost").
 
 	The script is called at any moment when debugging is needed. To restore
@@ -46,7 +46,7 @@
 		line numbers and input box coordinates.
 
 .Parameter ReadHost
-		Tells to use Read-Host instead of the input box.
+		Tells to use Read-Host or PSReadLine instead of the input box.
 
 .Inputs
 	None
@@ -97,14 +97,14 @@ if (Test-Path Variable:\_Debugger) {
 
 # Removes and gets debugger handlers.
 function global:Remove-Debugger {
-	$instance = [runspace]::DefaultRunspace.Debugger
+	$debugger = [runspace]::DefaultRunspace.Debugger
 	$type = [System.Management.Automation.Debugger]
 	$e = $type.GetEvent('DebuggerStop')
-	$v = $type.GetField('DebuggerStop', ([System.Reflection.BindingFlags]'NonPublic, Instance')).GetValue($instance)
+	$v = $type.GetField('DebuggerStop', ([System.Reflection.BindingFlags]'NonPublic, Instance')).GetValue($debugger)
 	if ($v) {
 		$handlers = $v.GetInvocationList()
 		foreach($handler in $handlers) {
-			$e.RemoveEventHandler($instance, $handler)
+			$e.RemoveEventHandler($debugger, $handler)
 		}
 		$handlers
 	}
@@ -145,7 +145,7 @@ function global:Read-DebuggerState {
 			catch {}
 		}
 	}
-	[pscustomobject]@{n=$n; m=$m; x=$x; y=$y}
+	[PSCustomObject]@{n=$n; m=$m; x=$x; y=$y}
 }
 
 function global:Save-DebuggerState {
@@ -164,7 +164,7 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	Module = $null
 	Args = $null
 	Watch = $null
-	History = [System.Collections.ArrayList]@()
+	History = [System.Collections.Generic.List[string]]@()
 	Handlers = Remove-Debugger
 	Action = '?'
 	REIndent1 = [regex]'^(\s*)'
@@ -226,7 +226,7 @@ else {
 function global:Read-InputBox {
 	param($Prompt, $Title, $Default, $Text1, $Text2, $State)
 
-	Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+	Add-Type -AssemblyName System.Windows.Forms
 
 	$form = New-Object System.Windows.Forms.Form
 	$form.Text = $Title
@@ -572,9 +572,9 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 		}
 
 		### invoke command
+		$_Debugger.History.Remove($_Debugger.Action)
+		$_Debugger.History.Add($_Debugger.Action)
 		try {
-			$_Debugger.History.Remove($_Debugger.Action)
-			$null = $_Debugger.History.Add($_Debugger.Action)
 			$_Debugger.q1 = [scriptblock]::Create($_Debugger.Action)
 			$_Debugger.q2 = $global:Error.Count
 			if ($_Debugger.Module) {
