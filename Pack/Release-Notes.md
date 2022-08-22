@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.11
+
+`Invoke-Ngen.ps1` 1.0.2, should work in Core.
+
 ## v1.13.10
 
 `Add-Debugger.ps1` 2.2.1, minor tweaks.

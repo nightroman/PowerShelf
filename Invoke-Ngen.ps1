@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Performance Tool Ngen
@@ -96,9 +96,17 @@ param(
 )
 
 $ErrorActionPreference = 1
+trap { Write-Error $_ }
 
-$ngen = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) ngen.exe
-if (!(Test-Path -LiteralPath $ngen)) {throw "Cannot find ngen.exe"}
+if ($PSVersionTable.PSEdition -eq 'Core') {
+	$ngen = powershell -NoProfile -Command 'Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) ngen.exe'
+}
+else {
+	$ngen = Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) ngen.exe
+}
+if (!$ngen -or !(Test-Path -LiteralPath $ngen)) {
+	throw "Cannot find ngen.exe"
+}
 
 if ($PSCmdlet.ParameterSetName -eq 'Alias') {
 	Set-Alias ngen $ngen -Scope 1
