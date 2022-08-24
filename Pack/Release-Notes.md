@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.12
+
+`Update-Gist`: use `-GitHubToken` instead of `-Credential`.
+
 ## v1.13.11
 
 `Invoke-Ngen.ps1` 1.0.2, should work in Core.

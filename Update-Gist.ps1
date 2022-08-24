@@ -14,16 +14,13 @@
 .Parameter GistId
 		The existing gist ID. If it is not specified then the script searches
 		for a gist URL in the file, the first matching URL is used for the ID.
-		The expected URL is either
-			https://gist.github.com/user/gist-id
-		or
+		The expected URL forms:
 			https://gist.github.com/gist-id
-		If the Credential is not specified then the first form is preferable
-		because the user name is automatically provided in the login dialog.
+			https://gist.github.com/user/gist-id
 
-.Parameter Credential
-		Specifies GitHub OAUTH-TOKEN token as password.
-		If it is omitted then the login dialog is shown.
+.Parameter GitHubToken
+		The GitHub token, default is $env:GITHUB_TOKEN.
+		If it is not defined then the prompt is shown.
 
 .Parameter Show
 		Tells to show the gist web page after updating.
@@ -45,14 +42,22 @@
 
 param(
 	[Parameter(Mandatory=1)]
-	[string]$FileName,
-	[string]$GistId,
-	[PSCredential]$Credential,
+	[string]$FileName
+	,
+	[string]$GistId
+	,
+	[string]$GitHubToken = $env:GITHUB_TOKEN
+	,
 	[switch]$Show
 )
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
+
+# get token
+if (!$GitHubToken) {
+	$GitHubToken = Read-Host 'GitHub token'
+}
 
 # get the file content
 $FileName = Resolve-Path -LiteralPath $FileName
@@ -80,18 +85,10 @@ $body = [System.Text.Encoding]::UTF8.GetBytes((
 	} | ConvertTo-Json -Compress
 ))
 
-# get credential
-if (!$Credential) {
-	$Credential = Get-Credential -Message 'GitHub OAUTH-TOKEN'
-	if (!$Credential) {
-		return
-	}
-}
-
 # make request headers
 $headers = @{
-	accept = 'application/vnd.github.v3+json'
-	Authorization = "Bearer $($Credential.GetNetworkCredential().Password)"
+	Accept = 'application/vnd.github+json'
+	Authorization = "Bearer $GitHubToken"
 }
 
 # send the request

@@ -6,10 +6,7 @@
 	The task UpdateGist uses the hardcoded gist.
 #>
 
-if ($PSVersionTable.PSVersion.Major -lt 3) {
-	task dummy {'No tests for PowerShell 2.0'}
-	return
-}
+if ($PSVersionTable.PSVersion.Major -lt 3) { return task v3 }
 
 Set-StrictMode -Version Latest
 
@@ -36,7 +33,6 @@ task UpdateGist {
 	$gistId = '95d318d6a34927f74eba'
 	$gistFile = 'test.txt'
 
-	$credential = Import-Clixml -LiteralPath "$HOME\data\GitHub.clixml"
 	($content = @'
 https://gist.github.com/{0}
 {1}
@@ -47,7 +43,7 @@ https://gist.github.com/{0}
 	[System.IO.File]::WriteAllText($file, $content, [System.Text.Encoding]::UTF8)
 
 	# update
-	Update-Gist.ps1 $file -Credential $credential
+	Update-Gist.ps1 $file
 
 	# get and check
 	$r = Invoke-RestMethod -Uri https://api.github.com/gists/95d318d6a34927f74eba
