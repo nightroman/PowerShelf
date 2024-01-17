@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.1.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -10,7 +10,7 @@
 
 <#
 .Synopsis
-	Compares the sample and result files.
+	Compares the sample and result files or texts.
 
 .Description
 	This script automates one typical test scenario, it compares the sample and
@@ -39,6 +39,11 @@
 		Specifies a command invoked when the files are different. It is an
 		application name or a script block. The arguments are file paths.
 
+.Parameter Text
+		Tells that the sample and result are strings to compare as text
+		ignoring line endings. If they differ and View is set then View
+		uses temp files Sample.txt and Result.txt with saved texts.
+
 .Example
 	Assert-SameFile Sample.log Result.log Merge.exe
 
@@ -56,17 +61,54 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
+[CmdletBinding()]
 param(
-	[Parameter(Mandatory=1)]
 	[string]$Sample
 	,
-	[Parameter(Mandatory=1)]
 	[string]$Result
 	,
-	$View
+	[object]$View
+	,
+	[switch]$Text
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
+
+if ($View -and !($View -is [string] -or $View -is [scriptblock])) {
+	Write-Error "Invalid view command: '$View'."
+}
+
+function Start-View([string]$A, [string]$B) {
+	if ($View -is [string]) {
+		Start-Process $View ('"{0}" "{1}"' -f $A, $B)
+	}
+	else {
+		& $View $A $B
+	}
+}
+
+# compare text lines
+if ($Text) {
+	$regex = [regex]'\r\n?'
+	$text1 = ($Sample.TrimEnd() -replace $regex, "`n") + "`n"
+	$text2 = ($Result.TrimEnd() -replace $regex, "`n") + "`n"
+	if ([string]::Equals($text1, $text2)) {
+		return
+	}
+
+	if (!$View) {
+		Write-Error "Different sample and result text."
+	}
+
+	$Sample = Join-Path $env:TEMP Sample.txt
+	$Result = Join-Path $env:TEMP Result.txt
+	[System.IO.File]::WriteAllText($Sample, $text1)
+	[System.IO.File]::WriteAllText($Result, $text2)
+
+	Write-Warning "Different sample and result text."
+	Start-View $Sample $Result
+	return
+}
 
 # result must exist
 $fileResult = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath($Result)
@@ -112,15 +154,7 @@ if (!$View) {
 Write-Warning "Different sample '$Sample' and result '$Result'."
 
 # start view
-if ($View -is [scriptblock]) {
-	& $View $fileSample.FullName $fileResult.FullName
-}
-elseif ($View -is [string]) {
-	Start-Process $View ('"{0}" "{1}"' -f $fileSample.FullName, $fileResult.FullName)
-}
-else {
-	Write-Error "Invalid view command: '$View'."
-}
+Start-View $fileSample.FullName $fileResult.FullName
 
 # choice, cast is for v2.0
 function Get-Choice($Caption, $Message, $Choices) {

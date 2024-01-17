@@ -1,23 +1,51 @@
-
 <#
 .Synopsis
 	Tests Assert-SameFile.ps1.
 #>
 
-Set-StrictMode -Version Latest
+Set-StrictMode -Version 3
 
 task SameFile {
 	Assert-SameFile $BuildFile $BuildFile
 }
 
+task SameText {
+	# empty text is fine
+	Assert-SameFile -Text
+
+	# text end is trimmed
+	Assert-SameFile -Text 'A' "A  `r`r`n`n"
+
+	# line ends are ignored
+	Assert-SameFile -Text "A`rB`nC`r`nD" "A`nB`nC`nD`n"
+	Assert-SameFile -Text "A`nB`nC`nD`n" "A`rB`nC`r`nD"
+}
+
 task MissingResult {
-	($e = try {Assert-SameFile $BuildFile missing} catch {$_})
-	assert ($e -clike "*Missing result file 'missing'.")
+	try {
+		throw Assert-SameFile $BuildFile missing
+	}
+	catch {
+		assert ($_ -clike "*Missing result file 'missing'.")
+	}
 }
 
 task DifferentFileFail {
-	($e = try {Assert-SameFile $BuildFile Add-Debugger.test.ps1} catch {$_})
-	assert ($e -like "*Different sample '*\Assert-SameFile.test.ps1' and result 'Add-Debugger.test.ps1'.")
+	try {
+		throw Assert-SameFile $BuildFile Add-Debugger.test.ps1
+	}
+	catch {
+		assert ($_ -like "*Different sample '*\Assert-SameFile.test.ps1' and result 'Add-Debugger.test.ps1'.")
+	}
+}
+
+task DifferentTextFail {
+	try {
+		throw Assert-SameFile a b -Text
+	}
+	catch {
+		equals "$_" "Different sample and result text."
+	}
 }
 
 task MissingSample {
@@ -85,4 +113,28 @@ task DifferentFile {
 	assert ($e -like "*Different sample 'z' and result '$BuildFile'.")
 	equals (Get-Content z) '2'
 	remove z
+}
+
+task DifferentTextView {
+	$Warnings = ${*}.Warnings
+	$n = $Warnings.Count
+
+	$r = @{}
+	Assert-SameFile a b -Text -View {
+		$r.file1 = $args[0]
+		$r.file2 = $args[1]
+	}
+
+	equals $r.Count 2
+	equals $r.file1 (Join-Path $env:TEMP Sample.txt)
+	equals $r.file2 (Join-Path $env:TEMP Result.txt)
+
+	$text1 = [System.IO.File]::ReadAllText($r.file1)
+	$text2 = [System.IO.File]::ReadAllText($r.file2)
+	equals $text1 "a`n"
+	equals $text2 "b`n"
+
+	equals $Warnings.Count ($n + 1)
+	equals $Warnings[-1].Message "Different sample and result text."
+	$Warnings.RemoveAt($n)
 }

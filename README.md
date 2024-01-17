@@ -41,10 +41,10 @@ The scripts are published as the NuGet package [PowerShelf](https://www.nuget.or
 Download by NuGet tools or [directly](http://nuget.org/api/v2/package/PowerShelf).
 Save as `.zip` and unzip. Use the package subdirectory `tools`.
 
-Or, using downloaded on the fly `Save-NuGetTool.ps1` download and unzip:
+Or, using downloaded on the fly `Save-NuGetTool.ps1`, download and unzip by this command:
 
 ```powershell
-Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/nightroman/PowerShelf/main/Save-NuGetTool.ps1'))} PowerShelf"
+iex "& {$(irm https://raw.githubusercontent.com/nightroman/PowerShelf/main/Save-NuGetTool.ps1)} PowerShelf"
 ```
 
 ## See Also

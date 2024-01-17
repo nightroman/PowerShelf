@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.13
+
+`Assert-SameFile` 1.1.0, new switch `Text` to compare texts.
+
 ## v1.13.12
 
 `Update-Gist`: use `-GitHubToken` instead of `-Credential`.
