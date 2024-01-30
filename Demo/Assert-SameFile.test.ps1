@@ -135,6 +135,33 @@ task DifferentTextView {
 	equals $text2 "b`n"
 
 	equals $Warnings.Count ($n + 1)
-	equals $Warnings[-1].Message "Different sample and result text."
+	equals $Warnings[-1].Message 'Different sample and result text.'
 	$Warnings.RemoveAt($n)
+}
+
+task FailText {
+	$log = @{}
+	try {
+		throw Assert-SameFile -Fail -Text S R {$log.Sample = $args[0]; $log.Result = $args[1]}
+	}
+	catch {
+		equals "$_" 'Different sample and result text.'
+	}
+	equals $log.Sample "$env:TEMP\Sample.txt"
+	equals $log.Result "$env:TEMP\Result.txt"
+}
+
+task FailFile {
+	$log = @{}
+	Set-Content z.Sample S
+	Set-Content z.Result R
+	try {
+		throw Assert-SameFile -Fail z.Sample z.Result {$log.Sample = $args[0]; $log.Result = $args[1]}
+	}
+	catch {
+		equals "$_" "Different sample 'z.Sample' and result 'z.Result'."
+	}
+	equals $log.Sample "$PSScriptRoot\z.Sample"
+	equals $log.Result "$PSScriptRoot\z.Result"
+	remove z.*
 }

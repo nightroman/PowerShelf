@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.13.14
+
+`Assert-SameFile` 1.2.0, new switch `Fail` to fail even with `View`.
+
 ## v1.13.13
 
 `Assert-SameFile` 1.1.0, new switch `Text` to compare texts.

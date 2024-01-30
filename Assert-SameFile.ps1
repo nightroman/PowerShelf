@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.1.0
+.VERSION 1.2.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -22,8 +22,9 @@
 	a warning is written and the sample is created as a copy of the result. The
 	target directory is also created if it does not exist.
 
-	If files are different then the test either fails or, if View is specified,
-	writes a warning, invokes View, and then prompts to update the sample.
+	If files are different then the test either fails or, if View is specified
+	and Fail is not, invokes View, writes a warning, and then prompts to update
+	the sample file.
 
 	File comparison is done via MD5 hashes, it is fast and suitable for large
 	files. But there is a tiny chance that file differences are not detected.
@@ -38,6 +39,9 @@
 .Parameter View
 		Specifies a command invoked when the files are different. It is an
 		application name or a script block. The arguments are file paths.
+
+.Parameter Fail
+		Tells to fail on differences even when View is specified.
 
 .Parameter Text
 		Tells that the sample and result are strings to compare as text
@@ -68,6 +72,8 @@ param(
 	[string]$Result
 	,
 	[object]$View
+	,
+	[switch]$Fail
 	,
 	[switch]$Text
 )
@@ -105,8 +111,13 @@ if ($Text) {
 	[System.IO.File]::WriteAllText($Sample, $text1)
 	[System.IO.File]::WriteAllText($Result, $text2)
 
-	Write-Warning "Different sample and result text."
 	Start-View $Sample $Result
+
+	if ($Fail) {
+		Write-Error "Different sample and result text."
+	}
+
+	Write-Warning "Different sample and result text."
 	return
 }
 
@@ -151,10 +162,14 @@ if (!$View) {
 	Write-Error "Different sample '$Sample' and result '$Result'."
 }
 
-Write-Warning "Different sample '$Sample' and result '$Result'."
-
 # start view
 Start-View $fileSample.FullName $fileResult.FullName
+
+if ($Fail) {
+	Write-Error "Different sample '$Sample' and result '$Result'."
+}
+
+Write-Warning "Different sample '$Sample' and result '$Result'."
 
 # choice, cast is for v2.0
 function Get-Choice($Caption, $Message, $Choices) {
