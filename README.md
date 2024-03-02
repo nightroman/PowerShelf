@@ -24,6 +24,7 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 * *Set-Env.ps1* - Sets or removes environment variables (Windows User/Machine).
 * *Show-Color.ps1* - Shows all color combinations, color names and codes.
 * *Show-Coverage.ps1* - Converts to HTML and shows script coverage data.
+* *Show-GraphQLVoyager.ps1* - Shows GraphQL schema using GraphQL Voyager.
 * *Show-SolutionDgml.ps1* - Generates and shows the solution project graph.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
 * *Sync-Directory.ps1* - Syncs two directories with some interaction.

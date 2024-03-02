@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.14.0
+
+New script `Show-GraphQLVoyager.ps1`.
+
 ## v1.13.14
 
 `Assert-SameFile` 1.2.0, new switch `Fail` to fail even with `View`.
