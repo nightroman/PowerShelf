@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.14.1
+
+`Show-GraphQLVoyager.ps1` - use UTF-8 and page title
+
 ## v1.14.0
 
 New script `Show-GraphQLVoyager.ps1`.

@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 0.0.2
+.VERSION 0.0.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS GraphQL Voyager
@@ -123,9 +123,12 @@ function Get-Boolean($Value) {
 }
 
 $html = @"
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
+  	<title>$RootType $ApiUrl</title>
+
     <style>
       body {
         height: 100%;
@@ -139,7 +142,7 @@ $html = @"
       }
     </style>
 
-    <link rel="stylesheet" href="$(Get-FileUrl $css)" />
+    <link rel="stylesheet" href="$(Get-FileUrl $css)">
     <script src="$(Get-FileUrl $js)"></script>
   </head>
 
