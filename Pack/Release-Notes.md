@@ -1,5 +1,12 @@
 # PowerShelf Release Notes
 
+## v1.14.2
+
+`Add-Debugger.ps1`
+
+- Default input method is `ReadHost` in console and `ReadGui` in other hosts
+- Use switches `ReadHost` and `ReadGui` (new) to change the default method
+
 ## v1.14.1
 
 `Show-GraphQLVoyager.ps1` - use UTF-8 and page title

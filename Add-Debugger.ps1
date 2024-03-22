@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.2.1
+.VERSION 2.3.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -16,18 +16,16 @@
 	The script adds or replaces existing debugger in any PowerShell runspace.
 	It is useful for hosts with no own debuggers, e.g. bare runspace host
 	"Default Host", Visual Studio NuGet console "Package Manager Host".
-	But it may replace and improve existing debuggers ("ConsoleHost").
+	Or it may replace existing debuggers, e.g. in "ConsoleHost".
 
 	The script is called at any moment when debugging is needed. To restore
 	the original debuggers, invoke Restore-Debugger defined by Add-Debugger.
 
-	For output of debug commands the script uses Out-Host or a file with a
-	separate console started for watching its tail.
+	For output of debug commands the script uses Out-Host by default.
+	If Out-Host is not suitable then specify Path for an output file.
 
-	For input the input box is used for typing PowerShell and debugger
-	commands. Specify the switch ReadHost for using Read-Host instead
-	or PSReadLine if this module is imported, with its addons, e.g.
-	https://www.powershellgallery.com/packages/GuiCompletion
+	Use the switch ReadHost or ReadGui to specify the input method.
+	By default it is Read-Host for console and GUI for other hosts.
 
 .Parameter Path
 		Specifies the output file used instead of Out-Host.
@@ -45,31 +43,23 @@
 		It is also used as the input box title. The state includes context
 		line numbers and input box coordinates.
 
-.Parameter ReadHost
-		Tells to use Read-Host or PSReadLine instead of the input box.
+.Parameter ReadGui
+		Tells to use GUI dialogs for commands input.
 
-.Inputs
-	None
-.Outputs
-	None
+.Parameter ReadHost
+		Tells to use Read-Host or PSReadLine for commands input.
 
 .Example
 	>
-	How to debug terminating errors in a bare runspace. Use cases:
-	- In .NET, the similar code is typical for invoking PowerShell.
-	- In PowerShell, when using BeginInvoke() for background jobs.
+	# How to debug a runspace
 
 	$ps = [PowerShell]::Create()
 	$null = $ps.AddScript({
-		# add debugger with file output
-		Add-Debugger $env:TEMP\debug.log
+		# add debugger with default input and output
+		Add-Debugger
 
-		# trick: break on terminating errors
-		$null = Set-PSBreakpoint -Variable StackTrace -Mode Write
-
-		# from now on the debugger dialog is shown on errors
-		# and a separate PowerShell output console is opened
-		...
+		# set breakpoints or use this hardcoded
+		Wait-Debugger
 	})
 	$ps.Invoke() # or BeginInvoke()
 
@@ -86,6 +76,8 @@ param(
 	[int[]]$Context = @(0, 0)
 	,
 	[string]$Environment
+	,
+	[switch]$ReadGui
 	,
 	[switch]$ReadHost
 )
@@ -198,7 +190,7 @@ else {
 }
 
 ### Define how to read debugger input.
-if ($ReadHost) {
+if ($ReadHost -or ($Host.Name -eq 'ConsoleHost' -and !$ReadGui)) {
 	function global:Read-Debugger {
 		param($Prompt, $Default)
 		if ($_Debugger.PSReadLine) {
@@ -265,8 +257,7 @@ function global:Read-InputBox {
 	$cancel.Location = New-Object System.Drawing.Point(300, 60)
 	$cancel.Size = New-Object System.Drawing.Size(75, 23)
 	$cancel.Text = $Text2
-	$cancel.DialogResult = 'Cancel'
-	$form.CancelButton = $cancel
+	$cancel.DialogResult = 'Continue'
 	$form.Controls.Add($cancel)
 
 	$form.add_Load({
@@ -282,8 +273,14 @@ function global:Read-InputBox {
 	}
 
 	if ($result -eq 'OK') {
-	    $text.Text
+	    return $text.Text
 	}
+
+	if ($result -eq 'Continue') {
+	    return 'continue'
+	}
+
+	'quit'
 }
 
 # Starts an external file viewer.
