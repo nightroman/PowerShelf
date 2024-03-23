@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.14.3
+
+`Add-Debugger.ps1` - amend `ReadHost`
+
 ## v1.14.2
 
 `Add-Debugger.ps1`

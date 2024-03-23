@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.3.0
+.VERSION 2.3.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -25,7 +25,7 @@
 	If Out-Host is not suitable then specify Path for an output file.
 
 	Use the switch ReadHost or ReadGui to specify the input method.
-	By default it is Read-Host for console and GUI for other hosts.
+	By default it is ReadHost in console and ReadGui in other cases.
 
 .Parameter Path
 		Specifies the output file used instead of Out-Host.
@@ -44,21 +44,22 @@
 		line numbers and input box coordinates.
 
 .Parameter ReadGui
-		Tells to use GUI dialogs for commands input.
+		Tells to use GUI input boxes for commands.
 
 .Parameter ReadHost
 		Tells to use Read-Host or PSReadLine for commands input.
+		PSReadLine should be imported and configured beforehand.
 
 .Example
 	>
-	# How to debug a runspace
+	# How to debug a bare runspace
 
 	$ps = [PowerShell]::Create()
 	$null = $ps.AddScript({
-		# add debugger with default input and output
+		# add debugger with default options
 		Add-Debugger
 
-		# set breakpoints or use this hardcoded
+		# use this breakpoint or set custom
 		Wait-Debugger
 	})
 	$ps.Invoke() # or BeginInvoke()
@@ -67,6 +68,7 @@
 	https://github.com/nightroman/PowerShelf
 #>
 
+[CmdletBinding(DefaultParameterSetName='Main')]
 param(
 	[Parameter(Position=0)]
 	[string]$Path
@@ -77,8 +79,10 @@ param(
 	,
 	[string]$Environment
 	,
+	[Parameter(ParameterSetName='ReadGui', Mandatory=1)]
 	[switch]$ReadGui
 	,
+	[Parameter(ParameterSetName='ReadHost', Mandatory=1)]
 	[switch]$ReadHost
 )
 
@@ -149,6 +153,9 @@ function global:Save-DebuggerState {
 }
 
 ### Set debugger data.
+if (!$ReadHost -and !$ReadGui -and $Host.Name -eq 'ConsoleHost') {
+	$ReadHost = $true
+}
 $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
 	Path = $null
 	Environment = $Environment
@@ -190,19 +197,24 @@ else {
 }
 
 ### Define how to read debugger input.
-if ($ReadHost -or ($Host.Name -eq 'ConsoleHost' -and !$ReadGui)) {
+if ($ReadHost -and $_Debugger.PSReadLine) {
 	function global:Read-Debugger {
 		param($Prompt, $Default)
-		if ($_Debugger.PSReadLine) {
-			$_Debugger.q1 = $_Debugger.PSReadLine.HistorySaveStyle
-			$_Debugger.PSReadLine.HistorySaveStyle = 'SaveNothing'
-			Write-Host "${Prompt}: " -NoNewline
+		$_Debugger.q1 = $_Debugger.PSReadLine.HistorySaveStyle
+		$_Debugger.PSReadLine.HistorySaveStyle = 'SaveNothing'
+		Write-Host "${Prompt}: " -NoNewline
+		try {
 			PSConsoleHostReadline
+		}
+		finally {
 			$_Debugger.PSReadLine.HistorySaveStyle = $_Debugger.q1
 		}
-		else {
-			Read-Host $Prompt
-		}
+	}
+}
+elseif ($ReadHost) {
+	function global:Read-Debugger {
+		param($Prompt, $Default)
+		Read-Host $Prompt
 	}
 }
 else {
