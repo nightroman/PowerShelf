@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 0.0.3
+.VERSION 1.0.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS GraphQL Voyager
@@ -15,10 +15,6 @@
 .Description
 	This command generates and opens HTML which renders GraphQL Voyager with
 	the specified GraphQL API URL and several display options.
-
-	The GraphQL Voyager .css and .js files are downloaded once to the cache.
-	Remove them in order to get the latest versions. The cache directory:
-	$HOME/.PowerShelf/Show-GraphQLVoyager
 
 .Parameter ApiUrl
 		Specifies the GraphQL API URL for introspection.
@@ -80,10 +76,9 @@ param(
 )
 
 $ErrorActionPreference = 1
-$ProgressPreference = 0
 
 if ($RootType -notmatch '^\w+$') {
-	Write-Error "Invalid parameter RootType: $RootType"
+	throw "Invalid parameter RootType: $RootType"
 }
 
 ### resolve output
@@ -95,28 +90,7 @@ else {
 	$Output = [System.IO.Path]::GetTempPath() + "GraphQLVoyager-$RootType.html"
 }
 
-### cache resources
-
-$cache = "$HOME/.PowerShelf/Show-GraphQLVoyager"
-$null = mkdir $cache -Force
-
-$css = "$cache/voyager.css"
-if (![System.IO.File]::Exists($css)) {
-	Write-Host "Downloading $css"
-	Invoke-WebRequest -Uri https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.css -OutFile $css
-}
-
-$js = "$cache/voyager.standalone.js"
-if (![System.IO.File]::Exists($js)) {
-	Write-Host "Downloading $js"
-	Invoke-WebRequest -Uri https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.standalone.js -OutFile $js
-}
-
 ### make HTML
-
-function Get-FileUrl([string]$Path) {
-	'file:///' + $Path.Replace('\', '/')
-}
 
 function Get-Boolean($Value) {
 	if ($Value) {'true'} else {'false'}
@@ -132,8 +106,8 @@ $html = @"
     <style>
       body {
         height: 100%;
-        margin: 0;
         width: 100%;
+        margin: 0;
         overflow: hidden;
       }
 
@@ -142,8 +116,8 @@ $html = @"
       }
     </style>
 
-    <link rel="stylesheet" href="$(Get-FileUrl $css)">
-    <script src="$(Get-FileUrl $js)"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.css">
+    <script src="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.standalone.js"></script>
   </head>
 
   <body>

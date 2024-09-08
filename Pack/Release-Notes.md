@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.14.4
+
+Tweak `Show-GraphQLVoyager.ps1`.
+
 ## v1.14.3
 
 `Add-Debugger.ps1` - amend `ReadHost`

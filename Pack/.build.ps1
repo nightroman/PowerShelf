@@ -33,7 +33,7 @@ task pushNuGet nuget, {
 	$NuGetApiKey = Read-Host NuGetApiKey
 	exec { nuget.exe push "PowerShelf.$Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
 },
-Clean
+clean
 
 # Synopsis: Copy files to z\tools.
 task package markdown, {
