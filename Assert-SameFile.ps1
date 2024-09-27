@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.2.0
+.VERSION 1.2.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -95,6 +95,7 @@ function Start-View([string]$A, [string]$B) {
 
 # compare text lines
 if ($Text) {
+	# make and compare strings
 	$regex = [regex]'\r\n?'
 	$text1 = ($Sample.TrimEnd() -replace $regex, "`n") + "`n"
 	$text2 = ($Result.TrimEnd() -replace $regex, "`n") + "`n"
@@ -106,11 +107,18 @@ if ($Text) {
 		Write-Error "Different sample and result text."
 	}
 
-	$Sample = Join-Path $env:TEMP Sample.txt
-	$Result = Join-Path $env:TEMP Result.txt
+	# use cyclic suffix 0-9 to reduce collisions
+	$n = $env:AssertSameFile
+	$n = if ($n -match '^\d$') {([int]$n + 1) % 10} else {0}
+	$env:AssertSameFile = $n
+
+	# write temp files
+	$Sample = Join-Path $env:TEMP "Sample-$n.txt"
+	$Result = Join-Path $env:TEMP "Result-$n.txt"
 	[System.IO.File]::WriteAllText($Sample, $text1)
 	[System.IO.File]::WriteAllText($Result, $text2)
 
+	# show
 	Start-View $Sample $Result
 
 	if ($Fail) {
@@ -162,7 +170,7 @@ if (!$View) {
 	Write-Error "Different sample '$Sample' and result '$Result'."
 }
 
-# start view
+# show
 Start-View $fileSample.FullName $fileResult.FullName
 
 if ($Fail) {

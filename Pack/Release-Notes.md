@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.14.5
+
+`Assert-SameFile.ps1 -Text` - use temp file cyclic suffix 0-9 to reduce collisions
+
 ## v1.14.4
 
 Tweak `Show-GraphQLVoyager.ps1`.
