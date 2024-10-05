@@ -1,0 +1,4 @@
+﻿type Query {
+  "Use this to test the connectivity to this service\n\n**Returns:**\nExpect \"pong\""
+  ping: String!
+}

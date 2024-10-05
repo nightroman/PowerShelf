@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 2.0.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS GraphQL Voyager
@@ -13,17 +13,20 @@
 	Shows GraphQL schema using https://github.com/graphql-kit/graphql-voyager
 
 .Description
-	This command generates and opens HTML which renders GraphQL Voyager with
-	the specified GraphQL API URL and several display options.
+	This command generates and opens HTML which renders GraphQL Voyager
+	with the specified GraphQL schema file or URL for introspection and
+	several display options.
 
-.Parameter ApiUrl
-		Specifies the GraphQL API URL for introspection.
+.Parameter Schema
+		Specifies the GraphQL schema file or URL for introspection.
 
 .Parameter RootType
-		The root type name. Default: Query
+		The root type name.
 
 .Parameter Output
-		The output HTML file. The default is in the temp directory.
+		Tells to output HTML to the specified file. If this parameter is
+		omitted then the temp file "GraphQLVoyager.html" is used and on
+		Windows automatically opened.
 
 .Parameter HideDocs
 		Tells to hide the docs sidebar.
@@ -41,10 +44,10 @@
 		Tells to show deprecated entities.
 
 .Parameter ShowRelay
-		Tells to show relay related types as is.
+		Tells to show relay types literally.
 
 .Parameter SortByAlphabet
-		Tells to sort fields on graph by alphabet.
+		Tells to sort type fields by alphabet.
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -53,10 +56,10 @@
 [CmdletBinding()]
 param(
 	[Parameter(Position=0, Mandatory=1)]
-	[Uri]$ApiUrl
+	[string]$Schema
 	,
 	[Parameter(Position=1)]
-	[string]$RootType = 'Query'
+	[string]$RootType
 	,
 	[string]$Output
 	,
@@ -77,17 +80,36 @@ param(
 
 $ErrorActionPreference = 1
 
-if ($RootType -notmatch '^\w+$') {
-	throw "Invalid parameter RootType: $RootType"
+### Schema
+
+if ($Schema -match '^\w\w+://') {
+	$sdl = $null
+}
+else {
+	$sdl = [System.IO.File]::ReadAllText($PSCmdlet.GetUnresolvedProviderPathFromPSPath($Schema))
 }
 
-### resolve output
+### RootType
+
+if ($RootType) {
+	if ($RootType -notmatch '^\w+$') {
+		throw "Invalid parameter RootType: '$RootType'."
+	}
+	$title = "$RootType $Schema"
+}
+else {
+	$title = $Schema
+}
+
+### Output
 
 if ($Output) {
+	$toShow = $false
 	$Output = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Output)
 }
 else {
-	$Output = [System.IO.Path]::GetTempPath() + "GraphQLVoyager-$RootType.html"
+	$toShow = $PSVersionTable['Platform'] -ne 'Unix'
+	$Output = [System.IO.Path]::GetTempPath() + 'GraphQLVoyager.html'
 }
 
 ### make HTML
@@ -96,67 +118,90 @@ function Get-Boolean($Value) {
 	if ($Value) {'true'} else {'false'}
 }
 
-$html = @"
+$html = $(
+	@"
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
-  	<title>$RootType $ApiUrl</title>
-
+  	<title>$title</title>
     <style>
       body {
         height: 100%;
-        width: 100%;
         margin: 0;
+        width: 100%;
         overflow: hidden;
       }
-
       #voyager {
         height: 100vh;
       }
     </style>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.css"/>
     <script src="https://cdn.jsdelivr.net/npm/graphql-voyager/dist/voyager.standalone.js"></script>
   </head>
-
   <body>
     <div id="voyager">Loading...</div>
     <script type="module">
-      const { voyagerIntrospectionQuery: query } = GraphQLVoyager;
-      const response = await fetch(
-        '$ApiUrl',
-        {
-          method: 'post',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ query }),
-          credentials: 'omit',
-        },
-      );
-      const introspection = await response.json();
+      const escapeHtml = (html) => {
+        return html.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+      }
+      const voyager = document.getElementById('voyager');
+      try {
+"@
 
-      GraphQLVoyager.renderVoyager(document.getElementById('voyager'), {
-        introspection,
-        hideDocs: $(Get-Boolean $HideDocs),
-        hideSettings: $(Get-Boolean $HideSettings),
-        displayOptions: {
-        	rootType: "$RootType",
-        	hideRoot: $(Get-Boolean $HideRoot),
-        	showLeafFields: $(Get-Boolean (!$HideLeafFields)),
-        	skipDeprecated: $(Get-Boolean (!$ShowDeprecated)),
-        	skipRelay: $(Get-Boolean (!$ShowRelay)),
-        	sortByAlphabet: $(Get-Boolean $SortByAlphabet)
-        },
-      });
+	if ($sdl) {
+		@"
+        const sdl = ``$($sdl.Replace('\', '\\').Replace('${', '\${').Replace('`', '\`'))``
+        const { sdlToSchema: sdlToIntrospection } = GraphQLVoyager;
+        const introspection = sdlToIntrospection(sdl);
+"@
+	}
+	else {
+		@"
+        const { voyagerIntrospectionQuery: query } = GraphQLVoyager;
+        const response = await fetch(
+          '$($Schema.Replace("'", "\'"))',
+          {
+            method: 'post',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query }),
+            credentials: 'omit',
+          },
+        );
+        const introspection = await response.json();
+"@
+	}
+
+	@"
+        GraphQLVoyager.renderVoyager(voyager, {
+          introspection,
+          hideDocs: $(Get-Boolean $HideDocs),
+          hideSettings: $(Get-Boolean $HideSettings),
+          displayOptions: {
+            rootType: $(if ($RootType) {"'$RootType'"} else {'null'}),
+            hideRoot: $(Get-Boolean $HideRoot),
+            showLeafFields: $(Get-Boolean (!$HideLeafFields)),
+            skipDeprecated: $(Get-Boolean (!$ShowDeprecated)),
+            skipRelay: $(Get-Boolean (!$ShowRelay)),
+            sortByAlphabet: $(Get-Boolean $SortByAlphabet),
+          },
+        });
+      }
+      catch(error) {
+        voyager.innerHTML = ``<pre>`${escapeHtml(error.toString())}</pre>``;
+      }
     </script>
   </body>
 </html>
 "@
+) -join "`n"
 
 ### save and open HTML
 
 [System.IO.File]::WriteAllText($Output, $html)
-Invoke-Item -LiteralPath $Output
+if ($toShow) {
+	Invoke-Item -LiteralPath $Output
+}

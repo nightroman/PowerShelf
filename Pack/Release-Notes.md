@@ -1,5 +1,12 @@
 # PowerShelf Release Notes
 
+## v1.15.0
+
+`Show-GraphQLVoyager.ps1` 2.0.0
+
+- replaced `ApiUrl` with `Schema`, either schema file (SDL format) or URL for introspection
+- if `Output` is specified then the browser is not opened automatically
+
 ## v1.14.5
 
 `Assert-SameFile.ps1 -Text` - use temp file cyclic suffix 0-9 to reduce collisions

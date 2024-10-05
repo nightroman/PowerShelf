@@ -37,7 +37,8 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 
 ## Get Scripts
 
-The scripts are published as the NuGet package [PowerShelf](https://www.nuget.org/packages/PowerShelf).
+The scripts are published as the NuGet package [PowerShelf](https://www.nuget.org/packages/PowerShelf).\
+In addition, some scripts are published at [PSGallery](https://www.powershellgallery.com/).
 
 Download by NuGet tools or [directly](http://nuget.org/api/v2/package/PowerShelf).
 Save as `.zip` and unzip. Use the package subdirectory `tools`.
