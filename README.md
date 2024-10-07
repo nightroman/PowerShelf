@@ -1,8 +1,8 @@
-# PowerShelf - PowerShell Scripts
+# PowerShelf
 
-PowerShell tools for various tasks implemented as scripts, mostly standalone.
+PowerShell script tools for various tasks, mostly standalone.
 
-## Script List
+## Scripts
 
 * *Add-Debugger.ps1* - Adds a script debugger to PowerShell.
 * *Add-Path.ps1* - Adds a directory to an environment path variable.
@@ -37,13 +37,10 @@ PowerShell tools for various tasks implemented as scripts, mostly standalone.
 
 ## Get Scripts
 
-The scripts are published as the NuGet package [PowerShelf](https://www.nuget.org/packages/PowerShelf).\
-In addition, some scripts are published at [PSGallery](https://www.powershellgallery.com/).
+Some scripts are available at [PSGallery](https://www.powershellgallery.com/)
+and all scripts are published as the NuGet package [PowerShelf](https://www.nuget.org/packages/PowerShelf).
 
-Download by NuGet tools or [directly](http://nuget.org/api/v2/package/PowerShelf).
-Save as `.zip` and unzip. Use the package subdirectory `tools`.
-
-Or, using downloaded on the fly `Save-NuGetTool.ps1`, download and unzip by this command:
+You may download all scripts by this command:
 
 ```powershell
 iex "& {$(irm https://raw.githubusercontent.com/nightroman/PowerShelf/main/Save-NuGetTool.ps1)} PowerShelf"

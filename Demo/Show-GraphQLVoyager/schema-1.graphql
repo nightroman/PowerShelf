@@ -1,4 +1,13 @@
 ﻿type Query {
-  "Use this to test the connectivity to this service\n\n**Returns:**\nExpect \"pong\""
-  ping: String!
+  "Par '*italic*'.\n\nPar \"**strong**\".\n\nPar `${script}`."
+  test1: String!
+
+  """
+  Para '*italic*'.
+
+  Para \"**strong**\".
+
+  Para `${script}`.
+  """
+  test2: String!
 }

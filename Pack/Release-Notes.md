@@ -1,5 +1,11 @@
 # PowerShelf Release Notes
 
+## v1.15.1
+
+Tweak `Show-GraphQLVoyager.ps1`.
+
+Support several expressions in `Measure-Command2.ps1`.
+
 ## v1.15.0
 
 `Show-GraphQLVoyager.ps1` 2.0.0
@@ -324,4 +330,4 @@ compares the sample and result files and performs copy and view operations.
 
 ## v1.0.0
 
-NuGetDebugTools 1.3.0
+Debug tools.

@@ -1,0 +1,16 @@
+# https://editorconfig.org
+
+root = true
+
+[*]
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.ps1]
+indent_style = tab
+indent_size = 4
+
+[*.{json,xml,yml,*proj,graphql,html,js}]
+indent_style = space
+indent_size = 2

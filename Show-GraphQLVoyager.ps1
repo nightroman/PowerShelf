@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 2.0.0
+.VERSION 2.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS GraphQL Voyager
@@ -87,6 +87,7 @@ if ($Schema -match '^\w\w+://') {
 }
 else {
 	$sdl = [System.IO.File]::ReadAllText($PSCmdlet.GetUnresolvedProviderPathFromPSPath($Schema))
+	$sdl = $sdl.Replace('\', '\\').Replace('${', '\${').Replace('`', '\`')
 }
 
 ### RootType
@@ -151,14 +152,12 @@ $html = $(
 
 	if ($sdl) {
 		@"
-        const sdl = ``$($sdl.Replace('\', '\\').Replace('${', '\${').Replace('`', '\`'))``
-        const { sdlToSchema: sdlToIntrospection } = GraphQLVoyager;
-        const introspection = sdlToIntrospection(sdl);
+        const sdl = ``$sdl``
+        const introspection = GraphQLVoyager.sdlToSchema(sdl);
 "@
 	}
 	else {
 		@"
-        const { voyagerIntrospectionQuery: query } = GraphQLVoyager;
         const response = await fetch(
           '$($Schema.Replace("'", "\'"))',
           {
@@ -167,7 +166,7 @@ $html = $(
               Accept: 'application/json',
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ query }),
+            body: JSON.stringify({ query: GraphQLVoyager.voyagerIntrospectionQuery }),
             credentials: 'omit',
           },
         );
