@@ -13,9 +13,9 @@ function Write-Warning2($Message) {
 }
 
 function Reset-Test {
-	[System.Environment]::SetEnvironmentVariable('q1', '', 'User')
-	[System.Environment]::SetEnvironmentVariable('q1', '', 'Machine')
-	[System.Environment]::SetEnvironmentVariable('q1', '', 'Process')
+	[System.Environment]::SetEnvironmentVariable('q1', [NullString]::Value, 'User')
+	[System.Environment]::SetEnvironmentVariable('q1', [NullString]::Value, 'Machine')
+	[System.Environment]::SetEnvironmentVariable('q1', [NullString]::Value, 'Process')
 	Set-Alias Write-Warning Write-Warning2
 	$Warnings.Clear()
 }
@@ -112,4 +112,16 @@ task MachineValueOverrides {
 	equals $r MachineValue
 
 	. Reset-Test
+}
+
+task EmptyStringRemovesVariable {
+	. Reset-Test
+
+	Set-Env q1 v1
+	equals v1 $env:q1
+	equals v1 ([System.Environment]::GetEnvironmentVariable('q1', 'User'))
+
+	Set-Env q1 ''
+	equals $null $env:q1
+	equals $null ([System.Environment]::GetEnvironmentVariable('q1', 'User'))
 }

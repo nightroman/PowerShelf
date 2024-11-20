@@ -35,25 +35,26 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $target = if ($Machine) {'Machine'} else {'User'}
+$ValueOrNull = if ($Value) {$Value} else {[NullString]::Value}
 
 # set registry variable
-[System.Environment]::SetEnvironmentVariable($Name, $Value, $target)
+[System.Environment]::SetEnvironmentVariable($Name, $ValueOrNull, $target)
 
 # special cases
 if ($target -eq 'Machine') {
 	$value2 = [System.Environment]::GetEnvironmentVariable($Name, 'User')
-	if ($value2) {
+	if ($null -ne $value2) {
 		Write-Warning "Set-Env: Existing User variable '$Name' takes over."
-		$Value = $value2
+		$ValueOrNull = $value2
 	}
 }
 elseif ($target -eq 'User' -and !$Value) {
 	$value2 = [System.Environment]::GetEnvironmentVariable($Name, 'Machine')
-	if ($value2) {
+	if ($null -ne $value2) {
 		Write-Warning "Set-Env: Existing Machine variable '$Name' takes over."
-		$Value = $value2
+		$ValueOrNull = $value2
 	}
 }
 
 # set process variable
-[System.Environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+[System.Environment]::SetEnvironmentVariable($Name, $ValueOrNull, 'Process')

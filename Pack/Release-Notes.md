@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.15.2
+
+Amend `Set-Env.ps1` for PowerShell 7.5.
+
 ## v1.15.1
 
 Tweak `Show-GraphQLVoyager.ps1`.
