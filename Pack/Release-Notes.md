@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.15.3
+
+`Assert-SameFile -Text` - accept 2+ strings as `Sample` and `Result`.
+
 ## v1.15.2
 
 Amend `Set-Env.ps1` for PowerShell 7.5.

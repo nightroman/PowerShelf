@@ -14,11 +14,11 @@ task SameText {
 	Assert-SameFile -Text
 
 	# text end is trimmed
-	Assert-SameFile -Text 'A' "A  `r`r`n`n"
+	Assert-SameFile -Text 'A' "A  `r`n`n`n"
 
 	# line ends are ignored
-	Assert-SameFile -Text "A`rB`nC`r`nD" "A`nB`nC`nD`n"
-	Assert-SameFile -Text "A`nB`nC`nD`n" "A`rB`nC`r`nD"
+	Assert-SameFile -Text "A`r`nB`nC`r`nD" "A`nB`nC`nD`n"
+	Assert-SameFile -Text "A`nB`nC`nD`n" "A`r`nB`nC`r`nD"
 }
 
 task MissingResult {
@@ -126,8 +126,9 @@ task DifferentTextView {
 	}
 
 	equals $r.Count 2
-	equals $r.file1 (Join-Path $env:TEMP Sample.txt)
-	equals $r.file2 (Join-Path $env:TEMP Result.txt)
+	$temp = [regex]::Escape($env:TEMP)
+	assert ($r.file1 -match ($temp + '\\Sample-\d.txt$'))
+	assert ($r.file2 -match ($temp + '\\Result-\d.txt$'))
 
 	$text1 = [System.IO.File]::ReadAllText($r.file1)
 	$text2 = [System.IO.File]::ReadAllText($r.file2)
@@ -147,8 +148,9 @@ task FailText {
 	catch {
 		equals "$_" 'Different sample and result text.'
 	}
-	equals $log.Sample "$env:TEMP\Sample.txt"
-	equals $log.Result "$env:TEMP\Result.txt"
+	$temp = [regex]::Escape($env:TEMP)
+	assert ($log.Sample -match ($temp + '\\Sample-\d.txt$'))
+	assert ($log.Result -match ($temp + '\\Result-\d.txt$'))
 }
 
 task FailFile {

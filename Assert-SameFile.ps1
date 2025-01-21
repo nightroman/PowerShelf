@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.2.1
+.VERSION 1.2.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -33,8 +33,12 @@
 		Specifies the sample file path. If it does not exist then it is
 		created as a copy of the result.
 
+		With Text, specifies strings to be joined and compared with Result.
+
 .Parameter Result
 		Specifies the result file path. The file must exist.
+
+		With Text, specifies strings to be joined and compared with Sample.
 
 .Parameter View
 		Specifies a command invoked when the files are different. It is an
@@ -44,9 +48,9 @@
 		Tells to fail on differences even when View is specified.
 
 .Parameter Text
-		Tells that the sample and result are strings to compare as text
-		ignoring line endings. If they differ and View is set then View
-		uses temp files Sample.txt and Result.txt with saved texts.
+		Tells that Sample and Result are strings to compare as text ignoring
+		line ends. If they differ and View is set then View uses temp files
+		Sample-{n}.txt and Result-{n}.txt with saved texts.
 
 .Example
 	Assert-SameFile Sample.log Result.log Merge.exe
@@ -67,9 +71,9 @@
 
 [CmdletBinding()]
 param(
-	[string]$Sample
+	[object]$Sample
 	,
-	[string]$Result
+	[object]$Result
 	,
 	[object]$View
 	,
@@ -96,9 +100,8 @@ function Start-View([string]$A, [string]$B) {
 # compare text lines
 if ($Text) {
 	# make and compare strings
-	$regex = [regex]'\r\n?'
-	$text1 = ($Sample.TrimEnd() -replace $regex, "`n") + "`n"
-	$text2 = ($Result.TrimEnd() -replace $regex, "`n") + "`n"
+	$text1 = ($Sample -join "`n").TrimEnd().Replace("`r`n", "`n") + "`n"
+	$text2 = ($Result -join "`n").TrimEnd().Replace("`r`n", "`n") + "`n"
 	if ([string]::Equals($text1, $text2)) {
 		return
 	}
