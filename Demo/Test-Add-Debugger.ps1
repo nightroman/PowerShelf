@@ -21,7 +21,7 @@ function TestModule1($Param1) {
 '@ > $env:TEMP\debug.psm1
 
 # add debugger
-Add-Debugger.ps1 $log
+Add-Debugger.ps1 $log -Context 0 -Environment ''
 if (!(Test-Path Variable:\_Debugger)) {throw}
 
 # fake

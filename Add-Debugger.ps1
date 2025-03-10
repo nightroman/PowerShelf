@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.3.1
+.VERSION 2.4.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -13,56 +13,58 @@
 	Debugger for PowerShell hosts with no own debuggers.
 
 .Description
-	The script adds or replaces existing debugger in any PowerShell runspace.
-	It is useful for hosts with no own debuggers, e.g. bare runspace host
-	"Default Host", Visual Studio NuGet console "Package Manager Host".
-	Or it may replace existing debuggers, e.g. in "ConsoleHost".
+	The script adds or replaces existing debugger in any runspace. It is
+	useful for hosts with no own debuggers, e.g. 'Default Host', 'Package
+	Manager Host', 'FarHost'. Or it may replace existing debuggers, e.g.
+	in "ConsoleHost".
 
 	The script is called at any moment when debugging is needed. To restore
 	the original debuggers, invoke Restore-Debugger defined by Add-Debugger.
 
-	For output of debug commands the script uses Out-Host by default.
-	If Out-Host is not suitable then specify Path for an output file.
-
-	Use the switch ReadHost or ReadGui to specify the input method.
-	By default it is ReadHost in console and ReadGui in other cases.
+	Console like hosts include 'ConsoleHost', 'Visual Studio Code Host',
+	'Package Manager Host'. They imply using Read-Host and Write-Host by
+	default. Other hosts use GUI input box and output file watching.
 
 .Parameter Path
-		Specifies the output file used instead of Out-Host.
-		A separate console is opened for watching its tail.
-
-		Do not let this file to grow too large.
+		Specifies the file used for debugger output. A separate console is
+		used for watching its tail. Do not let the file to grow too large.
 		Invoke `new` when watching gets slower.
+
+		"$env:TEMP\Add-Debugger.log" is used by default.
+		Unlike specified, it is deleted before debugging.
 
 .Parameter Context
 		Specifies the default numbers of context source lines to show.
 		One or two integers, line numbers before and after the current.
+
+		@(4, 4) is used by default.
 
 .Parameter Environment
 		Specifies the user environment variable name for keeping the state.
 		It is also used as the input box title. The state includes context
 		line numbers and input box coordinates.
 
+		'Add-Debugger' is used by default.
+
 .Parameter ReadGui
-		Tells to use GUI input boxes for commands.
+		Tells to use GUI input boxes for input.
 
 .Parameter ReadHost
-		Tells to use Read-Host or PSReadLine for commands input.
+		Tells to use Read-Host or PSReadLine for input.
 		PSReadLine should be imported and configured beforehand.
+
+.Parameter WriteHost
+		Tells to use Write-Host and Out-Host for debugger output.
 
 .Example
 	>
-	# How to debug a bare runspace
-
-	$ps = [PowerShell]::Create()
-	$null = $ps.AddScript({
-		# add debugger with default options
-		Add-Debugger
-
-		# use this breakpoint or set custom
-		Wait-Debugger
-	})
-	$ps.Invoke() # or BeginInvoke()
+	# How to debug bare runspaces
+	$script = {
+		Add-Debugger  # add debugger with default options
+		Wait-Debugger # use hardcoded or other breakpoints
+	}
+	$ps = [PowerShell]::Create().AddScript('& $args[0]').AddArgument($script)
+	$null = $ps.BeginInvoke()
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -74,10 +76,12 @@ param(
 	[string]$Path
 	,
 	[ValidateCount(1, 2)]
-	[ValidateRange(0, 9999)]
-	[int[]]$Context = @(0, 0)
+	[ValidateRange(0, 999)]
+	[int[]]$Context = @(4, 4)
 	,
-	[string]$Environment
+	[string]$Environment = 'Add-Debugger'
+	,
+	[switch]$WriteHost
 	,
 	[Parameter(ParameterSetName='ReadGui', Mandatory=1)]
 	[switch]$ReadGui
@@ -147,17 +151,38 @@ function global:Read-DebuggerState {
 function global:Save-DebuggerState {
 	if ($_Debugger.Environment) {
 		$_ = $_Debugger.State
-		$string = "n=$($_.n);m=$($_.m);x=$($_.x);y=$($_.y)"
-		[Environment]::SetEnvironmentVariable($_Debugger.Environment, $string, 'User')
+		$value = "n=$($_.n);m=$($_.m);x=$($_.x);y=$($_.y)"
+		if ($value -ne [Environment]::GetEnvironmentVariable($_Debugger.Environment, 'User')) {
+			[Environment]::SetEnvironmentVariable($_Debugger.Environment, $value, 'User')
+		}
 	}
 }
 
-### Set debugger data.
-if (!$ReadHost -and !$ReadGui -and $Host.Name -eq 'ConsoleHost') {
+### Init debugger data.
+
+$IsConsoleLikeHost = $Host.Name -in ('ConsoleHost', 'Visual Studio Code Host', 'Package Manager Host')
+
+if (!$ReadHost -and !$ReadGui -and $IsConsoleLikeHost) {
 	$ReadHost = $true
 }
+
+if (!$WriteHost -and !$Path -and $IsConsoleLikeHost) {
+	$WriteHost = $true
+}
+
+if (!$WriteHost -and !$Path) {
+	$Path = "$env:TEMP\Add-Debugger.log"
+	[System.IO.File]::Delete($Path)
+}
+elseif (!$WriteHost) {
+	$Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+}
+else {
+	$Path = $null
+}
+
 $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
-	Path = $null
+	Path = $Path
 	Environment = $Environment
 	State = Read-DebuggerState $Environment $Context
 	Module = $null
@@ -173,9 +198,8 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	PSReadLine = if ($ReadHost -and (Get-Module PSReadLine)) {Get-PSReadLineOption}
 }
 
-### Define how to write debugger output.
+### Define debugger output.
 if ($Path) {
-	$_Debugger.Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
 	function global:Write-Debugger {
 		param($Data)
 		if ($_Debugger.UseAnsi) {
@@ -196,7 +220,7 @@ else {
 	}
 }
 
-### Define how to read debugger input.
+### Define debugger input.
 if ($ReadHost -and $_Debugger.PSReadLine) {
 	function global:Read-Debugger {
 		param($Prompt, $Default)
@@ -369,11 +393,11 @@ function global:Write-DebuggerFile {
 		}
 		$isMark = $LineIndex -eq $MarkIndex
 		if ($isMark -and $ansi) {
-			$line = "$sMark{0,4}:$sReset>> $sLine{1}$sReset" -f ($LineIndex + 1), $line
+			$line = "$sMark{0,3}:$sReset>> $sLine{1}$sReset" -f ($LineIndex + 1), $line
 		}
 		else {
 			$mark = if ($isMark) {'>>'} else {'  '}
-			$line = '{0,4}:{1} {2}' -f ($LineIndex + 1), $mark, $line
+			$line = '{0,3}:{1} {2}' -f ($LineIndex + 1), $mark, $line
 		}
 		Write-Debugger $line
 	}
@@ -432,47 +456,50 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 		if ($_Debugger.Action) {
 			$_Debugger.Action = $_Debugger.Action.Trim()
 		}
+		if (${env:Add-Debugger-Action} -and $_Debugger.Action -in ('s', 'StepInto', 'v', 'StepOver', 'o', 'StepOut', 'c', 'Continue', 'd', 'Detach', 'q', 'Quit')) {
+			$_Debugger.Action = ${env:Add-Debugger-Action}
+		}
 		Write-Debugger "[DBG]: $($_Debugger.Action)"
 
 		### repeat
-		if ($_Debugger.Action -eq '' -and ('s', 'StepInto', 'v', 'StepOver') -contains $_Debugger.LastAction) {
+		if ($_Debugger.Action -eq '' -and $_Debugger.LastAction -in ('s', 'StepInto', 'v', 'StepOver')) {
 			$_Debugger.Action = $_Debugger.LastAction
-			$_Debugger.Args.ResumeAction = if (('s', 'StepInto') -contains $_Debugger.Action) {'StepInto'} else {'StepOver'}
+			$_Debugger.Args.ResumeAction = if ($_Debugger.Action -in ('s', 'StepInto')) {'StepInto'} else {'StepOver'}
 			return
 		}
 
 		### Continue
-		if (($null, 'c', 'Continue') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ($null, 'c', 'Continue')) {
 			$_Debugger.Args.ResumeAction = 'Continue'
 			return
 		}
 
 		### StepInto
-		if (('s', 'StepInto') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ('s', 'StepInto')) {
 			$_Debugger.Args.ResumeAction = 'StepInto'
 			return
 		}
 
 		### StepOver
-		if (('v', 'StepOver') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ('v', 'StepOver')) {
 			$_Debugger.Args.ResumeAction = 'StepOver'
 			return
 		}
 
 		### StepOut
-		if (('o', 'StepOut') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ('o', 'StepOut')) {
 			$_Debugger.Args.ResumeAction = 'StepOut'
 			return
 		}
 
 		### Quit
-		if (('q', 'Quit') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ('q', 'Quit')) {
 			$_Debugger.Args.ResumeAction = 'Stop'
 			return
 		}
 
 		### Detach
-		if (('d', 'Detach') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ('d', 'Detach')) {
 			if ($_Debugger.Handlers) {
 				Write-Debugger 'd, Detach - not supported in this environment.'
 				continue
@@ -524,7 +551,7 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 		}
 
 		### help
-		if (('?', 'h') -contains $_Debugger.Action) {
+		if ($_Debugger.Action -in ('?', 'h')) {
 			Write-Debugger (@(
 				''
 				'  s, StepInto  Step to the next statement into functions, scripts, etc.'

@@ -1,5 +1,13 @@
 # PowerShelf Release Notes
 
+## v1.15.4
+
+`Add-Debugger.ps1` 2.4.0
+
+- Rework so that default parameters are suitable for console like hosts and other hosts, too.
+- Console like hosts include 'ConsoleHost', 'Visual Studio Code Host', 'Package Manager Host'.
+- Avoid saving state if it is not changed.
+
 ## v1.15.3
 
 `Assert-SameFile -Text` - accept 2+ strings as `Sample` and `Result`.
