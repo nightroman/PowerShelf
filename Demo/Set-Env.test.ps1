@@ -3,7 +3,7 @@
 	Set-Env.ps1 tests.
 #>
 
-Set-StrictMode -Version 2
+Set-StrictMode -Version 3
 
 $Warnings = [System.Collections.Generic.List[string]]::new()
 
@@ -43,14 +43,14 @@ task User {
 task Machine {
 	. Reset-Test
 
-	Set-Env q1 MachineValue -Machine
+	Set-Env q1 MachineValue Machine
 	equals $env:q1 MachineValue
 	equals $Warnings.Count 0
 
 	$r = Invoke-PowerShell -Command '$env:q1'
 	equals $r MachineValue
 
-	Set-Env q1 -Machine
+	Set-Env q1 '' Machine
 	equals $env:q1 $null
 	equals $Warnings.Count 0
 
@@ -72,7 +72,7 @@ task UserValueOverrides {
 	equals $r UserValue
 
 	# set machine
-	Set-Env q1 MachineValue -Machine
+	Set-Env q1 MachineValue Machine
 	equals $env:q1 UserValue
 	equals $Warnings.Count 1
 	equals $Warnings[0] "Set-Env: Existing User variable 'q1' takes over."
@@ -87,7 +87,7 @@ task MachineValueOverrides {
 	. Reset-Test
 
 	# set machine
-	Set-Env q1 MachineValue -Machine
+	Set-Env q1 MachineValue Machine
 	equals $env:q1 MachineValue
 	equals $Warnings.Count 0
 

@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.4.0
+.VERSION 2.5.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -30,19 +30,20 @@
 		used for watching its tail. Do not let the file to grow too large.
 		Invoke `new` when watching gets slower.
 
-		"$env:TEMP\Add-Debugger.log" is used by default.
-		Unlike specified, it is deleted before debugging.
+		"$env:TEMP\$Environment.log" is used by default.
+		The default file is deleted before debugging.
 
 .Parameter Context
-		Specifies the default numbers of context source lines to show.
-		One or two integers, line numbers before and after the current.
+		One or two integers, shown line counts before and after the current.
 
 		@(4, 4) is used by default.
 
 .Parameter Environment
-		Specifies the user environment variable name for keeping the state.
-		It is also used as the input box title. The state includes context
-		line numbers and input box coordinates.
+		Specifies the environment name for saving the state. It is also used as
+		the input box title and the default output file name.
+
+		The saved state includes context line numbers and input box coordinates.
+		Environments are saved as "$HOME\.PowerShelf\Add-Debugger.clixml".
 
 		'Add-Debugger' is used by default.
 
@@ -126,36 +127,45 @@ function global:Restore-Debugger {
 
 function global:Read-DebuggerState {
 	param($Environment, $Context)
+
+	if ($Environment -and [System.IO.File]::Exists("$HOME\.PowerShelf\Add-Debugger.clixml")) {
+		$config = Import-Clixml -LiteralPath "$HOME\.PowerShelf\Add-Debugger.clixml"
+		if ($state = $config[$Environment]) {
+			return $state
+		}
+	}
+
 	$n, $m = $Context
 	if ($null -eq $m) {
 		$m = $n
 	}
-	$x = -1
-	$y = -1
-	if ($Environment) {
-		if ($string = [Environment]::GetEnvironmentVariable($Environment, 'User')) {
-			try {
-				$b = New-Object System.Data.Common.DbConnectionStringBuilder
-				$b.set_ConnectionString($string)
-				$n = [int]$b['n']
-				$m = [int]$b['m']
-				$x = [int]$b['x']
-				$y = [int]$b['y']
-			}
-			catch {}
-		}
+	@{
+		Data = [pscustomobject]@{n=$n; m=$m; x=-1; y=-1}
+		Text = ''
 	}
-	[PSCustomObject]@{n=$n; m=$m; x=$x; y=$y}
 }
 
 function global:Save-DebuggerState {
-	if ($_Debugger.Environment) {
-		$_ = $_Debugger.State
-		$value = "n=$($_.n);m=$($_.m);x=$($_.x);y=$($_.y)"
-		if ($value -ne [Environment]::GetEnvironmentVariable($_Debugger.Environment, 'User')) {
-			[Environment]::SetEnvironmentVariable($_Debugger.Environment, $value, 'User')
-		}
+	if (!$_Debugger.Environment) {
+		return
 	}
+
+	$state = $_Debugger.State
+	if ($state.Text -ceq "$($state.Data)") {
+		return
+	}
+
+	if ([System.IO.File]::Exists("$HOME\.PowerShelf\Add-Debugger.clixml")) {
+		$config = Import-Clixml -LiteralPath "$HOME\.PowerShelf\Add-Debugger.clixml"
+	}
+	else {
+		$null = mkdir "$HOME\.PowerShelf" -Force
+		$config = @{}
+	}
+
+	$state.Text = "$($state.Data)"
+	$config[$_Debugger.Environment] = $state
+	$config | Export-Clixml -LiteralPath "$HOME\.PowerShelf\Add-Debugger.clixml"
 }
 
 ### Init debugger data.
@@ -171,7 +181,7 @@ if (!$WriteHost -and !$Path -and $IsConsoleLikeHost) {
 }
 
 if (!$WriteHost -and !$Path) {
-	$Path = "$env:TEMP\Add-Debugger.log"
+	$Path = "$env:TEMP\$Environment.log"
 	[System.IO.File]::Delete($Path)
 }
 elseif (!$WriteHost) {
@@ -245,7 +255,7 @@ else {
 	function global:Read-Debugger {
 		param($Prompt, $Default)
 		$title = if ($_Debugger.Environment) {$_Debugger.Environment} else {'Add-Debugger'}
-		Read-InputBox $Prompt $title $Default Step Continue $_Debugger.State
+		Read-InputBox $Prompt $title $Default Step Continue $_Debugger.State.Data
 		Save-DebuggerState
 	}
 }
@@ -440,7 +450,7 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 	}}
 
 	# write debug location
-	Write-DebuggerInfo $_args.InvocationInfo $_Debugger.State
+	Write-DebuggerInfo $_args.InvocationInfo $_Debugger.State.Data
 	Write-Debugger ''
 
 	# hide local variables
@@ -495,6 +505,9 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 		### Quit
 		if ($_Debugger.Action -in ('q', 'Quit')) {
 			$_Debugger.Args.ResumeAction = 'Stop'
+			if (($exe = $_Debugger.Watch) -and !$exe.HasExited) {
+				try { $exe.Kill() } catch {}
+			}
 			return
 		}
 
@@ -534,8 +547,8 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 				$n2 = [int]$(if ($m.Groups[3].Success) {$m.Groups[3].Value} else {$n1})
 				Write-DebuggerInfo $_Debugger.Args.InvocationInfo @{n=$n1; m=$n2}
 				if ($m.Groups[1].Success) {
-					$_Debugger.State.n = $n1
-					$_Debugger.State.m = $n2
+					$_Debugger.State.Data.n = $n1
+					$_Debugger.State.Data.m = $n2
 					Save-DebuggerState
 				}
 			}

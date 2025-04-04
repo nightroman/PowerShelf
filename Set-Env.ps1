@@ -1,11 +1,11 @@
 <#
 .Synopsis
-	Sets or removes environment variables (Windows User/Machine).
+	Sets or removes environment variables (Windows User/Machine/Process).
 	Author: Roman Kuzmin
 
 .Description
-	This command sets or removes the current User or local Machine environment
-	variable and updates the current process environment variable accordingly.
+	This command sets the current process environment and sets the current User
+	or local Machine environment, depending on Target (default: User).
 
 .Link
 	Set-Env.ArgumentCompleters.ps1
@@ -17,9 +17,9 @@
 		Specifies the environment variable value.
 		If it is omitted or empty then the variable is removed.
 
-.Parameter Machine
-		Tells to update the local Machine variable.
-		By default it updates the current User variable.
+.Parameter $Target
+		Specifies the environment target.
+		User is the default.
 
 .Link
 	https://github.com/nightroman/PowerShelf
@@ -28,27 +28,32 @@
 [CmdletBinding()]
 param(
 	[Parameter(Mandatory=1)]
-	[string]$Name,
-	[string]$Value,
-	[switch]$Machine
+	[string]$Name
+	,
+	[string]$Value
+	,
+	[ValidateSet('User', 'Machine', 'Process')]
+	[string]$Target = 'User'
 )
 
 $ErrorActionPreference = 'Stop'
-$target = if ($Machine) {'Machine'} else {'User'}
 $ValueOrNull = if ($Value) {$Value} else {[NullString]::Value}
 
-# set registry variable
-[System.Environment]::SetEnvironmentVariable($Name, $ValueOrNull, $target)
+# set target variable
+[System.Environment]::SetEnvironmentVariable($Name, $ValueOrNull, $Target)
 
-# special cases
-if ($target -eq 'Machine') {
+# target cases
+if ($Target -eq 'Process') {
+	return
+}
+elseif ($Target -eq 'Machine') {
 	$value2 = [System.Environment]::GetEnvironmentVariable($Name, 'User')
 	if ($null -ne $value2) {
 		Write-Warning "Set-Env: Existing User variable '$Name' takes over."
 		$ValueOrNull = $value2
 	}
 }
-elseif ($target -eq 'User' -and !$Value) {
+elseif ($Target -eq 'User' -and !$Value) {
 	$value2 = [System.Environment]::GetEnvironmentVariable($Name, 'Machine')
 	if ($null -ne $value2) {
 		Write-Warning "Set-Env: Existing Machine variable '$Name' takes over."

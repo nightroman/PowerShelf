@@ -1,5 +1,17 @@
 # PowerShelf Release Notes
 
+## v1.15.5
+
+`Add-Debugger.ps1` 2.5.0
+
+- Save states to file instead of environment variables.
+- Use `$env:TEMP\$Environment.log` as default output.
+- Close output console on Quit.
+
+`Set-Env.ps1`
+
+- Use parameter `Target` instead of switch `Machine`.
+
 ## v1.15.4
 
 `Add-Debugger.ps1` 2.4.0
