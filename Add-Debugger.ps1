@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.5.0
+.VERSION 2.5.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -200,7 +200,7 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	Watch = $null
 	History = [System.Collections.Generic.List[string]]@()
 	Handlers = Remove-Debugger
-	Action = '?'
+	Action = ''
 	REIndent1 = [regex]'^(\s*)'
 	REIndent2 = [regex]'^(\s+)(.*)'
 	REContext = [regex]'^\s*(=)?\s*(\d+)\s*(\d+)?\s*$'
