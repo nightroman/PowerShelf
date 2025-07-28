@@ -18,6 +18,7 @@ PowerShell script tools for various tasks, mostly standalone.
 * *Invoke-PowerShell.ps1* - Invokes PowerShell of the currently running version.
 * *Measure-Command2.ps1* - Measure-Command with several iterations and progress.
 * *Measure-Property.ps1* -  Counts properties grouped by names and types.
+* *Open-Url.ps1* - Creates and opens HTML navigating to URL.
 * *Save-NuGetTool.ps1* - Downloads a NuGet package and extracts /tools.
 * *Set-ConsoleSize.ps1* - Sets the current console size, interactively by default.
 * *Set-Env.ArgumentCompleters.ps1* - Completes Set-Env.ps1 -Name .

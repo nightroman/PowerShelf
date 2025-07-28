@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.16.0
+
+New script `Open-Url.ps1`.
+
 ## v1.15.6
 
 `Add-Debugger.ps1` 2.5.1 - use empty default input at start
