@@ -27,6 +27,7 @@ PowerShell script tools for various tasks, mostly standalone.
 * *Show-Coverage.ps1* - Converts to HTML and shows script coverage data.
 * *Show-GraphQLVoyager.ps1* - Shows GraphQL schema using GraphQL Voyager.
 * *Show-SolutionDgml.ps1* - Generates and shows the solution project graph.
+* *Start-HttpRoutes.ps1* - Starts HTTP server with routing script blocks.
 * *Submit-Gist.ps1* - Submits a file to its GitHub gist repository.
 * *Sync-Directory.ps1* - Syncs two directories with some interaction.
 * *Test-Debugger.ps1* - Tests PowerShell debugging with breakpoints.
