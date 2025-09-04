@@ -5,12 +5,12 @@
 
 # Synopsis: Convert markdown to HTML.
 task markdown {
-	exec { pandoc.exe --standalone --from=gfm --output=README.htm ../README.md --metadata=pagetitle=README }
+	exec { pandoc.exe --standalone --from=gfm --output=README.html ../README.md --metadata=pagetitle=README }
 }
 
 # Synopsis: Remove temp files.
 task clean {
-	remove z, README.htm, Release-Notes.htm, PowerShelf.*.nupkg
+	remove z, README.html, Release-Notes.html, PowerShelf.*.nupkg
 }
 
 # Synopsis: Set $script:Version.
@@ -47,7 +47,7 @@ task package markdown, {
 	Copy-Item -Destination z\tools @(
 		'..\*-*.ps1'
 		'..\LICENSE'
-		'README.htm'
+		'README.html'
 	)
 }
 
@@ -74,3 +74,6 @@ task nuget package, version, {
 
 	exec { nuget.exe pack z\Package.nuspec -NoPackageAnalysis }
 }
+
+# Synopsis: Release changes.
+task release pushNuGet, pushRelease

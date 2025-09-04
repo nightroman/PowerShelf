@@ -9,6 +9,11 @@ Start-HttpRoutes http://127.0.0.1:9999 @{
 		$PID
 	}
 
+	# Wildcard path.
+	'GET /test/*' = {
+		$Request.Url.AbsolutePath
+	}
+
 	# Adds numbers and gets text result.
 	'POST /add/text' = {
 		$Query = Get-Query

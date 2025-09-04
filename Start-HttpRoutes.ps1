@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 0.0.1
+.VERSION 0.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS HTTP Server HttpListener
@@ -13,6 +13,8 @@
 	Starts HTTP server with routing script blocks.
 
 .Description
+	Starts HTTP server with routing script blocks.
+
 	Route handler helper commands and variables:
 
 		Read-Content
@@ -25,7 +27,7 @@
 
 .Parameter Prefix
 		HttpListener prefix.
-		Examples:
+		Example:
 			http://localhost:8080/
 			http://127.0.0.1:8080/
 
@@ -35,7 +37,8 @@
 		Keys are route tags:
 
 			GET /
-			POST /test
+			POST /user
+			POST /test/*
 
 		Values are route request handlers, script blocks.
 
@@ -130,7 +133,7 @@ $HttpListener.Start()
 	# routes
 	foreach($_ in $Routes.GetEnumerator()) {
 		$private:method, $private:path = $_.Key.Split(' ', 2, 'RemoveEmptyEntries')
-		if ($Request.HttpMethod -eq $method -and $Request.Url.AbsolutePath -eq $path) {
+		if ($Request.HttpMethod -eq $method -and $Request.Url.AbsolutePath -like $path) {
 			try {
 				$data = & $_.Value
 			}

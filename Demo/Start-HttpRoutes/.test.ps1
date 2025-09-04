@@ -7,6 +7,14 @@ Enter-Build {
 	Start-Process $pwsh $PSScriptRoot/server.ps1 -WindowStyle Minimized
 }
 
+task wildcard {
+	($r = Invoke-RestMethod "$Prefix/test/1")
+	equals $r /test/1
+
+	($r = Invoke-RestMethod "$Prefix/test/2?name=Joe")
+	equals $r /test/2
+}
+
 task add_text {
 	$r = Invoke-RestMethod "$Prefix/add/text?A=13&B=27" -Method Post
 
