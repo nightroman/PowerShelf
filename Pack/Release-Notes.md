@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.17.2
+
+`Start-HttpRoutes.ps1` - conventional function routes.
+
 ## v1.17.1
 
 `Start-HttpRoutes.ps1` - wildcard route paths.

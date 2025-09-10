@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 0.0.2
+.VERSION 0.1.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS HTTP Server HttpListener
@@ -24,6 +24,15 @@
 		$Context  [System.Net.HttpListenerContext]
 		$Request  [System.Net.HttpListenerRequest]
 		$Response [System.Net.HttpListenerResponse]
+
+		In addition to the parameter Routes, or even instead of it, routes may
+		be defined as conventional functions named like HttpRoute-*, providing
+		their route tags as CmdletBinding DefaultParameterSetName:
+
+			function HttpRoute-Show {
+				[CmdletBinding(DefaultParameterSetName = 'POST /show')] param()
+				...
+			}
 
 .Parameter Prefix
 		HttpListener prefix.
@@ -51,8 +60,8 @@ param(
 	[Parameter(Position=0, Mandatory=$true)]
 	[string]$Prefix
 	,
-	[Parameter(Position=1, Mandatory=$true)]
-	[System.Collections.IDictionary]$Routes
+	[Parameter(Position=1)]
+	[System.Collections.IDictionary]$Routes = [ordered]@{}
 )
 
 <#
@@ -118,6 +127,14 @@ if (!$Prefix.EndsWith('/')) {
 
 Write-Host $Prefix
 $Host.UI.RawUI.WindowTitle = $Prefix
+
+Get-Command HttpRoute-* -CommandType Function | &{process{
+	$script = $_.ScriptBlock
+	$binding = $script.Attributes.Where({$_ -is [System.Management.Automation.CmdletBindingAttribute]})
+	if ($binding) {
+		$Routes.Add($binding.DefaultParameterSetName, $script)
+	}
+}}
 
 $HttpListener = [System.Net.HttpListener]::new()
 $HttpListener.Prefixes.Add($Prefix)

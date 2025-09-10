@@ -1,6 +1,6 @@
 ﻿
 Set-StrictMode -Version 3
-$Prefix = "http://127.0.0.1:9999"
+$Prefix = "http://[::1]:9999"
 
 Enter-Build {
 	$pwsh = if ($PSEdition -eq 'Core') {'pwsh'} else {'powershell'}
