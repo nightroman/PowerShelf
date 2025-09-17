@@ -1,26 +1,26 @@
 # Add-Debugger.ps1
 
-```
+```text
 Debugger for PowerShell hosts with no own debuggers.
 ```
 
 ## Syntax
 
-```
+```text
 Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Environment String] [-WriteHost]
 ```
 
-```
+```text
 Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Environment String] [-WriteHost] -ReadGui
 ```
 
-```
+```text
 Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Environment String] [-WriteHost] -ReadHost
 ```
 
 ## Description
 
-```
+```text
 The script adds or replaces existing debugger in any runspace. It is
 useful for hosts with no own debuggers, e.g. 'Default Host', 'Package
 Manager Host', 'FarHost'. Or it may replace existing debuggers, e.g.
@@ -36,7 +36,7 @@ default. Other hosts use GUI input box and output file watching.
 
 ## Parameters
 
-```
+```text
 -Path <String>
     Specifies the file used for debugger output. A separate console is
     used for watching its tail. Do not let the file to grow too large.
@@ -51,7 +51,7 @@ default. Other hosts use GUI input box and output file watching.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Context <Int32[]>
     One or two integers, shown line counts before and after the current.
     
@@ -64,7 +64,7 @@ default. Other hosts use GUI input box and output file watching.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Environment <String>
     Specifies the environment name for saving the state. It is also used as
     the input box title and the default output file name.
@@ -81,7 +81,7 @@ default. Other hosts use GUI input box and output file watching.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -WriteHost [<SwitchParameter>]
     Tells to use Write-Host and Out-Host for debugger output.
     
@@ -92,7 +92,7 @@ default. Other hosts use GUI input box and output file watching.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -ReadGui [<SwitchParameter>]
     Tells to use GUI input boxes for input.
     
@@ -103,7 +103,7 @@ default. Other hosts use GUI input box and output file watching.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -ReadHost [<SwitchParameter>]
     Tells to use Read-Host or PSReadLine for input.
     PSReadLine should be imported and configured beforehand.
@@ -117,7 +117,7 @@ default. Other hosts use GUI input box and output file watching.
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 # How to debug bare runspaces
 $script = {
@@ -130,6 +130,6 @@ $null = $ps.BeginInvoke()
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

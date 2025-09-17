@@ -1,19 +1,19 @@
 # Set-ConsoleSize.ps1
 
-```
+```text
 Sets the current console size, interactively by default.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Set-ConsoleSize.ps1 [[-Width] Object] [[-Height] Object]
 ```
 
 ## Description
 
-```
+```text
 The script allows resizing of the current console either interactively by
 arrow keys (other keys stop resizing) or by specifying Width and/or Height.
 
@@ -23,7 +23,7 @@ set equal to width if it was initially equal or not changed otherwise.
 
 ## Parameters
 
-```
+```text
 -Width <Object>
     New console width. Default is 0 (the current).
     
@@ -34,7 +34,7 @@ set equal to width if it was initially equal or not changed otherwise.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Height <Object>
     New console height. Default is 0 (the current).
     
@@ -47,31 +47,31 @@ set equal to width if it was initially equal or not changed otherwise.
 
 ## Inputs
 
-```
+```text
 None.
 ```
 
 ## Outputs
 
-```
+```text
 None.
 ```
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 Set-ConsoleSize.ps1
 Starts interactive resizing with arrow keys.
 ```
 
-```
+```text
 -------------------------- EXAMPLE 2 --------------------------
 Set-ConsoleSize.ps1 80 25
 Sets classic small console size.
 ```
 
-```
+```text
 -------------------------- EXAMPLE 3 --------------------------
 Set-ConsoleSize.ps1 80
 Sets only new width.
@@ -79,6 +79,6 @@ Sets only new width.
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

@@ -1,19 +1,19 @@
 # Submit-Gist.ps1
 
-```
+```text
 Submits a file to its GitHub gist repository.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Submit-Gist.ps1 [-FileName] String [[-GistId] String] [-Keep]
 ```
 
 ## Description
 
-```
+```text
 Requirements:
 * The gist exists and you are the owner.
 * Git client is installed, configured, and available in the path.
@@ -31,7 +31,7 @@ See also Update-Gist.ps1 which has its pros and cons.
 
 ## Parameters
 
-```
+```text
 -FileName <String>
     The file to be submitted (existing is updated, new is added).
     
@@ -41,7 +41,7 @@ See also Update-Gist.ps1 which has its pros and cons.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -GistId <String>
     The existing gist ID. If it is not specified then the script searches
     for a gist URL in the file, the first matching URL is used for the ID.
@@ -56,7 +56,7 @@ See also Update-Gist.ps1 which has its pros and cons.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Keep [<SwitchParameter>]
     Tells to keep the local gist repository.
     
@@ -69,18 +69,18 @@ See also Update-Gist.ps1 which has its pros and cons.
 
 ## Inputs
 
-```
+```text
 None.
 ```
 
 ## Outputs
 
-```
+```text
 git output.
 ```
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

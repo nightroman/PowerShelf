@@ -44,14 +44,14 @@ $text = $(
 	'# {0}' -f $Name
 
 	### Synopsis
-	'{0}```{0}{1}{0}```' -f $n, $r.Synopsis
+	'{0}```text{0}{1}{0}```' -f $n, $r.Synopsis
 
 	### Syntax
 	'{0}## Syntax' -f $n
 	$many = foreach($_ in $r.Syntax) { foreach ($_ in $_.syntaxItem) {
 		$parameter = $_.PSObject.Properties['parameter']
 		if ($parameter) {
-			'{0}```' -f $n
+			'{0}```text' -f $n
 			$s = $Name
 			foreach($p in $parameter.Value) {
 				$s += ' '
@@ -70,7 +70,7 @@ $text = $(
 		}
 		else {
 			# parameter set with no parameters
-			'{0}```{0}{1}{0}```' -f $n, $Name
+			'{0}```text{0}{1}{0}```' -f $n, $Name
 		}
 	}}
 	if ($many) {
@@ -78,7 +78,7 @@ $text = $(
 	}
 	else {
 		# command with no parameters
-		'{0}```{0}{1}{0}```' -f $n, $Name
+		'{0}```text{0}{1}{0}```' -f $n, $Name
 	}
 
 	### Description
@@ -86,7 +86,7 @@ $text = $(
 		$_.Text
 	}
 	if ($many) {
-		'{0}## Description{0}{0}```' -f $n
+		'{0}## Description{0}{0}```text' -f $n
 		$many
 		'```'
 	}
@@ -95,7 +95,7 @@ $text = $(
 	$parameter = $r.Parameters.PSObject.Properties['parameter']
 	if ($parameter) {
 		$many = foreach($_ in $parameter.Value) {
-			'{0}```' -f $n
+			'{0}```text' -f $n
 			$lines = ($_ | Out-String).Trim() -split "`r?`n"
 			foreach($line in $lines) {
 				if ($line.Trim() -notin 'Default value', 'Accept pipeline input?', 'Aliases', 'Accept wildcard characters?') {
@@ -114,7 +114,7 @@ $text = $(
 	if ($x = $r.PSObject.Properties['inputTypes']) {
 		'{0}## Inputs' -f $n
 		foreach($_ in $x.Value) { foreach($_ in $_.inputType) {
-			'{0}```' -f $n
+			'{0}```text' -f $n
 			'{0}' -f $_.type.name
 			if ($description = $_.PSObject.Properties['description']) {
 				'{0}' -f ($description.Value.text -replace '(?m)^(?!\s)', '    ')
@@ -127,7 +127,7 @@ $text = $(
 	if ($x = $r.PSObject.Properties['returnValues']) {
 		'{0}## Outputs' -f $n
 		foreach($_ in $x.Value) { foreach($_ in $_.returnValue) {
-			'{0}```' -f $n
+			'{0}```text' -f $n
 			'{0}' -f $_.type.name
 			if ($description = $_.PSObject.Properties['description']) {
 				'{0}' -f ($description.Value.text -replace '(?m)^(?!\s)', '    ')
@@ -139,7 +139,7 @@ $text = $(
 	### Notes
 	$alertSet = $r.PSObject.Properties['alertSet']
 	if ($alertSet) {
-		'{0}## Notes{0}```' -f $n
+		'{0}## Notes{0}```text' -f $n
 		foreach($_ in $alertSet.Value) { foreach($_ in $_.alert) {
 			$_.Text
 		}}
@@ -151,7 +151,7 @@ $text = $(
 	$examples = $r.PSObject.Properties['examples']
 	if ($examples) {
 		$many = foreach($_ in $examples.Value) { foreach($_ in $_.example) {
-			'{0}```' -f $n
+			'{0}```text' -f $n
 			$_.title
 
 			$remarks = $_.PSObject.Properties['remarks']
@@ -203,7 +203,7 @@ $text = $(
 			if ($s) {$s}
 		}}
 		if ($many) {
-			'{0}## Links{0}{0}```' -f $n
+			'{0}## Links{0}{0}```text' -f $n
 			$many
 			'```'
 		}

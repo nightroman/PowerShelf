@@ -1,19 +1,19 @@
 # Measure-Command2.ps1
 
-```
+```text
 Measure-Command with several iterations and progress.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Measure-Command2.ps1 [-Expression] ScriptBlock[] [[-Count] Int32] [-NoProgress] [-NoEscape] [-Test]
 ```
 
 ## Description
 
-```
+```text
 The script is for measuring duration of fast expressions. In order to get a
 more reliable result it invokes an expression several times and returns the
 average. Unlike Measure-Command, it returns milliseconds, not a time span.
@@ -31,7 +31,7 @@ names like -*, e.g. ${-MyVar}. Such variables are used internally.
 
 ## Parameters
 
-```
+```text
 -Expression <ScriptBlock[]>
     Specifies one or more expressions being invoked repeatedly.
     
@@ -41,7 +41,7 @@ names like -*, e.g. ${-MyVar}. Such variables are used internally.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Count <Int32>
     Number of iterations. The default is 1000.
     
@@ -52,7 +52,7 @@ names like -*, e.g. ${-MyVar}. Such variables are used internally.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -NoProgress [<SwitchParameter>]
     Tells to not show the progress messages.
     
@@ -63,7 +63,7 @@ names like -*, e.g. ${-MyVar}. Such variables are used internally.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -NoEscape [<SwitchParameter>]
     Tells to not return on pressed [Escape].
     
@@ -74,7 +74,7 @@ names like -*, e.g. ${-MyVar}. Such variables are used internally.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Test [<SwitchParameter>]
     Tells to invoke once before timing.
     The result is written to the output.
@@ -88,19 +88,19 @@ names like -*, e.g. ${-MyVar}. Such variables are used internally.
 
 ## Inputs
 
-```
+```text
 None. Use the script parameters.
 ```
 
 ## Outputs
 
-```
+```text
 Average duration in milliseconds.
 It comes after Test output, if any.
 ```
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

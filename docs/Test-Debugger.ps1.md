@@ -1,19 +1,19 @@
 # Test-Debugger.ps1
 
-```
+```text
 Tests PowerShell debugging with breakpoints.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Test-Debugger.ps1 [-NoTest] [-RemoveBreakpoints]
 ```
 
 ## Description
 
-```
+```text
 This scripts helps to get familiar with various breakpoints: command,
 variable (reading, writing, reading and writing), and custom actions.
 It is also useful for testing debuggers, e.g. Add-Debugger.ps1.
@@ -36,7 +36,7 @@ Use it with a custom debugger, e.g. Add-Debugger.ps1, with
 
 ## Parameters
 
-```
+```text
 -NoTest [<SwitchParameter>]
     Tells to set breakpoints and exit without testing.
     
@@ -47,7 +47,7 @@ Use it with a custom debugger, e.g. Add-Debugger.ps1, with
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -RemoveBreakpoints [<SwitchParameter>]
     Tells to remove breakpoints set for this script.
     
@@ -60,7 +60,7 @@ Use it with a custom debugger, e.g. Add-Debugger.ps1, with
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 PS>
 # add debugger (or use the built-in and skip this)
@@ -72,6 +72,6 @@ Test-Debugger.ps1
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

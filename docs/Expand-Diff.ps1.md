@@ -1,18 +1,18 @@
 # Expand-Diff.ps1
 
-```
+```text
 Expands git diff into directories "a" and "b".
 ```
 
 ## Syntax
 
-```
+```text
 Expand-Diff.ps1 [-Diff] String [[-Root] String]
 ```
 
 ## Description
 
-```
+```text
 The script is designed for diff and patch files created by git. It expands
 the specified diff file into directories "a" and "b" (original and changes)
 with pieces of files stored in the diff.
@@ -34,7 +34,7 @@ Other lines are ignored.
 
 ## Parameters
 
-```
+```text
 -Diff <String>
     Specifies the diff file path.
     
@@ -44,7 +44,7 @@ Other lines are ignored.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Root <String>
     Specifies the output directory where the directories "a" and "b" will
     be created. The script fails if "a" or "b" exists in this directory.
@@ -59,6 +59,6 @@ Other lines are ignored.
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

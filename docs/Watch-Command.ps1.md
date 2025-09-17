@@ -1,19 +1,19 @@
 # Watch-Command.ps1
 
-```
+```text
 Invokes a command repeatedly and shows its one screen output.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Watch-Command.ps1 [[-Expression] ScriptBlock] [[-Seconds] Int32]
 ```
 
 ## Description
 
-```
+```text
 The script invokes a specified command repeatedly with specified pauses and
 shows each time one screen of output. Long lines are truncated and lines
 exceeding window height are discarded.
@@ -28,7 +28,7 @@ exceeding window height are discarded.
 
 ## Parameters
 
-```
+```text
 -Expression <ScriptBlock>
     Script block which output is being watched. Default is {Get-Process}.
     
@@ -39,7 +39,7 @@ exceeding window height are discarded.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Seconds <Int32>
     Refresh rate in seconds. Default is 3.
     
@@ -52,18 +52,18 @@ exceeding window height are discarded.
 
 ## Inputs
 
-```
+```text
 None. Use the parameters.
 ```
 
 ## Outputs
 
-```
+```text
 None.
 ```
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

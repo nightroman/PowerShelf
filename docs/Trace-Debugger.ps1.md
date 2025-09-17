@@ -1,27 +1,27 @@
 # Trace-Debugger.ps1
 
-```
+```text
 Provides script tracing and coverage data collection.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Trace-Debugger.ps1 [[-Command] String[]] [[-Filter] ScriptBlock]
 ```
 
-```
+```text
 Trace-Debugger.ps1 [[-Command] String[]] [[-Filter] ScriptBlock] -Path String
 ```
 
-```
+```text
 Trace-Debugger.ps1 [[-Command] String[]] [[-Filter] ScriptBlock] -Table String
 ```
 
 ## Description
 
-```
+```text
 This script is designed as the alternative to "Set-PSDebug -Trace".
 It avoids some known Set-PSDebug issues and provides extra features.
 
@@ -36,7 +36,7 @@ closes the output file if it is used.
 
 ## Parameters
 
-```
+```text
 -Command <String[]>
     Specifies the commands which trigger tracing, often a script being
     traced. In fact, any breakpoint which is hit triggers tracing. The
@@ -49,7 +49,7 @@ closes the output file if it is used.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Filter <ScriptBlock>
     Specifies the filter scriptblock which tests the variable $ScriptName
     and returns $true in order to trace or $false in order to ignore.
@@ -66,7 +66,7 @@ closes the output file if it is used.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Path <String>
     Specifies the file used instead of the default Write-Host output. The
     data are appended to this file. Thus, the same file may be used many
@@ -83,7 +83,7 @@ closes the output file if it is used.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Table <String>
     Tells to collect script coverage data and specifies the variable name.
     The variable is a hashtable created in the global scope. The keys are
@@ -100,19 +100,19 @@ closes the output file if it is used.
 
 ## Inputs
 
-```
+```text
 None
 ```
 
 ## Outputs
 
-```
+```text
 None
 ```
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 PS>
 How to trace Test-Debugger.ps1. Test-Debugger is invoked twice. The first
@@ -132,7 +132,7 @@ Test-Debugger
 Restore-Debugger
 ```
 
-```
+```text
 -------------------------- EXAMPLE 2 --------------------------
 PS> How to collect and show script coverage data
 
@@ -151,7 +151,7 @@ Show-Coverage $Coverage
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 Show-Coverage.ps1
 ```

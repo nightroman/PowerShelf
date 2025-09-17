@@ -1,19 +1,19 @@
 # Show-Coverage.ps1
 
-```
+```text
 Converts to HTML and shows script coverage data.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Show-Coverage.ps1 [-Data] Hashtable [[-Html] String] [[-Show] ScriptBlock]
 ```
 
 ## Description
 
-```
+```text
 This script converts script coverage data produced by Trace-Debugger.ps1 to
 a HTML file and opens it by an associated application, normally the default
 internet browser.
@@ -25,7 +25,7 @@ analysis of sources.
 
 ## Parameters
 
-```
+```text
 -Data <Hashtable>
     A hashtable with coverage data, e.g. produced by Trace-Debugger.ps1.
     
@@ -35,7 +35,7 @@ analysis of sources.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Html <String>
     Specifies the output HTML file.
     Default: $env:TEMP\Coverage.htm
@@ -47,7 +47,7 @@ analysis of sources.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Show <ScriptBlock>
     Specifies the script block which opens the converted HTML file. The
     default script { Invoke-Item -LiteralPath $args[0] } opens it by the
@@ -62,19 +62,19 @@ analysis of sources.
 
 ## Inputs
 
-```
+```text
 None
 ```
 
 ## Outputs
 
-```
+```text
 None
 ```
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 PS> How to collect and show script coverage data
 
@@ -93,7 +93,7 @@ Show-Coverage $Coverage
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 Trace-Debugger.ps1
 ```

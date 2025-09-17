@@ -1,19 +1,19 @@
 # Sync-Directory.ps1
 
-```
+```text
 Syncs two directories with some interaction.
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Sync-Directory.ps1 [-Directory1] String [-Directory2] String [-Arguments String[]]
 ```
 
 ## Description
 
-```
+```text
 Requires:
 	Robocopy.exe, Windows utility since Windows Vista
 	PowerShell host supporting Write-Host with colors
@@ -36,7 +36,7 @@ performed manually. Besides it may help to avoids mistakes and data loss
 
 ## Parameters
 
-```
+```text
 -Directory1 <String>
     Specifies the first directory.
     If it is missing then the second should exist.
@@ -47,7 +47,7 @@ performed manually. Besides it may help to avoids mistakes and data loss
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Directory2 <String>
     Specifies the second directory.
     If it is missing then the first should exist.
@@ -58,7 +58,7 @@ performed manually. Besides it may help to avoids mistakes and data loss
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Arguments <String[]>
     Additional Robocopy arguments. Example:
     ... -Arguments /XD, bin, obj, /XF, *.tmp, *.bak
@@ -71,7 +71,7 @@ performed manually. Besides it may help to avoids mistakes and data loss
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 PS>
 # Sync the current directory with its conventional backup
@@ -82,6 +82,6 @@ Sync-Directory $pwd ($pwd -replace '^(.:)', '$1\Backup')
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

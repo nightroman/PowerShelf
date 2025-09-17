@@ -1,18 +1,18 @@
 # Debug-Error.ps1
 
-```
+```text
 Enables debugging on terminating errors.
 ```
 
 ## Syntax
 
-```
+```text
 Debug-Error.ps1 [[-Script] String[]] [[-Action] ScriptBlock] [-Off]
 ```
 
 ## Description
 
-```
+```text
 Enables breaking into the debugger on terminating errors automatically. The
 script works in any host with a debugger, in the console it breaks into the
 debugger, too. But troubleshooting is not that easy as in VS Code.
@@ -32,7 +32,7 @@ errors. Setting this variable breakpoint enables debugging on failures.
 
 ## Parameters
 
-```
+```text
 -Script <String[]>
     Sets a breakpoint in each of the specified script files.
     See: Get-Help Set-PSBreakpoint -Parameter Script
@@ -43,7 +43,7 @@ errors. Setting this variable breakpoint enables debugging on failures.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Action <ScriptBlock>
     Specifies commands that run at each breakpoint.
     See: Get-Help Set-PSBreakpoint -Parameter Action
@@ -54,7 +54,7 @@ errors. Setting this variable breakpoint enables debugging on failures.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Off [<SwitchParameter>]
     Tells to stop debugging on errors.
     Other parameters are ignored.
@@ -68,6 +68,6 @@ errors. Setting this variable breakpoint enables debugging on failures.
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

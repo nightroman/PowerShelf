@@ -1,26 +1,26 @@
 # Set-Env.ps1
 
-```
+```text
 Sets or removes environment variables (Windows User/Machine/Process).
 Author: Roman Kuzmin
 ```
 
 ## Syntax
 
-```
+```text
 Set-Env.ps1 [-Name] String [[-Value] String] [[-Target] String]
 ```
 
 ## Description
 
-```
+```text
 This command sets the current process environment and sets the current User
 or local Machine environment, depending on Target (default: User).
 ```
 
 ## Parameters
 
-```
+```text
 -Name <String>
     Specifies the environment variable name.
     
@@ -30,7 +30,7 @@ or local Machine environment, depending on Target (default: User).
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Value <String>
     Specifies the environment variable value.
     If it is omitted or empty then the variable is removed.
@@ -41,7 +41,7 @@ or local Machine environment, depending on Target (default: User).
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Target <String>
     
     Required?                    false
@@ -53,7 +53,7 @@ or local Machine environment, depending on Target (default: User).
 
 ## Links
 
-```
+```text
 Set-Env.ArgumentCompleters.ps1
 https://github.com/nightroman/PowerShelf
 ```

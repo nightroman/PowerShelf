@@ -1,18 +1,18 @@
 # Show-GraphQLVoyager.ps1
 
-```
+```text
 Shows GraphQL schema using https://github.com/graphql-kit/graphql-voyager
 ```
 
 ## Syntax
 
-```
+```text
 Show-GraphQLVoyager.ps1 [-Schema] String [[-RootType] String] [-Output String] [-HideDocs] [-HideLeafFields] [-HideSettings] [-HideRoot] [-ShowDeprecated] [-ShowRelay] [-SortByAlphabet]
 ```
 
 ## Description
 
-```
+```text
 This command generates and opens HTML which renders GraphQL Voyager
 with the specified GraphQL schema file or URL for introspection and
 several display options.
@@ -20,7 +20,7 @@ several display options.
 
 ## Parameters
 
-```
+```text
 -Schema <String>
     Specifies the GraphQL schema file or URL for introspection.
     
@@ -30,7 +30,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -RootType <String>
     The root type name.
     
@@ -40,7 +40,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Output <String>
     Tells to output HTML to the specified file. If this parameter is
     omitted then the temp file "GraphQLVoyager.html" is used and on
@@ -52,7 +52,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -HideDocs [<SwitchParameter>]
     Tells to hide the docs sidebar.
     
@@ -63,7 +63,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -HideLeafFields [<SwitchParameter>]
     Tells to hide all scalars and enums.
     
@@ -74,7 +74,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -HideSettings [<SwitchParameter>]
     Tells to hide the settings panel.
     
@@ -85,7 +85,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -HideRoot [<SwitchParameter>]
     Tells to hide the root type.
     
@@ -96,7 +96,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -ShowDeprecated [<SwitchParameter>]
     Tells to show deprecated entities.
     
@@ -107,7 +107,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -ShowRelay [<SwitchParameter>]
     Tells to show relay types literally.
     
@@ -118,7 +118,7 @@ several display options.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -SortByAlphabet [<SwitchParameter>]
     Tells to sort type fields by alphabet.
     
@@ -131,6 +131,6 @@ several display options.
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

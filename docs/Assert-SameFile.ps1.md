@@ -1,18 +1,18 @@
 # Assert-SameFile.ps1
 
-```
+```text
 Compares the sample and result files or texts.
 ```
 
 ## Syntax
 
-```
+```text
 Assert-SameFile.ps1 [[-Sample] Object] [[-Result] Object] [[-View] Object] [-Fail] [-Text]
 ```
 
 ## Description
 
-```
+```text
 This script automates one typical test scenario, it compares the sample and
 result files and performs copy and view operations if the sample is missing
 (nor yet created) or the result is different (potentially valid but changed
@@ -32,7 +32,7 @@ files. But there is a tiny chance that file differences are not detected.
 
 ## Parameters
 
-```
+```text
 -Sample <Object>
     Specifies the sample file path. If it does not exist then it is
     created as a copy of the result.
@@ -45,7 +45,7 @@ files. But there is a tiny chance that file differences are not detected.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Result <Object>
     Specifies the result file path. The file must exist.
     
@@ -57,7 +57,7 @@ files. But there is a tiny chance that file differences are not detected.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -View <Object>
     Specifies a command invoked when the files are different. It is an
     application name or a script block. The arguments are file paths.
@@ -68,7 +68,7 @@ files. But there is a tiny chance that file differences are not detected.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Fail [<SwitchParameter>]
     Tells to fail on differences even when View is specified.
     
@@ -79,7 +79,7 @@ files. But there is a tiny chance that file differences are not detected.
     Accept wildcard characters?  false
 ```
 
-```
+```text
 -Text [<SwitchParameter>]
     Tells that Sample and Result are strings to compare as text ignoring
     line ends. If they differ and View is set then View uses temp files
@@ -94,7 +94,7 @@ files. But there is a tiny chance that file differences are not detected.
 
 ## Examples
 
-```
+```text
 -------------------------- EXAMPLE 1 --------------------------
 PS> Assert-SameFile Sample.log Result.log Merge.exe
 
@@ -103,7 +103,7 @@ uses Merge.exe for viewing differences (Merge.exe and file paths are passed
 in Start-Process).
 ```
 
-```
+```text
 -------------------------- EXAMPLE 2 --------------------------
 PS> Assert-SameFile Sample.log Result.log {git diff --no-index $args[0] $args[1]}
 
@@ -113,6 +113,6 @@ than Merge.exe above, so that the proper script block is used as a command.
 
 ## Links
 
-```
+```text
 https://github.com/nightroman/PowerShelf
 ```

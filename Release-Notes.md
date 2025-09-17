@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.18.1
+
+`Convert-HelpToDocs.ps1` - use text for fenced blocks.
+
 ## v1.18.0
 
 New script `Convert-HelpToDocs.ps1`.
