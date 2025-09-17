@@ -52,10 +52,7 @@ param(
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
 
-function exec($command) {
-	. $command
-	if ($LASTEXITCODE) {throw "Command {$command} exited with code $LASTEXITCODE."}
-}
+function __exec($command, $ok=0) {. $command; if ($LASTEXITCODE -notin $ok) {Write-Error "Exit code $LASTEXITCODE."}}
 
 $FileName = Resolve-Path -LiteralPath $FileName
 
@@ -78,7 +75,7 @@ try {
 		$Keep = $true
 	}
 	else {
-		exec { git clone "https://gist.github.com/$GistId.git" $repo }
+		__exec { git clone "https://gist.github.com/$GistId.git" $repo }
 	}
 
 	Push-Location -LiteralPath $repo
@@ -87,10 +84,10 @@ try {
 		Copy-Item -LiteralPath $FileName . -Force
 
 		# add
-		exec { git add . }
+		__exec { git add . }
 
 		# status
-		$status = exec { git status -s }
+		$status = __exec { git status -s }
 
 		# nothing?
 		if (!$status) {
@@ -99,10 +96,10 @@ try {
 		}
 
 		# commit
-		exec { git commit -m ([System.IO.Path]::GetFileName($FileName)) }
+		__exec { git commit -m ([System.IO.Path]::GetFileName($FileName)) }
 
 		# push
-		exec { git push }
+		__exec { git push }
 	}
 	finally {
 		Pop-Location

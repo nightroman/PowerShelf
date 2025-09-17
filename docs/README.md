@@ -1,0 +1,35 @@
+# PowerShelf Scripts
+
+- [Add-Debugger.ps1](Add-Debugger.ps1.md) - Debugger for PowerShell hosts with no own debuggers.
+- [Add-Path.ps1](Add-Path.ps1.md) - Adds a directory to an environment path variable.
+- [Assert-SameFile.ps1](Assert-SameFile.ps1.md) - Compares the sample and result files or texts.
+- [Convert-HelpToDocs.ps1](Convert-HelpToDocs.ps1.md) - Converts command help to markdown docs.
+- [Debug-Error.ps1](Debug-Error.ps1.md) - Enables debugging on terminating errors.
+- [Expand-Diff.ps1](Expand-Diff.ps1.md) - Expands git diff into directories "a" and "b".
+- [Export-Binary.ps1](Export-Binary.ps1.md) - Exports objects using binary serialization.
+- [Format-Chart.ps1](Format-Chart.ps1.md) - Formats output as a table with the last chart column.
+- [Format-High.ps1](Format-High.ps1.md) - Formats output by columns with optional custom item colors.
+- [Import-Binary.ps1](Import-Binary.ps1.md) - Imports objects using binary serialization.
+- [Invoke-Environment.ps1](Invoke-Environment.ps1.md) - Invokes a command and imports its environment variables.
+- [Invoke-Ngen.ps1](Invoke-Ngen.ps1.md) - Invokes the Native Image Generator tool (ngen.exe).
+- [Invoke-PowerShell.ps1](Invoke-PowerShell.ps1.md) - Invokes new PowerShell of the currently running version.
+- [Measure-Command2.ps1](Measure-Command2.ps1.md) - Measure-Command with several iterations and progress.
+- [Measure-Property.ps1](Measure-Property.ps1.md) - Counts properties grouped by names and types.
+- [Open-Url.ps1](Open-Url.ps1.md) - Creates and opens HTML navigating to URL.
+- [Save-NuGetTool.ps1](Save-NuGetTool.ps1.md) - Downloads a NuGet package and extracts /tools.
+- [Set-ConsoleSize.ps1](Set-ConsoleSize.ps1.md) - Sets the current console size, interactively by default.
+- [Set-Env.ArgumentCompleters.ps1](Set-Env.ArgumentCompleters.ps1.md) - Completes Set-Env.ps1 -Name, -Value .
+- [Set-Env.ps1](Set-Env.ps1.md) - Sets or removes environment variables (Windows User/Machine/Process).
+- [Show-Color.ps1](Show-Color.ps1.md) - Shows all color combinations, color names and codes.
+- [Show-Coverage.ps1](Show-Coverage.ps1.md) - Converts to HTML and shows script coverage data.
+- [Show-GraphQLVoyager.ps1](Show-GraphQLVoyager.ps1.md) - Shows GraphQL schema using https://github.com/graphql-kit/graphql-voyager
+- [Show-SolutionDgml.ps1](Show-SolutionDgml.ps1.md) - Generates and shows the solution project graph.
+- [Start-HttpRoutes.ps1](Start-HttpRoutes.ps1.md) - Starts HTTP server with routing script blocks.
+- [Submit-Gist.ps1](Submit-Gist.ps1.md) - Submits a file to its GitHub gist repository.
+- [Sync-Directory.ps1](Sync-Directory.ps1.md) - Syncs two directories with some interaction.
+- [Test-Debugger.ps1](Test-Debugger.ps1.md) - Tests PowerShell debugging with breakpoints.
+- [Trace-Debugger.ps1](Trace-Debugger.ps1.md) - Provides script tracing and coverage data collection.
+- [Update-Gist.ps1](Update-Gist.ps1.md) - Updates or creates a gist file using Invoke-RestMethod.
+- [Update-ReadmeIndex.ps1](Update-ReadmeIndex.ps1.md) - Updates README index from content directories.
+- [Watch-Command.ps1](Watch-Command.ps1.md) - Invokes a command repeatedly and shows its one screen output.
+- [Watch-Directory.ps1](Watch-Directory.ps1.md) - File change watcher and handler.

@@ -1,0 +1,13 @@
+diff --git a/repo/file.cs b/repo/file.cs
+index a7f1ac3d38..70c8725699 100644
+--- a/repo/file.cs	
++++ b/repo/file.cs	
+@@ -20,6 +20,8 @@ namespace My.Namespace
+ 
+         int OrderQuantity { get; }
+ 
++        string UniqueId { get; }
++
+         IEnumerable Solutions { get; }
+     }
+ }
