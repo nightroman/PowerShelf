@@ -5,7 +5,7 @@
 
 task scripts {
 	Set-Location ..
-	foreach($_ in Get-ChildItem *.ps1) {
+	foreach($_ in Get-ChildItem *-*.ps1) {
 		$name = $_.FullName
 
 		# has repo link

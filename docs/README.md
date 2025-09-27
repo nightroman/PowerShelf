@@ -2,6 +2,7 @@
 
 - [Add-Debugger.ps1](Add-Debugger.ps1.md) - Debugger for PowerShell hosts with no own debuggers.
 - [Add-Path.ps1](Add-Path.ps1.md) - Adds a directory to an environment path variable.
+- [Assert-GitBranchClean.ps1](Assert-GitBranchClean.ps1.md) - Asserts current branch name and clean status.
 - [Assert-SameFile.ps1](Assert-SameFile.ps1.md) - Compares the sample and result files or texts.
 - [Convert-HelpToDocs.ps1](Convert-HelpToDocs.ps1.md) - Converts command help to markdown docs.
 - [Debug-Error.ps1](Debug-Error.ps1.md) - Enables debugging on terminating errors.

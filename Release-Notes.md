@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.19.0
+
+New script `Assert-GitBranchClean.ps1`
+
 ## v1.18.1
 
 `Convert-HelpToDocs.ps1` - use text for fenced blocks.
