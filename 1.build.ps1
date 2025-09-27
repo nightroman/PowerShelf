@@ -91,4 +91,7 @@ task docs {
 }
 
 # Synopsis: Release changes.
-task release pushNuGet, pushRelease
+task release pushNuGet, pushRelease -If {
+	Assert-GitBranchClean.ps1
+	$true
+}
