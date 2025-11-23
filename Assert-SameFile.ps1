@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.2.2
+.VERSION 1.2.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Test
@@ -182,21 +182,12 @@ if ($Fail) {
 
 Write-Warning "Different sample '$Sample' and result '$Result'."
 
-# choice, cast is for v2.0
-function Get-Choice($Caption, $Message, $Choices) {
-	$Host.UI.PromptForChoice($Caption, $Message, [System.Management.Automation.Host.ChoiceDescription[]]$Choices, 0)
-}
-function New-Choice {
-	New-Object System.Management.Automation.Host.ChoiceDescription $args
-}
-
 # prompt
-switch(Get-Choice 'Different result' 'How would you like to proceed?' @(
-	New-Choice '&0. Ignore' 'Do nothing.'
-	New-Choice '&1. Update' 'Copy result to sample.'
-	New-Choice '&2. Abort' 'Write terminating error.'
-))
-{
+switch($Host.UI.PromptForChoice('Different result', 'How would you like to proceed?', @(
+	[System.Management.Automation.Host.ChoiceDescription]::new('&0 Pass', 'Do nothing.')
+	[System.Management.Automation.Host.ChoiceDescription]::new('&1 Update', 'Copy result to sample.')
+	[System.Management.Automation.Host.ChoiceDescription]::new('&2 Abort', 'Write terminating error.')
+), 0)) {
 	1 {
 		Copy-Item -LiteralPath $fileResult.FullName -Destination $fileSample.FullName -Force
 	}
