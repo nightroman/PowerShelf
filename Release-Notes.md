@@ -1,5 +1,9 @@
 # PowerShelf Release Notes
 
+## v1.19.2
+
+`Add-Debugger.ps1` 3.0.1 - ensure GUI runs in STA
+
 ## v1.19.1
 
 `Add-Debugger.ps1` 3.0.0

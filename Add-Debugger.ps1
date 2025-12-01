@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 3.0.0
+.VERSION 3.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -182,6 +182,7 @@ function global:Save-DebuggerState {
 }
 
 ### Init debugger data.
+Add-Type -AssemblyName Microsoft.VisualBasic
 
 $IsConsoleLikeHost = $Host.Name -in ('ConsoleHost', 'Visual Studio Code Host', 'Package Manager Host')
 
@@ -204,6 +205,13 @@ else {
 	$Path = $null
 }
 
+if ($history = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', '$shared', 'history')) {
+	$history = $history -split ' _ '
+}
+else {
+	$history = @()
+}
+
 $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
 	Path = $Path
 	Env = $Env
@@ -211,18 +219,15 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	Module = $null
 	Args = $null
 	Watch = $null
-	History = [System.Collections.Generic.List[string]]@()
+	History = [System.Collections.Generic.List[string]]$history
 	Handlers = Remove-Debugger
+	PS = $null
 	Action = ''
 	REIndent1 = [regex]'^(\s*)'
 	REIndent2 = [regex]'^(\s+)(.*)'
 	REContext = [regex]'^\s*(=)?\s*(\d+)\s*(\d+)?\s*$'
 	UseAnsi = $PSVersionTable.PSVersion -ge ([Version]'7.2')
 	PSReadLine = if ($ReadHost -and (Get-Module PSReadLine)) {Get-PSReadLineOption}
-}
-
-if ($history = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', '$shared', 'history')) {
-	$_Debugger.History.AddRange($history.Split(' _ '))
 }
 
 ### Define debugger output.
@@ -281,75 +286,88 @@ else {
 function global:Read-InputBox {
 	param($Prompt, $Title, $Default, $Text1, $Text2, $State)
 
-	Add-Type -AssemblyName System.Windows.Forms
+	$script = {
+		Add-Type -AssemblyName System.Windows.Forms
 
-	$form = [System.Windows.Forms.Form]::new()
-	$form.Text = $Title
-	$form.TopMost = $true
-	$form.Size = [System.Drawing.Size]::new(400, 132)
-	$form.FormBorderStyle = 'FixedDialog'
-	if ($State -and $State.x -ge 0 -and $State.y -ge 0) {
-		$form.StartPosition = 'Manual'
-		$form.Location = [System.Drawing.Point]::new($State.x, $State.y)
+		$form = [System.Windows.Forms.Form]::new()
+		$form.Text = $Title
+		$form.TopMost = $true
+		$form.Size = [System.Drawing.Size]::new(400, 132)
+		$form.FormBorderStyle = 'FixedDialog'
+		if ($State -and $State.x -ge 0 -and $State.y -ge 0) {
+			$form.StartPosition = 'Manual'
+			$form.Location = [System.Drawing.Point]::new($State.x, $State.y)
+		}
+		else {
+			$form.StartPosition = 'CenterScreen'
+		}
+
+		$label = [System.Windows.Forms.Label]::new()
+		$label.Location = [System.Drawing.Point]::new(10, 10)
+		$label.Size = [System.Drawing.Size]::new(380, 20)
+		$label.Text = $Prompt
+		$form.Controls.Add($label)
+
+		$combo = [Windows.Forms.ComboBox]::new()
+		$combo.Text = $Default
+		$combo.Location = [System.Drawing.Point]::new(10, 30)
+		$combo.Size = [System.Drawing.Size]::new(365, 20)
+		$combo.DropDownStyle = 'DropDown'
+		$combo.AutoCompleteMode = 'SuggestAppend'
+		$combo.AutoCompleteSource = 'ListItems'
+		foreach($_ in $_Debugger.History) {
+			$null=$combo.Items.Add($_)
+		}
+		$form.Controls.Add($combo)
+
+		$ok = [System.Windows.Forms.Button]::new()
+		$ok.Location = [System.Drawing.Point]::new(225, 60)
+		$ok.Size = [System.Drawing.Size]::new(75, 23)
+		$ok.Text = $Text1
+		$ok.DialogResult = 'OK'
+		$form.AcceptButton = $ok
+		$form.Controls.Add($ok)
+
+		$continue = [System.Windows.Forms.Button]::new()
+		$continue.Location = [System.Drawing.Point]::new(300, 60)
+		$continue.Size = [System.Drawing.Size]::new(75, 23)
+		$continue.Text = $Text2
+		$continue.DialogResult = 'Ignore'
+		$form.Controls.Add($continue)
+
+		$form.add_Load({
+			$combo.Select()
+			$form.Activate()
+		})
+
+		$result = $form.ShowDialog()
+
+		if ($State) {
+			$State.x = [Math]::Max(0, $form.Location.X)
+			$State.y = [Math]::Max(0, $form.Location.Y)
+		}
+
+		if ($result -eq 'OK') {
+			return $combo.Text
+		}
+
+		if ($result -eq 'Ignore') {
+			return 'continue'
+		}
+
+		'quit'
+	}.GetNewClosure()
+
+	if (!($ps = $_Debugger.PS)) {
+		$rs =  [runspacefactory]::CreateRunspace()
+		$rs.ApartmentState = 'STA'
+		$rs.Open()
+		$_Debugger.PS = $ps = [powershell]::Create()
+		$ps.Runspace = $rs
 	}
-	else {
-		$form.StartPosition = 'CenterScreen'
-	}
 
-	$label = [System.Windows.Forms.Label]::new()
-	$label.Location = [System.Drawing.Point]::new(10, 10)
-	$label.Size = [System.Drawing.Size]::new(380, 20)
-	$label.Text = $Prompt
-	$form.Controls.Add($label)
-
-	$combo = [Windows.Forms.ComboBox]::new()
-	$combo.Text = $Default
-	$combo.Location = [System.Drawing.Point]::new(10, 30)
-	$combo.Size = [System.Drawing.Size]::new(365, 20)
-	$combo.DropDownStyle = 'DropDown'
-	$combo.AutoCompleteMode = 'SuggestAppend'
-	$combo.AutoCompleteSource = 'ListItems'
-	foreach($_ in $_Debugger.History) {
-		$null=$combo.Items.Add($_)
-	}
-	$form.Controls.Add($combo)
-
-	$ok = [System.Windows.Forms.Button]::new()
-	$ok.Location = [System.Drawing.Point]::new(225, 60)
-	$ok.Size = [System.Drawing.Size]::new(75, 23)
-	$ok.Text = $Text1
-	$ok.DialogResult = 'OK'
-	$form.AcceptButton = $ok
-	$form.Controls.Add($ok)
-
-	$cancel = [System.Windows.Forms.Button]::new()
-	$cancel.Location = [System.Drawing.Point]::new(300, 60)
-	$cancel.Size = [System.Drawing.Size]::new(75, 23)
-	$cancel.Text = $Text2
-	$cancel.DialogResult = 'Continue'
-	$form.Controls.Add($cancel)
-
-	$form.add_Load({
-		$combo.Select()
-		$form.Activate()
-	})
-
-	$result = $form.ShowDialog()
-
-	if ($State) {
-		$State.x = [Math]::Max(0, $form.Location.X)
-		$State.y = [Math]::Max(0, $form.Location.Y)
-	}
-
-	if ($result -eq 'OK') {
-	    return $combo.Text
-	}
-
-	if ($result -eq 'Continue') {
-	    return 'continue'
-	}
-
-	'quit'
+	$ps.Commands.Clear()
+	$ps.AddScript('& $args[0]').AddArgument($script).Invoke()
 }
 
 # Starts an external file viewer.
@@ -480,7 +498,6 @@ function global:Write-DebuggerFile {
 }
 
 ### Main.
-Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type @'
 using System;
 using System.Management.Automation;
