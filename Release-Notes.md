@@ -1,5 +1,19 @@
 # PowerShelf Release Notes
 
+## v1.19.1
+
+`Add-Debugger.ps1` 3.0.0
+
+- **Breaking change.** Renamed parameter `Environment` to `Env`.
+- State is saved in registry instead of `$HOME\.PowerShelf\Add-Debugger.clixml` (remove old file).
+- Supports Windows Terminal as watcher and its customization via registry (e.g. `pos` and `size`).
+- Watchers are discovered and used in this order: `wt`, `pwsh`, `powershell`.
+- GUI uses auto completion combo with 50 last PowerShell statements.
+
+`Assert-SameFile.ps1` 1.2.3
+
+- Upgrade vintage code.
+
 ## v1.19.0
 
 New script `Assert-GitBranchClean.ps1`

@@ -7,15 +7,15 @@ Debugger for PowerShell hosts with no own debuggers.
 ## Syntax
 
 ```text
-Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Environment String] [-WriteHost]
+Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Env String] [-WriteHost]
 ```
 
 ```text
-Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Environment String] [-WriteHost] -ReadGui
+Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Env String] [-WriteHost] -ReadGui
 ```
 
 ```text
-Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Environment String] [-WriteHost] -ReadHost
+Add-Debugger.ps1 [[-Path] String] [-Context Int32[]] [-Env String] [-WriteHost] -ReadHost
 ```
 
 ## Description
@@ -32,6 +32,22 @@ the original debuggers, invoke Restore-Debugger defined by Add-Debugger.
 Console like hosts include 'ConsoleHost', 'Visual Studio Code Host',
 'Package Manager Host'. They imply using Read-Host and Write-Host by
 default. Other hosts use GUI input box and output file watching.
+
+Env data are saved as "HKCU\Software\VB and VBA Program Settings\Add-Debugger\<env>".
+Env "$shared" keeps common data, users may change:
+
+- "watch_app", "watch_args"
+
+	Watcher application and its arguments.
+	(1) "watch_app" may be "pwsh" or "powershell" with empty "watch_args".
+	(2) "watch_app" may be "wt" with "watch_args" ending with "pwsh" or "powershell":
+
+		watch_app  : wt.exe
+		watch_args : --window -1 --pos 0,0 --size 80,50 --title Debug pwsh.exe
+
+- "history"
+
+	History of typed PowerShell statements (automatically updated 50 last items).
 ```
 
 ## Parameters
@@ -42,7 +58,7 @@ default. Other hosts use GUI input box and output file watching.
     used for watching its tail. Do not let the file to grow too large.
     Invoke `new` when watching gets slower.
     
-    "$env:TEMP\$Environment.log" is used by default.
+    "$env:TEMP\$Env.log" is used by default.
     The default file is deleted before debugging.
     
     Required?                    false
@@ -55,7 +71,7 @@ default. Other hosts use GUI input box and output file watching.
 -Context <Int32[]>
     One or two integers, shown line counts before and after the current.
     
-    @(4, 4) is used by default.
+    Default: @(4, 4)
     
     Required?                    false
     Position?                    named
@@ -65,14 +81,13 @@ default. Other hosts use GUI input box and output file watching.
 ```
 
 ```text
--Environment <String>
+-Env <String>
     Specifies the environment name for saving the state. It is also used as
     the input box title and the default output file name.
     
     The saved state includes context line numbers and input box coordinates.
-    Environments are saved as "$HOME\.PowerShelf\Add-Debugger.clixml".
     
-    'Add-Debugger' is used by default.
+    Default: "Add-Debugger"
     
     Required?                    false
     Position?                    named
@@ -131,5 +146,5 @@ $null = $ps.BeginInvoke()
 ## Links
 
 ```text
-https://github.com/nightroman/PowerShelf
+https://github.com/nightroman/PowerShelf/blob/main/docs/Add-Debugger.ps1.md
 ```

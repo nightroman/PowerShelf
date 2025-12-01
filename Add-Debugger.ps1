@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 2.5.1
+.VERSION 3.0.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Debug
@@ -25,27 +25,42 @@
 	'Package Manager Host'. They imply using Read-Host and Write-Host by
 	default. Other hosts use GUI input box and output file watching.
 
+	Env data are saved as "HKCU\Software\VB and VBA Program Settings\Add-Debugger\<env>".
+	Env "$shared" keeps common data, users may change:
+
+	- "watch_app", "watch_args"
+
+		Watcher application and its arguments.
+		(1) "watch_app" may be "pwsh" or "powershell" with empty "watch_args".
+		(2) "watch_app" may be "wt" with "watch_args" ending with "pwsh" or "powershell":
+
+			watch_app  : wt.exe
+			watch_args : --window -1 --pos 0,0 --size 80,50 --title Debug pwsh.exe
+
+	- "history"
+
+		History of typed PowerShell statements (automatically updated 50 last items).
+
 .Parameter Path
 		Specifies the file used for debugger output. A separate console is
 		used for watching its tail. Do not let the file to grow too large.
 		Invoke `new` when watching gets slower.
 
-		"$env:TEMP\$Environment.log" is used by default.
+		"$env:TEMP\$Env.log" is used by default.
 		The default file is deleted before debugging.
 
 .Parameter Context
 		One or two integers, shown line counts before and after the current.
 
-		@(4, 4) is used by default.
+		Default: @(4, 4)
 
-.Parameter Environment
+.Parameter Env
 		Specifies the environment name for saving the state. It is also used as
 		the input box title and the default output file name.
 
 		The saved state includes context line numbers and input box coordinates.
-		Environments are saved as "$HOME\.PowerShelf\Add-Debugger.clixml".
 
-		'Add-Debugger' is used by default.
+		Default: "Add-Debugger"
 
 .Parameter ReadGui
 		Tells to use GUI input boxes for input.
@@ -68,7 +83,7 @@
 	$null = $ps.BeginInvoke()
 
 .Link
-	https://github.com/nightroman/PowerShelf
+	https://github.com/nightroman/PowerShelf/blob/main/docs/Add-Debugger.ps1.md
 #>
 
 [CmdletBinding(DefaultParameterSetName='Main')]
@@ -80,7 +95,7 @@ param(
 	[ValidateRange(0, 999)]
 	[int[]]$Context = @(4, 4)
 	,
-	[string]$Environment = 'Add-Debugger'
+	[string]$Env = 'Add-Debugger'
 	,
 	[switch]$WriteHost
 	,
@@ -126,46 +141,44 @@ function global:Restore-Debugger {
 }
 
 function global:Read-DebuggerState {
-	param($Environment, $Context)
+	param($Env, $Context)
 
-	if ($Environment -and [System.IO.File]::Exists("$HOME\.PowerShelf\Add-Debugger.clixml")) {
-		$config = Import-Clixml -LiteralPath "$HOME\.PowerShelf\Add-Debugger.clixml"
-		if ($state = $config[$Environment]) {
-			return $state
+	if ($Env) {
+		[int]$n = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', $Env, 'n', 3)
+		[int]$m = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', $Env, 'm', $n)
+		[int]$x = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', $Env, 'x', -1)
+		[int]$y = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', $Env, 'y', -1)
+	}
+	else {
+		$x, $y = -1
+		$n, $m = $Context
+		if ($null -eq $m) {
+			$m = $n
 		}
 	}
 
-	$n, $m = $Context
-	if ($null -eq $m) {
-		$m = $n
-	}
+	$data = [pscustomobject]@{n=$n; m=$m; x=$x; y=$y}
 	@{
-		Data = [pscustomobject]@{n=$n; m=$m; x=-1; y=-1}
-		Text = ''
+		Data = $data
+		Text = "$data"
 	}
 }
 
 function global:Save-DebuggerState {
-	if (!$_Debugger.Environment) {
+	if (!($env = $_Debugger.Env)) {
 		return
 	}
 
 	$state = $_Debugger.State
-	if ($state.Text -ceq "$($state.Data)") {
+	$data = $state.Data
+	if ($state.Text -ceq "$data") {
 		return
 	}
 
-	if ([System.IO.File]::Exists("$HOME\.PowerShelf\Add-Debugger.clixml")) {
-		$config = Import-Clixml -LiteralPath "$HOME\.PowerShelf\Add-Debugger.clixml"
-	}
-	else {
-		$null = mkdir "$HOME\.PowerShelf" -Force
-		$config = @{}
-	}
-
-	$state.Text = "$($state.Data)"
-	$config[$_Debugger.Environment] = $state
-	$config | Export-Clixml -LiteralPath "$HOME\.PowerShelf\Add-Debugger.clixml"
+	[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', $env, 'n', $data.n)
+	[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', $env, 'm', $data.m)
+	[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', $env, 'x', $data.x)
+	[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', $env, 'y', $data.y)
 }
 
 ### Init debugger data.
@@ -181,7 +194,7 @@ if (!$WriteHost -and !$Path -and $IsConsoleLikeHost) {
 }
 
 if (!$WriteHost -and !$Path) {
-	$Path = "$env:TEMP\$Environment.log"
+	$Path = "$env:TEMP\$Env.log"
 	[System.IO.File]::Delete($Path)
 }
 elseif (!$WriteHost) {
@@ -193,8 +206,8 @@ else {
 
 $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1 -Option ReadOnly -Value @{
 	Path = $Path
-	Environment = $Environment
-	State = Read-DebuggerState $Environment $Context
+	Env = $Env
+	State = Read-DebuggerState $Env $Context
 	Module = $null
 	Args = $null
 	Watch = $null
@@ -206,6 +219,10 @@ $null = New-Variable -Name _Debugger -Scope Global -Description Add-Debugger.ps1
 	REContext = [regex]'^\s*(=)?\s*(\d+)\s*(\d+)?\s*$'
 	UseAnsi = $PSVersionTable.PSVersion -ge ([Version]'7.2')
 	PSReadLine = if ($ReadHost -and (Get-Module PSReadLine)) {Get-PSReadLineOption}
+}
+
+if ($history = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', '$shared', 'history')) {
+	$_Debugger.History.AddRange($history.Split(' _ '))
 }
 
 ### Define debugger output.
@@ -254,7 +271,7 @@ elseif ($ReadHost) {
 else {
 	function global:Read-Debugger {
 		param($Prompt, $Default)
-		$title = if ($_Debugger.Environment) {$_Debugger.Environment} else {'Add-Debugger'}
+		$title = if ($_Debugger.Env) {$_Debugger.Env} else {'Add-Debugger'}
 		Read-InputBox $Prompt $title $Default Step Continue $_Debugger.State.Data
 		Save-DebuggerState
 	}
@@ -266,48 +283,54 @@ function global:Read-InputBox {
 
 	Add-Type -AssemblyName System.Windows.Forms
 
-	$form = New-Object System.Windows.Forms.Form
+	$form = [System.Windows.Forms.Form]::new()
 	$form.Text = $Title
 	$form.TopMost = $true
-	$form.Size = New-Object System.Drawing.Size(400, 132)
+	$form.Size = [System.Drawing.Size]::new(400, 132)
 	$form.FormBorderStyle = 'FixedDialog'
 	if ($State -and $State.x -ge 0 -and $State.y -ge 0) {
 		$form.StartPosition = 'Manual'
-		$form.Location = New-Object System.Drawing.Point($State.x, $State.y)
+		$form.Location = [System.Drawing.Point]::new($State.x, $State.y)
 	}
 	else {
 		$form.StartPosition = 'CenterScreen'
 	}
 
-	$label = New-Object System.Windows.Forms.Label
-	$label.Location = New-Object System.Drawing.Point(10, 10)
-	$label.Size = New-Object System.Drawing.Size(380, 20)
+	$label = [System.Windows.Forms.Label]::new()
+	$label.Location = [System.Drawing.Point]::new(10, 10)
+	$label.Size = [System.Drawing.Size]::new(380, 20)
 	$label.Text = $Prompt
 	$form.Controls.Add($label)
 
-	$text = New-Object System.Windows.Forms.TextBox
-	$text.Text = $Default
-	$text.Location = New-Object System.Drawing.Point(10, 30)
-	$text.Size = New-Object System.Drawing.Size(365, 20)
-	$form.Controls.Add($text)
+	$combo = [Windows.Forms.ComboBox]::new()
+	$combo.Text = $Default
+	$combo.Location = [System.Drawing.Point]::new(10, 30)
+	$combo.Size = [System.Drawing.Size]::new(365, 20)
+	$combo.DropDownStyle = 'DropDown'
+	$combo.AutoCompleteMode = 'SuggestAppend'
+	$combo.AutoCompleteSource = 'ListItems'
+	foreach($_ in $_Debugger.History) {
+		$null=$combo.Items.Add($_)
+	}
+	$form.Controls.Add($combo)
 
-	$ok = New-Object System.Windows.Forms.Button
-	$ok.Location = New-Object System.Drawing.Point(225, 60)
-	$ok.Size = New-Object System.Drawing.Size(75, 23)
+	$ok = [System.Windows.Forms.Button]::new()
+	$ok.Location = [System.Drawing.Point]::new(225, 60)
+	$ok.Size = [System.Drawing.Size]::new(75, 23)
 	$ok.Text = $Text1
 	$ok.DialogResult = 'OK'
 	$form.AcceptButton = $ok
 	$form.Controls.Add($ok)
 
-	$cancel = New-Object System.Windows.Forms.Button
-	$cancel.Location = New-Object System.Drawing.Point(300, 60)
-	$cancel.Size = New-Object System.Drawing.Size(75, 23)
+	$cancel = [System.Windows.Forms.Button]::new()
+	$cancel.Location = [System.Drawing.Point]::new(300, 60)
+	$cancel.Size = [System.Drawing.Size]::new(75, 23)
 	$cancel.Text = $Text2
 	$cancel.DialogResult = 'Continue'
 	$form.Controls.Add($cancel)
 
 	$form.add_Load({
-		$text.Select()
+		$combo.Select()
 		$form.Activate()
 	})
 
@@ -319,7 +342,7 @@ function global:Read-InputBox {
 	}
 
 	if ($result -eq 'OK') {
-	    return $text.Text
+	    return $combo.Text
 	}
 
 	if ($result -eq 'Continue') {
@@ -331,18 +354,59 @@ function global:Read-InputBox {
 
 # Starts an external file viewer.
 function global:Watch-Debugger {
-	param([switch]$New)
 	if (($exe = $_Debugger.Watch) -and !$exe.HasExited) {
-		if ($New) {
-			try { $exe.Kill() } catch {}
+		return
+	}
+
+	$watch_app = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', '$shared', 'watch_app', ':')
+	$watch_args = [Microsoft.VisualBasic.Interaction]::GetSetting('Add-Debugger', '$shared', 'watch_args', ':')
+
+	if ($watch_app -and $watch_app -ne ':') {
+		$_ = if ($watch_args) {$watch_args} else {$watch_app}
+		if ($_ -notmatch '\b(pwsh|powershell)(\.exe)?$') {
+			if ($watch_args -and $watch_args -ne ':') {
+				throw "Expected: 'watch_args' ends with 'pwsh' or 'powershell'. Actual: '$watch_args'."
+			}
+			else {
+				throw "Expected: 'watch_app' with empty 'watch_args' specifies 'pwsh' or 'powershell'. Actual: '$watch_app'."
+			}
+		}
+		$pwsh = "$($Matches[1]).exe"
+	}
+	else {
+		$init = $watch_app + $watch_args
+
+		$pwsh = if (Get-Command pwsh.exe -ErrorAction Ignore) {'pwsh.exe'} else {'powershell.exe'}
+		if (Get-Command wt.exe -ErrorAction Ignore) {
+			$watch_app = 'wt.exe'
+			$watch_args = "--window -1 --pos 0,0 --title `"Debug output`" $pwsh"
 		}
 		else {
-			return
+			$watch_app = $pwsh
+			$watch_args = ''
+		}
+
+		if ($init -eq '::') {
+			[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', '$shared', 'watch_app', $watch_app)
+			[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', '$shared', 'watch_args', $watch_args)
 		}
 	}
-	$path = $_Debugger.Path.Replace("'", "''")
-	$app = if ($PSVersionTable.PSEdition -eq 'Core' -and (Get-Command pwsh -ErrorAction 0)) {'pwsh'} else {'powershell'}
-	$_Debugger.Watch = Start-Process $app "-NoProfile -Command `$Host.UI.RawUI.WindowTitle = 'Debug output'; Get-Content -LiteralPath '$path' -Encoding UTF8 -Wait" -PassThru
+
+	$path = $_Debugger.Path.Replace("\", "/").Replace("'", "''")
+	Start-Process $watch_app "$watch_args -nop -c Get-Content -LiteralPath '$path' -Encoding UTF8 -ErrorAction Ignore -Wait"
+
+	$query = [System.Management.ManagementObjectSearcher]::new(@"
+SELECT ProcessId FROM Win32_Process WHERE Name='$pwsh' AND CommandLine LIKE "%$path%"
+"@)
+
+	for($process = $null) {
+		Start-Sleep -Milliseconds 100
+		if ($r = @($query.Get())) {
+			$process = Get-Process -Id $r[0].ProcessId
+			break
+		}
+	}
+	$_Debugger.Watch = $process
 }
 
 # Writes the current invocation info.
@@ -415,6 +479,8 @@ function global:Write-DebuggerFile {
 	Write-Debugger ''
 }
 
+### Main.
+Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type @'
 using System;
 using System.Management.Automation;
@@ -431,7 +497,7 @@ public class AddDebuggerHelpers
 '@
 
 ### Add DebuggerStop handler.
-$AddDebuggerHelpers = New-Object AddDebuggerHelpers
+$AddDebuggerHelpers = [AddDebuggerHelpers]::new()
 [runspace]::DefaultRunspace.Debugger.add_DebuggerStop($AddDebuggerHelpers.DebuggerStopHandler)
 $AddDebuggerHelpers.DebuggerStopProxy = {
 	param($_module, $_args)
@@ -505,9 +571,6 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 		### Quit
 		if ($_Debugger.Action -in ('q', 'Quit')) {
 			$_Debugger.Args.ResumeAction = 'Stop'
-			if (($exe = $_Debugger.Watch) -and !$exe.HasExited) {
-				try { $exe.Kill() } catch {}
-			}
 			return
 		}
 
@@ -557,9 +620,8 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 
 		### new
 		if ('new' -eq $_Debugger.Action -and $_Debugger.Path) {
-			Remove-Item -LiteralPath $_Debugger.Path
-			Write-Debugger (Get-Date)
-			Watch-Debugger -New
+			[System.IO.File]::WriteAllBytes($_Debugger.Path, @())
+			Watch-Debugger
 			continue
 		}
 
@@ -621,8 +683,6 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 		}
 
 		### invoke command
-		$_Debugger.History.Remove($_Debugger.Action)
-		$_Debugger.History.Add($_Debugger.Action)
 		try {
 			$_Debugger.q1 = [scriptblock]::Create($_Debugger.Action)
 			$_Debugger.q2 = $global:Error.Count
@@ -634,6 +694,14 @@ $AddDebuggerHelpers.DebuggerStopProxy = {
 				$_ = $global:Error[0]
 				Write-Debugger $(if ($_.InvocationInfo.ScriptName) {$_} else {"ERROR: $_"})
 			}
+
+			### history
+			$null=$_Debugger.History.Remove($_Debugger.Action)
+			$_Debugger.History.Insert(0, $_Debugger.Action)
+			while($_Debugger.History.Count -gt 50) {
+				$_Debugger.History.RemoveAt($_Debugger.History.Count - 1)
+			}
+			[Microsoft.VisualBasic.Interaction]::SaveSetting('Add-Debugger', '$shared', 'history', [string]::Join(' _ ', $_Debugger.History))
 		}
 		catch {
 			Write-Debugger $(if ($_.InvocationInfo.ScriptName) {$_} else {"ERROR: $_"})
